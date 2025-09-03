@@ -1,36 +1,36 @@
 """
-Django management command to clear all agendas.
+Django management command to clear all relatorios.
 """
 from django.core.management.base import BaseCommand
-from agenda.models import Agenda
+from relatorios.models import Relatorio
 
 
 class Command(BaseCommand):
-    help = 'Remove todos os registros da tabela de agendas'
+    help = 'Remove todos os registros da tabela de relatórios'
 
     def handle(self, *args, **options):
-        total_agendas = Agenda.objects.count()
+        total = Relatorio.objects.count()
         
         self.stdout.write(
-            self.style.SUCCESS(f'Removendo {total_agendas} agendas...')
+            self.style.SUCCESS(f'Removendo {total} relatórios...')
         )
         
         try:
-            if total_agendas > 0:
-                Agenda.objects.all().delete()
+            if total > 0:
+                Relatorio.objects.all().delete()
                 self.stdout.write(
-                    self.style.SUCCESS(f'✅ {total_agendas} agendas removidas!')
+                    self.style.SUCCESS(f'✅ {total} relatórios removidos!')
                 )
             
-            restantes = Agenda.objects.count()
+            restantes = Relatorio.objects.count()
             if restantes == 0:
                 self.stdout.write(
-                    self.style.SUCCESS('✅ Tabela de agendas completamente limpa!')
+                    self.style.SUCCESS('✅ Tabela de relatórios completamente limpa!')
                 )
             else:
                 self.stdout.write(
                     self.style.WARNING(
-                        f'⚠️  Ainda restam {restantes} agendas.'
+                        f'⚠️  Ainda restam {restantes} relatórios.'
                     )
                 )
         except Exception as e:
