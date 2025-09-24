@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'auditlog',
+    'drf_spectacular',
     'relatorios',
 ]
 
@@ -63,8 +64,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 DB_ENGINE = os.environ.get('DB_ENGINE', 'django.db.backends.postgresql')
-print(os.environ.get('DB_ENGINE'))
-print(DB_ENGINE)
+
 if DB_ENGINE == 'django.db.backends.sqlite3':
     DATABASES = {
         'default': {
@@ -83,8 +83,6 @@ else:
             'PORT': os.environ.get('DB_PORT', '5432'),
         }
     }
-
-print(DATABASES)
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -139,6 +137,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # AuditLog settings
@@ -157,4 +156,11 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'INFO',
     },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Relatorios Sigla API',
+    'DESCRIPTION': 'API para o sistema de relatórios de sigla',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
