@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Vagas por Cargo e DRE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: white;
+            padding: 0;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background-color: white;
+            padding: 0;
+        }
+
+        .cabecalho {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #3498db;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .cargo-section {
+            margin-bottom: 15px;
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            
+        }
+        
+        .cargo-section:first-child {
+            margin-top: 0;
+        }
+
+        .cargo-header {
+            background-color: #667eea;
+            color: white;
+            padding: 7px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .dre-section {
+            margin: 20px;
+            border: 1px solid #ddd;
+            
+        }
+
+        .dre-header {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        thead {
+            background-color: #ecf0f1;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        .tipo-unidade {
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+
+        .numero-vaga {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .vaga-definitiva {
+            color: #27ae60;
+        }
+
+        .vaga-precaria {
+            color: #e67e22;
+        }
+
+        .sem-vagas {
+            color: #95a5a6;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .container {
+                padding: 0;
+            }   
+
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cabecalho">
+            {{ cabecalho|default:cabecalho_padrao|linebreaksbr }}
+        </div>
+        
+        <h1>Relatório de Vagas por Cargo e DRE</h1>
+
+        {% for cargo in cargos %}
+            <div class="cargo-section">
+                <div class="cargo-header">
+                    Cargo: {{ cargo.descricao }}
+                </div>
+
+                {% for dre in cargo.dres %}
+                    <div class="dre-section">
+                        <div class="dre-header">
+                            DRE - {{ dre.nome }}
+                        </div>
+                        
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tipo de unidade</th>
+                                        <th>Unidade</th>
+                                        <th style="text-align: center;">Vagas Definitivas</th>
+                                        <th style="text-align: center;">Vagas Precárias</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vaga in dre.vagas %}
+                                        <tr>
+                                            <td class="tipo-unidade">
+                                                {{ vaga.escola.tipo_ue|default:"-" }}
+                                            </td>
+                                            <td>{{ vaga.escola.nome_oficial }}</td>
+                                            <td class="numero-vaga {% if vaga.vagas_definitivas > 0 %}vaga-definitiva{% else %}sem-vagas{% endif %}">
+                                                {{ vaga.vagas_definitivas|default:0 }}
+                                            </td>
+                                            <td class="numero-vaga {% if vaga.vagas_precarias > 0 %}vaga-precaria{% else %}sem-vagas{% endif %}">
+                                                {{ vaga.vagas_precarias|default:0 }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
