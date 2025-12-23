@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Relatorio
 
-
 class RelatorioSerializer(serializers.ModelSerializer):
     """Serializer para o modelo Relatorio."""
     

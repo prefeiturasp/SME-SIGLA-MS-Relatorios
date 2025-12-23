@@ -1,9 +1,9 @@
 """
-Constantes e enums para os modelos de relatorios.
+Constantes para os tipos de relatórios disponíveis no sistema.
 """
+
 TIPOS_RELATORIOS = [
-    ('agenda', 'Agenda'),
-    ('convocacao', 'Convocação'),
-    ('selecao', 'Seleção'),
-    ('avaliacao', 'Avaliação'),
+    ('LAUDA_VAGAS', 'Lauda de Vagas'),
+    # Adicione outros tipos de relatórios aqui conforme necessário
 ]
+
