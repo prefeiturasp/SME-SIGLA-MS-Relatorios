@@ -9,7 +9,7 @@ class Relatorio(BaseModel):
     """
 
     tipo = models.CharField(max_length=200, verbose_name="Tipo de Relatório", choices=TIPOS_RELATORIOS)
-    usuario = models.JSONField(max_length=20, verbose_name="Usuário")
+    usuario = models.CharField(max_length=20, verbose_name="Usuário")
     dados = models.JSONField(max_length=20000, verbose_name="JSON do Relatório", default={})
     processo_uuid = models.UUIDField(verbose_name="UUID do Processo")
     cabecalho = models.CharField(max_length=255, verbose_name="Cabeçalho do Relatório", blank=True, null=True)

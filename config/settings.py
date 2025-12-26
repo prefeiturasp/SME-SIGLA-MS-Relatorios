@@ -168,7 +168,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 # External services configuration
-ESCOLHAS_API_URL = os.environ.get('ESCOLHAS_API_URL', 'http://localhost:8000')
+ESCOLHAS_API_URL = os.environ.get('ESCOLHAS_API_URL', 'http://localhost:8004')
 
 # Relatórios configuration
 RELATORIO_CABECALHO_PADRAO = (
@@ -176,4 +176,3 @@ RELATORIO_CABECALHO_PADRAO = (
     "SECRETARIA MUNICIPAL DE EDUCAÇÃO\n"
     "DIVISÃO DE GESTÃO DE CARREIRAS - COGEP"
 )
-    
