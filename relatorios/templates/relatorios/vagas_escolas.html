@@ -156,7 +156,7 @@
 <body>
     <div class="container">
         <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|linebreaksbr }}
+            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
         </div>
         
         <h1>Relatório de Vagas por Cargo e DRE</h1>

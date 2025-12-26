@@ -25,11 +25,11 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     ordering_fields = ['criado_em']
     ordering = ['-criado_em']
     pagination_class = CustomPagination
-    
+
     def create(self, request, *args, **kwargs):   
         serializer = RelatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         tipo_relatorio = serializer.validated_data.get('tipo')
         processo_uuid = serializer.validated_data.get('processo_uuid')
         # Prioriza o cabecalho vindo do request (body ou query), senão usa o validado
@@ -39,10 +39,10 @@ class RelatorioViewSet(viewsets.ModelViewSet):
             or serializer.validated_data.get('cabecalho', '')
         )
         usuario = serializer.validated_data.get('usuario', '')
-   
+
         format_param = request.query_params.get('formato', '').lower()
         accept_header = request.META.get('HTTP_ACCEPT', '')
-        
+
         # Determinar formato: xls, pdf ou html (padrão)
         if format_param == 'xls' or format_param == 'xlsx' or 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in accept_header:
             formato = 'xls'
@@ -50,30 +50,30 @@ class RelatorioViewSet(viewsets.ModelViewSet):
             formato = 'pdf'
         else:
             formato = 'html'
-        
+
         logger.info('Tipo de relatório: %s, Formato solicitado: %s', 
                    tipo_relatorio, formato)
-        
+
         # Usar Factory para obter a instância correta do relatório
         try:
             relatorio_service = RelatorioFactory.obter_relatorio(tipo_relatorio)
             response, dados = relatorio_service.gerar(processo_uuid, request, formato, cabecalho)
-    
+
             try:
                 serializer.save(dados=dados)
                 logger.info('Relatório salvo no banco de dados - tipo: %s, usuario: %s', tipo_relatorio, usuario)
             except Exception as exc:
                 logger.error('Erro ao salvar relatório no banco de dados: %s', exc, exc_info=True)            
-            
+
             return response
-        
+
         except ValueError as exc:
             logger.error('Tipo de relatório inválido: %s - %s', tipo_relatorio, exc)
             return Response(
                 {'error': str(exc)}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         except Exception as exc:
             logger.error('Erro ao gerar relatório do tipo %s: %s', tipo_relatorio, exc, exc_info=True)
             return Response(
