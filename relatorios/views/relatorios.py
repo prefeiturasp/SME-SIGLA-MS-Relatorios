@@ -43,11 +43,13 @@ class RelatorioViewSet(viewsets.ModelViewSet):
         format_param = request.query_params.get('formato', '').lower()
         accept_header = request.META.get('HTTP_ACCEPT', '')
 
-        # Determinar formato: xls, pdf ou html (padrão)
+        # Determinar formato: xls, pdf, docx ou html (padrão)
         if format_param == 'xls' or format_param == 'xlsx' or 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in accept_header:
             formato = 'xls'
         elif format_param == 'pdf' or 'application/pdf' in accept_header:
             formato = 'pdf'
+        elif format_param == 'docx' or format_param == 'doc' or 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in accept_header:
+            formato = 'docx'
         else:
             formato = 'html'
 
