@@ -207,7 +207,8 @@ class LaudaVagas(RelatorioBase):
             if cabecalho:
                 ws.merge_cells(f'A{row}:D{row}')
                 cell = ws[f'A{row}']
-                cell.value = cabecalho
+                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+                cell.value = cabecalho_texto
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2

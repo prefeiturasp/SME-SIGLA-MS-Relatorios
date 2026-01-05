@@ -2,6 +2,7 @@
 Factory para criação de instâncias de relatórios baseado no tipo.
 """
 from relatorios.services.relatorios.lauda_vagas import LaudaVagas
+from relatorios.services.relatorios.relacao_vagas import RelacaoVagas
 
 
 class RelatorioFactory:
@@ -12,9 +13,9 @@ class RelatorioFactory:
     
     _MAPA = {
         'LAUDA_VAGAS': LaudaVagas,
+        'RELACAO_VAGAS': RelacaoVagas,
         # TODO: Adicionar outros tipos quando implementados
         # 'LAUDA_CONVOCACAO': LaudaConvocacao,
-        # 'RELACAO_VAGAS': RelacaoVagas,
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
         # 'CAPA_ATA_ESCOLHAS': CapaAtaEscolhas,
         # 'RESULTADO_ESCOLHA_VAGAS': ResultadoEscolhaVagas,
