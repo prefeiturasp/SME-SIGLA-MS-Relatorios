@@ -10,16 +10,16 @@ class RelatorioAdmin(admin.ModelAdmin):
     """Admin for Relatorio model."""
 
     list_display = (
-        'nome', 'tipo',
+        'uuid', 'tipo', 'usuario',
     )
-    list_filter = ('tipo',)
-    search_fields = ('nome', 'tipo')
+    list_filter = ('tipo', 'usuario')
+    search_fields = ('tipo', 'usuario')
     readonly_fields = ('uuid', 'criado_em', 'atualizado_em')
     ordering = ('-criado_em',)
 
     fieldsets = (
         ('Relatório', {
-            'fields': ('nome', 'tipo')
+            'fields': ('tipo', 'usuario')
         }),
         ('Datas', {
             'fields': ('criado_em', 'atualizado_em')
