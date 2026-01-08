@@ -54,3 +54,56 @@ class EscolhasService:
         except RequestException as exc:
             logger.error('Erro ao buscar vagas de escolas: %s', exc)
             raise
+
+    def buscar_escolhas_por_candidatos(
+        self,
+        candidato_uuids: list,
+        situacao: str = 'nao-escolha'
+    ) -> list:
+        """
+        Busca escolhas por lista de candidato_uuids filtrando por situação.
+        
+        Args:
+            candidato_uuids: Lista de UUIDs dos candidatos
+            situacao: Situação da escolha (padrão: 'nao-escolha')
+            
+        Returns:
+            Lista de escolhas filtradas por situação
+            
+        Raises:
+            RequestException: Em caso de erro na requisição
+        """
+        url = f"{self.base_url}/api/v1/escolhas/busca/"
+        
+        data = {
+            'candidato_uuid': candidato_uuids,
+        }
+        
+        try:
+            response = requests.post(
+                url,
+                json=data,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds
+            )
+            response.raise_for_status()
+            
+            # A resposta pode ser uma lista ou um dict com 'results'
+            escolhas_data = response.json()
+            if isinstance(escolhas_data, list):
+                escolhas = escolhas_data
+            elif isinstance(escolhas_data, dict) and 'results' in escolhas_data:
+                escolhas = escolhas_data.get('results', [])
+            else:
+                escolhas = []
+            
+            # Filtrar por situação
+            escolhas_filtradas = [e for e in escolhas if e.get('situacao') == situacao]
+            
+            logger.info('Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)', 
+                       len(candidato_uuids), situacao, len(escolhas_filtradas))
+            return escolhas_filtradas
+        
+        except RequestException as exc:
+            logger.error('Erro ao buscar escolhas: %s', exc)
+            raise
