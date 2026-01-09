@@ -5,7 +5,7 @@ from relatorios.services.relatorios.lauda_vagas import LaudaVagas
 from relatorios.services.relatorios.relacao_vagas import RelacaoVagas
 from relatorios.services.relatorios.nao_escolhas import NaoEscolhas
 from relatorios.services.relatorios.listagem_escolhas_dres import ListagemEscolhasDres
-
+from relatorios.services.relatorios.reconvocacao import Reconvocacao
 
 class RelatorioFactory:
     """
@@ -18,6 +18,7 @@ class RelatorioFactory:
         'RELACAO_VAGAS': RelacaoVagas,
         'NAO_ESCOLHAS': NaoEscolhas,
         'LISTAGEM_ESCOLHAS_DRES': ListagemEscolhasDres,
+        'RECONVOCACAO': Reconvocacao,
         # TODO: Adicionar outros tipos quando implementados
         # 'LAUDA_CONVOCACAO': LaudaConvocacao,
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,

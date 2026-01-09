@@ -7,6 +7,7 @@ TIPOS_RELATORIOS = [
     ('RELACAO_VAGAS', 'Relação de Vagas'),
     ('NAO_ESCOLHAS', 'Relatório de Não Escolhas'),
     ('LISTAGEM_ESCOLHAS_DRES', 'Listagem de Escolhas por DREs'),
+    ('RECONVOCACAO', 'Súmula de Reconvocados'),
     # Adicione outros tipos de relatórios aqui conforme necessário
 ]
 
