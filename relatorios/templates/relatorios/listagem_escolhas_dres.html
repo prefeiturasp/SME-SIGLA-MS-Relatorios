@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listagem de Escolhas por DREs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: white;
+            padding: 0;
+            margin: 0;
+            color: #333;
+            font-size: 11px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background-color: white;
+            padding: 0;
+        }
+
+        .cabecalho {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #3498db;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin: 0;
+            table-layout: auto;
+        }
+
+        thead {
+            background-color: #4a5568;
+            color: white;
+        }
+
+        thead th {
+            padding: 6px 4px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #2d3748;
+            font-size: 10px;
+        }
+
+        thead th:nth-child(1) { /* Cargo */
+            width: auto;
+        }
+        thead th:nth-child(2), /* Class */
+        thead th:nth-child(3), /* Def */
+        thead th:nth-child(4) { /* NNA */
+            width: auto;
+            text-align: center;
+        }
+        thead th:nth-child(5) { /* RF */
+            width: auto;
+        }
+        thead th:nth-child(6) { /* RG */
+            width: auto;
+        }
+        thead th:nth-child(7) { /* CPF */
+            width: auto;
+        }
+        thead th:nth-child(8) { /* Inscrição */
+            width: auto;
+        }
+        thead th:nth-child(9) { /* Nome */
+            width: auto;
+        }
+        thead th:nth-child(10) { /* Telefone */
+            width: auto;
+        }
+        thead th:nth-child(11) { /* DRE */
+            width: auto;
+        }
+        thead th:nth-child(12) { /* Código EOL */
+            width: auto;
+            text-align: center;
+        }
+        thead th:nth-child(13) { /* Tipo da unidade */
+            width: auto;
+        }
+        thead th:nth-child(14) { /* Unidade */
+            width: auto;
+        }
+        thead th:nth-child(15) { /* Tipo da vaga */
+            width: auto;
+            text-align: center;
+        }
+
+        tbody tr {
+            background-color: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        tbody td {
+            padding: 4px 3px;
+            border: 1px solid #e0e0e0;
+            vertical-align: middle;
+            font-size: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        tbody td:empty::before {
+            content: "-";
+            color: #999;
+        }
+
+        /* Alinhamentos específicos */
+        tbody td:nth-child(2), /* Class */
+        tbody td:nth-child(3), /* Def */
+        tbody td:nth-child(4), /* NNA */
+        tbody td:nth-child(12), /* Código EOL */
+        tbody td:nth-child(15) { /* Tipo da vaga */
+            text-align: center;
+        }
+
+        /* Estilos para tipo de vaga */
+        .tipo-vaga-d {
+            font-weight: 600;
+            color: #2d5016;
+        }
+
+        .tipo-vaga-p {
+            font-weight: 600;
+            color: #d97706;
+        }
+
+        /* Estilos específicos para PDF */
+        @media print {
+            body {
+                font-size: 7px;
+            }
+
+            .cabecalho {
+                page-break-after: avoid;
+                font-size: 10px;
+                padding: 8px;
+                margin-bottom: 10px;
+            }
+
+            h1 {
+                page-break-after: avoid;
+                font-size: 11px;
+                margin-bottom: 10px;
+            }
+
+            .table-container {
+                margin-top: 10px;
+            }
+
+            table {
+                font-size: 7px;
+                page-break-inside: auto;
+                table-layout: fixed;
+                width: 100%;
+            }
+
+            thead th {
+                padding: 3px 2px;
+                font-size: 7px;
+                white-space: normal;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            tbody td {
+                padding: 2px;
+                font-size: 7px;
+                page-break-inside: avoid;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                white-space: normal;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tbody {
+                display: table-row-group;
+            }
+
+            tbody tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            /* Garantir que o rodapé não seja quebrado */
+            .total-rodape {
+                page-break-before: avoid;
+                font-size: 8px;
+                padding: 8px;
+                margin-top: 10px;
+            }
+        }
+
+        /* Estilos específicos para WeasyPrint (PDF) */
+        @page {
+            size: A4 landscape;
+            margin: 0.5cm;
+        }
+
+        /* Ajustar merge cells para 15 colunas */
+        .merge-15 {
+            grid-column: 1 / 16;
+        }
+
+        .total-rodape {
+            margin-top: 20px;
+            padding: 10px;
+            text-align: right;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cabecalho">
+            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
+        </div>
+        
+        <h1>Listagem de Escolhas por DREs</h1>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cargo</th>
+                        <th>Class</th>
+                        <th>Def</th>
+                        <th>NNA</th>
+                        <th>RF</th>
+                        <th>RG</th>
+                        <th>CPF</th>
+                        <th>Inscrição</th>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>DRE</th>
+                        <th>Código EOL</th>
+                        <th>Tipo da unidade</th>
+                        <th>Unidade</th>
+                        <th>Tipo da vaga</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cargo in cargos %}
+                        {% for item in cargo.escolhas %}
+                            <tr>
+                                <td>{{ cargo.descricao|default:"-" }}</td>
+                                <td>{{ item.classificacao|default:"-" }}</td>
+                                <td>{{ item.classificacao_deficiente|default:"-" }}</td>
+                                <td>{{ item.classificacao_nna|default:"-" }}</td>
+                                <td>{{ item.rf|default:"-" }}</td>
+                                <td>{{ item.rg|default:"-" }}</td>
+                                <td>{{ item.cpf|default:"-" }}</td>
+                                <td>{{ item.inscricao|default:"-" }}</td>
+                                <td>{{ item.nome|default:"-" }}</td>
+                                <td>{{ item.telefone|default:"-" }}</td>
+                                <td>{{ item.dre|default:"-" }}</td>
+                                <td>{{ item.codigo_eol|default:"-" }}</td>
+                                <td>{{ item.tipo_ue|default:"-" }}</td>
+                                <td>{{ item.unidade|default:"-" }}</td>
+                                <td class="{% if item.tipo_vaga == 'D' %}tipo-vaga-d{% elif item.tipo_vaga == 'P' %}tipo-vaga-p{% endif %}">
+                                    {{ item.tipo_vaga|default:"-" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="15" style="text-align: center; padding: 20px; color: #999;">
+                                Nenhuma escolha encontrada.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="total-rodape">
+            <strong>Total de escolhas:</strong> {{ total_escolhas }}
+        </div>
+    </div>
+</body>
+</html>

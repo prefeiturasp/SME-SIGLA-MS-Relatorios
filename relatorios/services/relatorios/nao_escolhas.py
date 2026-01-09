@@ -7,6 +7,7 @@ from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.escolhas_api_service import EscolhasService
 from relatorios.services.candidatos_api_service import CandidatosService
 from relatorios.services.processos_api_service import ProcessosService
+from relatorios.utils import convert_uuids_to_strings
 
 try:
     from openpyxl import Workbook
@@ -155,6 +156,9 @@ class NaoEscolhas(RelatorioBase):
             })
         # Agrupar por cargo
         cargos_list = self._agrupar_por_cargo(candidatos_com_escolhas)
+        
+        # Converter todos os UUIDs para strings para garantir serialização JSON
+        cargos_list = convert_uuids_to_strings(cargos_list)
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
         cabecalho_input = (cabecalho or '').strip()

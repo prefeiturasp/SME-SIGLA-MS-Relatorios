@@ -4,6 +4,7 @@ Factory para criação de instâncias de relatórios baseado no tipo.
 from relatorios.services.relatorios.lauda_vagas import LaudaVagas
 from relatorios.services.relatorios.relacao_vagas import RelacaoVagas
 from relatorios.services.relatorios.nao_escolhas import NaoEscolhas
+from relatorios.services.relatorios.listagem_escolhas_dres import ListagemEscolhasDres
 
 
 class RelatorioFactory:
@@ -16,12 +17,12 @@ class RelatorioFactory:
         'LAUDA_VAGAS': LaudaVagas,
         'RELACAO_VAGAS': RelacaoVagas,
         'NAO_ESCOLHAS': NaoEscolhas,
+        'LISTAGEM_ESCOLHAS_DRES': ListagemEscolhasDres,
         # TODO: Adicionar outros tipos quando implementados
         # 'LAUDA_CONVOCACAO': LaudaConvocacao,
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
         # 'CAPA_ATA_ESCOLHAS': CapaAtaEscolhas,
         # 'RESULTADO_ESCOLHA_VAGAS': ResultadoEscolhaVagas,
-        # 'LISTAGEM_ESCOLHAS_DRES': ListagemEscolhasDres,
         # 'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao,
     }
     
