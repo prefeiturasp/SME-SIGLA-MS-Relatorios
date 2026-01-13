@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from relatorios.models import Relatorio
-from relatorios.serializers.relatorio_create import RelatorioCreateSerializer
+from relatorios.serializers import RelatorioCreateSerializer, RelatorioSerializer
 from relatorios.services.factory.relatorio_factory import RelatorioFactory
 from relatorios.utils import CustomPagination
 
@@ -17,7 +17,7 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     ViewSet para gerenciar relatorios.
     """
     queryset = Relatorio.objects.all()
-    serializer_class = RelatorioCreateSerializer
+    serializer_class = RelatorioSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['tipo']
@@ -26,7 +26,7 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     ordering = ['-criado_em']
     pagination_class = CustomPagination
 
-    def create(self, request, *args, **kwargs):   
+    def create(self, request, *args, **kwargs):
         serializer = RelatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -65,7 +65,7 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                 serializer.save(dados=dados)
                 logger.info('Relatório salvo no banco de dados - tipo: %s, usuario: %s', tipo_relatorio, usuario)
             except Exception as exc:
-                logger.error('Erro ao salvar relatório no banco de dados: %s', exc, exc_info=True)            
+                logger.error('Erro ao salvar relatório no banco de dados: %s', exc, exc_info=True)
 
             return response
 

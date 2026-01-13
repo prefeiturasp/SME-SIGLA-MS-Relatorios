@@ -19,7 +19,7 @@ class Relatorio(BaseModel):
         verbose_name_plural = "Relatórios"
         ordering = ['-criado_em']
         db_table = 'relatorios'
-    
+
     def __str__(self):
         return f"{self.tipo} - {self.criado_em}"
 

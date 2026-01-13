@@ -3,6 +3,7 @@ from .relacao_vagas import RelacaoVagas
 from .nao_escolhas import NaoEscolhas
 from .listagem_escolhas_dres import ListagemEscolhasDres
 from .reconvocacao import Reconvocacao
+from .lauda_convocacao import LaudaConvocacao
 
-__all__ = ['LaudaVagas', 'RelacaoVagas', 'NaoEscolhas', 'ListagemEscolhasDres', 'Reconvocacao']
+__all__ = ['LaudaVagas', 'RelacaoVagas', 'NaoEscolhas', 'ListagemEscolhasDres', 'Reconvocacao', 'LaudaConvocacao']
 
