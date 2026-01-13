@@ -6,6 +6,7 @@ from relatorios.services.relatorios.relacao_vagas import RelacaoVagas
 from relatorios.services.relatorios.nao_escolhas import NaoEscolhas
 from relatorios.services.relatorios.listagem_escolhas_dres import ListagemEscolhasDres
 from relatorios.services.relatorios.reconvocacao import Reconvocacao
+from relatorios.services.relatorios.sumula_escolhas import SumulaEscolhas
 
 class RelatorioFactory:
     """
@@ -16,9 +17,10 @@ class RelatorioFactory:
     _MAPA = {
         'LAUDA_VAGAS': LaudaVagas,
         'RELACAO_VAGAS': RelacaoVagas,
-        'NAO_ESCOLHAS': NaoEscolhas,
+        'SUMULA_NAO_ESCOLHAS': NaoEscolhas,
         'LISTAGEM_ESCOLHAS_DRES': ListagemEscolhasDres,
-        'RECONVOCACAO': Reconvocacao,
+        'SUMULA_RECONVOCACAO': Reconvocacao,
+        'SUMULA_ESCOLHAS': SumulaEscolhas,
         # TODO: Adicionar outros tipos quando implementados
         # 'LAUDA_CONVOCACAO': LaudaConvocacao,
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
