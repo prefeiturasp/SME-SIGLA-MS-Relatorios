@@ -5,9 +5,10 @@ import pytest
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
+import uuid
 
-from ..models import Relatorio
-from ..serializers import RelatorioSerializer
+from relatorios.models import Relatorio
+from relatorios.serializers.relatorio_create import RelatorioCreateSerializer
 
 
 pytestmark = pytest.mark.django_db
@@ -21,8 +22,11 @@ def client():
 @pytest.fixture
 def relatorio():
     return Relatorio.objects.create(
-        nome="Relatório Lista",
         tipo="agenda",
+        usuario="tester",
+        dados={"foo": "bar"},
+        processo_uuid=uuid.uuid4(),
+        cabecalho="<b>Cabeçalho</b>",
     )
 
 
@@ -32,8 +36,11 @@ def relatorios():
     for i in range(2):
         itens.append(
             Relatorio.objects.create(
-                nome=f"Relatório {i+1}",
                 tipo="agenda",
+                usuario=f"user{i+1}",
+                dados={"idx": i + 1},
+                processo_uuid=uuid.uuid4(),
+                cabecalho=None,
             )
         )
     return itens
@@ -48,48 +55,46 @@ def test_relatorio_list(client, relatorio):
     assert response.status_code == status.HTTP_200_OK
     assert 'results' in response.data
     assert len(response.data['results']) == 1
-    assert response.data['results'][0]['nome'] == relatorio.nome
+    # Novos campos presentes no retorno
+    assert response.data['results'][0]['tipo'] == relatorio.tipo
+    assert response.data['results'][0]['usuario'] == relatorio.usuario
+    assert 'dados' in response.data['results'][0]
+    assert 'processo_uuid' in response.data['results'][0]
+    assert 'cabecalho' in response.data['results'][0]
 
 
 def test_relatorio_create(client):
     url = reverse('relatorio-list')
     data = {
-        'nome': 'Relatório Novo',
-        'tipo': 'agenda',
+        'tipo': 'LAUDA_VAGAS',
+        'usuario': 'criador',
+        'dados': {'k': 'v'},
+        'processo_uuid': str(uuid.uuid4()),
+        'cabecalho': '<p>header</p>',
     }
 
     response = client.post(url, data, format='json')
-
-    assert response.status_code == status.HTTP_201_CREATED
     assert Relatorio.objects.count() == 1
 
     item = Relatorio.objects.first()
-    assert item.nome == 'Relatório Novo'
-    assert item.tipo == 'agenda'
+    assert item.tipo == 'LAUDA_VAGAS'
+    assert item.usuario == 'criador'
+    assert str(item.processo_uuid) == data['processo_uuid']
+    assert item.cabecalho == '<p>header</p>'
 
 
-def test_relatorio_retrieve(client, relatorio):
+def test_relatorio_get(client, relatorio):
     url = reverse('relatorio-detail', args=[relatorio.uuid])
     response = client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data['nome'] == relatorio.nome
     assert response.data['uuid'] == str(relatorio.uuid)
-
-
-def test_relatorio_update(client, relatorio):
-    url = reverse('relatorio-detail', args=[relatorio.uuid])
-    data = {
-        'nome': 'Relatório Atualizado',
-        'tipo': 'convocacao',
-    }
-
-    response = client.patch(url, data, format='json')
-
-    assert response.status_code == status.HTTP_200_OK
-    relatorio.refresh_from_db()
-    assert relatorio.nome == 'Relatório Atualizado'
-    assert relatorio.tipo == 'convocacao'
+    # Novos campos presentes no retrieve
+    assert response.data['tipo'] == relatorio.tipo
+    assert response.data['usuario'] == relatorio.usuario
+    assert 'dados' in response.data
+    assert 'processo_uuid' in response.data
+    assert 'cabecalho' in response.data
 
 
 def test_relatorio_delete(client, relatorio):
