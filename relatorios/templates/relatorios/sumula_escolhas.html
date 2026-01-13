@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Vagas por Cargo e DRE</title>
+    <title>Súmula de Escolhas</title>
     <style>
         * {
             margin: 0;
@@ -50,7 +50,6 @@
             margin-bottom: 15px;
             margin-top: 15px;
             border: 1px solid #e0e0e0;
-            
         }
         
         .cargo-section:first-child {
@@ -68,7 +67,6 @@
         .dre-section {
             margin: 20px;
             border: 1px solid #ddd;
-            
         }
 
         .dre-header {
@@ -76,6 +74,19 @@
             color: white;
             padding: 15px 20px;
             font-size: 16px;
+            font-weight: 500;
+        }
+
+        .escola-section {
+            margin: 15px;
+            border: 1px solid #ccc;
+        }
+
+        .escola-header {
+            background-color: #5a6c7d;
+            color: white;
+            padding: 12px 18px;
+            font-size: 15px;
             font-weight: 500;
         }
 
@@ -87,7 +98,6 @@
             width: 100%;
             border-collapse: collapse;
             background-color: white;
-            table-layout: fixed;
         }
 
         thead {
@@ -103,28 +113,10 @@
             font-size: 14px;
         }
 
-        th:nth-child(1) {
-            width: 15%;
-        }
-
-        th:nth-child(2) {
-            width: 50%;
-        }
-
-        th:nth-child(3) {
-            width: 17.5%;
-        }
-
-        th:nth-child(4) {
-            width: 17.5%;
-        }
-
         td {
             padding: 12px 15px;
             border-bottom: 1px solid #ecf0f1;
             font-size: 14px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
         }
 
         tbody tr:last-child td {
@@ -136,26 +128,8 @@
             margin: 1.5cm;
         }
 
-        .tipo-unidade {
-            color: #7f8c8d;
-            font-size: 13px;
-        }
-
-        .numero-vaga {
+        .text-center {
             text-align: center;
-            font-weight: 600;
-        }
-
-        .vaga-definitiva {
-            color: #27ae60;
-        }
-
-        .vaga-precaria {
-            color: #9b59b6;
-        }
-
-        .sem-vagas {
-            color: #95a5a6;
         }
 
         @media print {
@@ -166,9 +140,7 @@
 
             .container {
                 padding: 0;
-            }   
-
-            
+            }
         }
     </style>
 </head>
@@ -178,7 +150,7 @@
             {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
         </div>
         
-        <h1>Relação de Vagas</h1>
+        <h1>Súmula de Escolhas</h1>
 
         {% for cargo in cargos %}
             <div class="cargo-section">
@@ -191,35 +163,35 @@
                         <div class="dre-header">
                             DRE - {{ dre.nome }}
                         </div>
-                        
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Tipo de unidade</th>
-                                        <th>Unidade</th>
-                                        <th style="text-align: center;">Vagas Definitivas</th>
-                                        <th style="text-align: center;">Vagas Precárias</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for vaga in dre.vagas %}
-                                        <tr>
-                                            <td class="tipo-unidade">
-                                                {{ vaga.escola.tipo_ue|default:"-" }}
-                                            </td>
-                                            <td>{{ vaga.escola.nome_oficial }}</td>
-                                            <td class="numero-vaga {% if vaga.vagas_definitivas > 0 %}vaga-definitiva{% else %}sem-vagas{% endif %}">
-                                                {{ vaga.vagas_definitivas|default:0 }}
-                                            </td>
-                                            <td class="numero-vaga {% if vaga.vagas_precarias > 0 %}vaga-precaria{% else %}sem-vagas{% endif %}">
-                                                {{ vaga.vagas_precarias|default:0 }}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+
+                        {% for escola in dre.escolas %}
+                            <div class="escola-section">
+                                <div class="escola-header">
+                                    {{ escola.nome }}
+                                </div>
+                                
+                                <div class="table-container">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align: center;">Classificação</th>
+                                                <th>Candidatos</th>
+                                                <th style="text-align: center;">Tipo da Vaga</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for escolha in escola.escolhas %}
+                                                <tr>
+                                                    <td class="text-center">{{ escolha.classificacao|default:"-" }}</td>
+                                                    <td>{{ escolha.nome_candidato|default:"-" }}</td>
+                                                    <td class="text-center">{{ escolha.tipo_vaga|default:"-" }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 {% endfor %}
             </div>
@@ -227,3 +199,4 @@
     </div>
 </body>
 </html>
+

@@ -65,10 +65,10 @@ class EscolhasService:
         
         Args:
             candidato_uuids: Lista de UUIDs dos candidatos
-            situacao: Situação da escolha (padrão: 'nao-escolha')
+            situacao: Situação da escolha (padrão: 'nao-escolha'). Se None, retorna todas as escolhas.
             
         Returns:
-            Lista de escolhas filtradas por situação
+            Lista de escolhas filtradas por situação (ou todas se situacao=None)
             
         Raises:
             RequestException: Em caso de erro na requisição
@@ -97,8 +97,11 @@ class EscolhasService:
             else:
                 escolhas = []
             
-            # Filtrar por situação
-            escolhas_filtradas = [e for e in escolhas if e.get('situacao') == situacao]
+            # Filtrar por situação apenas se situacao não for None
+            if situacao is None:
+                escolhas_filtradas = escolhas
+            else:
+                escolhas_filtradas = [e for e in escolhas if e.get('situacao') == situacao]
             
             logger.info('Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)', 
                        len(candidato_uuids), situacao, len(escolhas_filtradas))
