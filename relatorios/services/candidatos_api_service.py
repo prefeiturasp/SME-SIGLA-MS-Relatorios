@@ -13,11 +13,11 @@ class CandidatosService:
     """
     Service para integração com API de candidatos.
     """
-    
+
     def __init__(self, base_url: str = 'https://example.com', timeout_seconds: int = 30):
         """
         Inicializa o serviço de candidatos.
-        
+
         Args:
             base_url: URL base da API de candidatos
             timeout_seconds: Timeout em segundos para as requisições
@@ -37,20 +37,20 @@ class CandidatosService:
     ) -> requests.Response:
         """
         Busca candidatos habilitados por processo_uuid, ordenados por ranking_escolha.
-        
+
         Args:
             processo_uuid: UUID do processo de convocação
             codigo_cargo: Código(s) de cargo para filtragem (opcional)
             ordering: Campo para ordenação (padrão: 'ranking_escolha')
-            
+
         Returns:
             Response da API com os candidatos habilitados
-            
+
         Raises:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/habilitados/"
-        
+
         params = {
             'processo_uuid': processo_uuid,
             'ordering': ordering,
@@ -67,7 +67,7 @@ class CandidatosService:
                     params['codigo_cargo__in'] = codigo_cargo_param
                 else:
                     params['codigo_cargo'] = codigo_cargo_param
-        
+
         try:
             response = requests.get(
                 url,
@@ -103,32 +103,32 @@ class CandidatosService:
         """
         Busca candidatos habilitados em múltiplos processos com classificações específicas.
         Suporta filtros por classificacao e/ou classificacao_nna de forma flexível.
-        
+
         Args:
             processo_uuids: Lista de UUIDs dos processos ou string com UUIDs separados por vírgula
             classificacao: Lista de classificações ou string com classificações separadas por vírgula (opcional)
             classificacao_nna: Lista de classificações NNA ou string com classificações separadas por vírgula (opcional)
             codigo_cargo: Lista de códigos de cargo ou string com códigos separados por vírgula (opcional)
             ordering: Campo para ordenação (padrão: 'ranking_escolha')
-            
+
         Returns:
             Response da API com os candidatos habilitados
-            
+
         Raises:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/habilitados/"
-        
+
         # Normaliza processo_uuids para string separada por vírgula
         if isinstance(processo_uuids, list):
             processo_uuid_param = ','.join(processo_uuids)
         else:
             processo_uuid_param = processo_uuids
-        
+
         params = {
             'ordering': ordering,
         }
-        
+
         # Adiciona processo_uuid - django-filter aceita vírgulas com sufixo __in
         # Para múltiplos valores, usa o formato: processo_uuid__in=uuid1,uuid2
         if isinstance(processo_uuids, list):
@@ -158,7 +158,7 @@ class CandidatosService:
                     params['classificacao__in'] = classificacao_param
                 else:
                     params['classificacao'] = classificacao_param
-        
+
         # Adiciona classificacao_nna se fornecido
         # django-filter aceita vírgulas: classificacao_nna__in=1,2,3
         if classificacao_nna is not None:
@@ -174,7 +174,7 @@ class CandidatosService:
                     params['classificacao_nna__in'] = classificacao_nna_param
                 else:
                     params['classificacao_nna'] = classificacao_nna_param
-        
+
         # Adiciona codigo_cargo se fornecido
         # django-filter aceita vírgulas: codigo_cargo__in=cod1,cod2
         if codigo_cargo is not None:
@@ -190,7 +190,7 @@ class CandidatosService:
                     params['codigo_cargo__in'] = codigo_cargo_param
                 else:
                     params['codigo_cargo'] = codigo_cargo_param
-        
+
         try:
             response = requests.get(
                 url,
@@ -226,27 +226,27 @@ class CandidatosService:
     ) -> requests.Response:
         """
         Busca candidatos habilitados por uma lista de UUIDs usando método POST.
-        
+
         Args:
             uuids: Lista de UUIDs dos candidatos
             order_by: Campo para ordenação (padrão: 'ranking_escolha')
-            
+
         Returns:
             Response da API com os candidatos habilitados
-            
+
         Raises:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/habilitados/buscar-por-uuids/"
-        
+
         params = {
             'order_by': order_by,
         }
-        
+
         payload = {
             'uuids': uuids
         }
-        
+
         try:
             response = requests.post(
                 url,
@@ -279,11 +279,11 @@ class CandidatosService:
         """
         Itera sobre as agendas retornadas e busca candidatos para cada agenda
         usando os candidatos_uuids de cada uma.
-        
+
         Args:
             agendas_response: Response da API de agendas (deve conter 'results' com lista de agendas)
             order_by: Campo para ordenação (padrão: 'ranking_escolha')
-            
+
         Returns:
             Dicionário com agendas e seus respectivos candidatos:
             {
@@ -295,13 +295,13 @@ class CandidatosService:
                     ...
                 ]
             }
-            
+
         Raises:
             RequestException: Em caso de erro nas requisições
         """
         try:
             agendas_data = agendas_response.json()
-            
+
             # Extrair lista de agendas (pode estar em 'results' ou ser uma lista direta)
             if isinstance(agendas_data, dict) and 'results' in agendas_data:
                 agendas = agendas_data['results']
@@ -309,16 +309,16 @@ class CandidatosService:
                 agendas = agendas_data
             else:
                 agendas = []
-            
+
             logger.info('Processando %d agendas para buscar candidatos', len(agendas))
-            
+
             resultado = {
                 'agendas': []
             }
-            
+
             for agenda in agendas:
                 candidatos_uuids = agenda.get('candidatos_uuids', [])
-                
+
                 if not candidatos_uuids:
                     logger.warning(
                         'Agenda %s não possui candidatos_uuids',
@@ -329,16 +329,16 @@ class CandidatosService:
                         'candidatos': []
                     })
                     continue
-                
+
                 try:
                     # Buscar candidatos usando os UUIDs da agenda
                     response_candidatos = self.buscar_por_uuids(
                         uuids=candidatos_uuids,
                         order_by=order_by
                     )
-                    
+
                     candidatos_data = response_candidatos.json()
-                    
+
                     # Extrair lista de candidatos (pode ser uma lista direta ou um objeto com 'results')
                     if isinstance(candidatos_data, dict) and 'results' in candidatos_data:
                         candidatos = candidatos_data['results']
@@ -346,19 +346,19 @@ class CandidatosService:
                         candidatos = candidatos_data
                     else:
                         candidatos = []
-                    
+
                     logger.info(
                         'Encontrados %d candidatos para agenda %s (de %d UUIDs)',
                         len(candidatos),
                         agenda.get('uuid', 'desconhecido'),
                         len(candidatos_uuids)
                     )
-                    
+
                     resultado['agendas'].append({
                         'agenda': agenda,
                         'candidatos': candidatos
                     })
-                    
+
                 except RequestException as exc:
                     logger.error(
                         'Erro ao buscar candidatos para agenda %s: %s',
@@ -371,18 +371,60 @@ class CandidatosService:
                         'candidatos': [],
                         'erro': str(exc)
                     })
-            
+
             logger.info(
                 'Processamento concluído: %d agendas processadas',
                 len(resultado['agendas'])
             )
-            
+
             return resultado
-            
+
         except Exception as exc:
             logger.error(
                 'Erro ao processar agendas e buscar candidatos: %s',
                 exc
             )
+            raise
+
+    def buscar_concurso_candidatos_por_processo(
+        self,
+        processo_uuid: str
+    ) -> requests.Response:
+        """
+        Busca ConcursoCandidato por processo_uuid.
+        Tenta usar o endpoint /api/v1/candidatos/ que pode retornar ConcursoCandidato
+        através do relacionamento 'concursos'.
+
+        Args:
+            processo_uuid: UUID do processo de convocação
+
+        Returns:
+            Response da API com os dados (pode ser Candidato ou ConcursoCandidato)
+
+        Raises:
+            RequestException: Em caso de erro na requisição
+        """
+        # O endpoint /api/v1/candidatos/ pode retornar Candidato com relacionamento concursos
+        # Ou pode ter uma lógica customizada que retorna ConcursoCandidato
+        # Vamos tentar buscar e ver o que retorna
+        url = f"{self.base_url}/api/v1/habilitados/"
+
+        params = {
+            'processo_uuid': processo_uuid,
+            'page_size': 10000,
+        }
+
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds
+            )
+            response.raise_for_status()
+            logger.info('Dados buscados via /api/v1/habilitados/ (processo_uuid=%s)', processo_uuid)
+            return response
+        except RequestException as exc:
+            logger.error('Erro ao buscar ConcursoCandidato: %s', exc)
             raise
 
