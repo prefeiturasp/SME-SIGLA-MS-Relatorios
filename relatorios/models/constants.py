@@ -9,6 +9,8 @@ TIPOS_RELATORIOS = [
     ('LISTAGEM_ESCOLHAS_DRES', 'Listagem de Escolhas por DREs'),
     ('SUMULA_RECONVOCACAO', 'Súmula de Reconvocados'),
     ('SUMULA_ESCOLHAS', 'Súmula de Escolhas'),
+    ('RECONVOCACAO', 'Súmula de Reconvocados'),
+    ('LAUDA_CONVOCACAO', 'Lauda de Convocação'),
     # Adicione outros tipos de relatórios aqui conforme necessário
 ]
 

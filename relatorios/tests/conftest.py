@@ -11,8 +11,11 @@ from ..models import Relatorio
 def relatorio():
     """Cria um Relatorio de teste."""
     return Relatorio.objects.create(
-        nome="Relatório Teste",
         tipo="agenda",
+        usuario="tester",
+        dados={"foo": "bar"},
+        processo_uuid=uuid.uuid4(),
+        cabecalho="<b>Cabeçalho</b>",
     )
 
 
@@ -23,8 +26,11 @@ def relatorios_multiplos():
     for i in range(3):
         itens.append(
             Relatorio.objects.create(
-                nome=f"Relatório {i+1}",
                 tipo="agenda",
+                usuario=f"user{i+1}",
+                dados={"idx": i + 1},
+                processo_uuid=uuid.uuid4(),
+                cabecalho=None,
             )
         )
     return itens
