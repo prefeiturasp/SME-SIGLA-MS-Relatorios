@@ -28,7 +28,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class Reconvocacao(RelatorioBase):
+class SumulaReconvocacao(RelatorioBase):
     """
     Classe concreta responsável por gerar o relatório de Reconvocados.
     """
