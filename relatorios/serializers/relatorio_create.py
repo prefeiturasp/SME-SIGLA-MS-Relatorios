@@ -13,6 +13,12 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
     usuario = serializers.CharField(required=True, help_text="RF do usuário")
     processo_uuid = serializers.UUIDField(required=True, help_text="UUID do processo")
     cabecalho = serializers.CharField(required=False, allow_blank=True, help_text="Cabeçalho do relatório (opcional)")
+    candidatos_uuids = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        allow_empty=True,
+        help_text="Lista opcional de UUIDs de candidatos"
+    )
 
     class Meta:
         model = Relatorio
@@ -20,7 +26,8 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
             'tipo',
             'usuario',
             'processo_uuid',
-            'cabecalho'
+            'cabecalho',
+            'candidatos_uuids',
         ]
 
     def validate_tipo(self, value):

@@ -30,7 +30,7 @@ class LaudaVagas(RelatorioBase):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Lauda de Vagas.
         
@@ -68,7 +68,6 @@ class LaudaVagas(RelatorioBase):
         cabecalho_input = (cabecalho or '').strip()
         cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
         cabecalho_padrao = settings.RELATORIO_CABECALHO_PADRAO
-        
         if formato == 'xls':
             filename = f'relatorio_vagas_{processo_uuid}.xlsx'
             logger.info('Gerando Excel: %s', filename)
@@ -102,7 +101,7 @@ class LaudaVagas(RelatorioBase):
                 context
             )
             return response, cargos_list
-    
+
     def _agrupar_vagas(self, vagas: list) -> dict:
         """
         Agrupa vagas por cargo_codigo e depois por DRE codigo.

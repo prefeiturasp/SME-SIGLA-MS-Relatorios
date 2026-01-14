@@ -195,7 +195,7 @@ class ListagemEscolhasDres(RelatorioBase):
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
             raise
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Listagem de Escolhas por DREs.
         

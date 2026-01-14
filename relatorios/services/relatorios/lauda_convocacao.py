@@ -27,7 +27,7 @@ class LaudaConvocacao(RelatorioBase):
             agendas_base_url=settings.AGENDAS_API_URL
         )
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Lauda de Convocação.
         
