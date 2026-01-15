@@ -6,5 +6,16 @@ from .reconvocacao import SumulaReconvocacao
 from .sumula_escolhas import SumulaEscolhas
 from .reconvocacao import SumulaReconvocacao
 from .lauda_convocacao import LaudaConvocacao
+from .resultado_escolha import ResultadoEscolha
 
-__all__ = ['LaudaVagas', 'RelacaoVagas', 'SumulaNaoEscolhas', 'ListagemEscolhasDres', 'SumulaReconvocacao', 'SumulaEscolhas', 'SumulaReconvocacao', 'LaudaConvocacao']
+__all__ = [
+    'LaudaVagas', 
+    'RelacaoVagas', 
+    'SumulaNaoEscolhas', 
+    'ListagemEscolhasDres', 
+    'SumulaReconvocacao', 
+    'SumulaEscolhas', 
+    'SumulaReconvocacao', 
+    'LaudaConvocacao', 
+    'ResultadoEscolha',
+]

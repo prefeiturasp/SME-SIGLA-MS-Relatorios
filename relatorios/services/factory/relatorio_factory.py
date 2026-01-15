@@ -8,7 +8,8 @@ from relatorios.services.relatorios import (
     ListagemEscolhasDres,
     SumulaReconvocacao,
     SumulaEscolhas,
-    LaudaConvocacao
+    LaudaConvocacao,
+    ResultadoEscolha
 )
 
 
@@ -26,6 +27,9 @@ class RelatorioFactory:
         'SUMULA_RECONVOCACAO': SumulaReconvocacao,
         'SUMULA_ESCOLHAS': SumulaEscolhas,
         'LAUDA_CONVOCACAO': LaudaConvocacao,
+        'RESULTADO_ESCOLHA_SIM': ResultadoEscolha,
+        'RESULTADO_ESCOLHA_NAO': ResultadoEscolha,
+        'RESULTADO_ESCOLHA_RECONVOCACAO': ResultadoEscolha,
         # TODO: Adicionar outros tipos quando implementados
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
         # 'RESULTADO_ESCOLHA_VAGAS': ResultadoEscolhaVagas,
@@ -52,4 +56,4 @@ class RelatorioFactory:
         if not classe:
             raise ValueError(f"O tipo '{tipo_slug}' não é um relatório válido.")
 
-        return classe() 
+        return classe(tipo=tipo_slug) 
