@@ -91,7 +91,9 @@
         </div>
 
         <h1>Lista de Candidatos por Sessão</h1>
-
+        <h4>Data: {{ agenda.escolha_em|slice:"8:10" }}/{{ agenda.escolha_em|slice:"5:7" }}/{{ agenda.escolha_em|slice:":4" }}</h4>
+        <h4>Horário: {{ agenda.hora_convocacao_inicio|slice:":5" }} às {{ agenda.hora_convocacao_fim|slice:":5" }}</h4>
+        <h4>{{ agenda.sessao }}</h4>
         <div class="table-container">
             <table>
                 <thead>

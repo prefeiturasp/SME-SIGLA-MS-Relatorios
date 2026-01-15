@@ -13,11 +13,10 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
     usuario = serializers.CharField(required=True, help_text="RF do usuário")
     processo_uuid = serializers.UUIDField(required=True, help_text="UUID do processo")
     cabecalho = serializers.CharField(required=False, allow_blank=True, help_text="Cabeçalho do relatório (opcional)")
-    candidatos_uuids = serializers.ListField(
-        child=serializers.CharField(),
+    agenda_uuid = serializers.CharField(
         required=False,
-        allow_empty=True,
-        help_text="Lista opcional de UUIDs de candidatos"
+        allow_blank=True,
+        help_text="UUID da agenda (opcional)"
     )
 
     class Meta:
@@ -27,7 +26,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
             'usuario',
             'processo_uuid',
             'cabecalho',
-            'candidatos_uuids',
+            'agenda_uuid',
         ]
 
     def validate_tipo(self, value):
@@ -40,6 +39,21 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
                 f"Tipo inválido. Tipos válidos: {', '.join(tipos_validos)}"
             )
         return value
+
+    def validate_cabecalho(self, value: str) -> str:
+        """
+        Se o cabeçalho vier apenas com tags HTML vazias (p/br/hX vazios), considera vazio.
+        Mantém o HTML quando houver texto de fato.
+        """
+        try:
+            from django.utils.html import strip_tags as _strip
+            texto = _strip(value or '').replace('&nbsp;', ' ').strip()
+            if not texto:
+                return ''
+            return value
+        except Exception:
+            # Em caso de qualquer problema na sanitização, mantém o valor original
+            return value
 
     def save(self, dados=None, **kwargs):
         """

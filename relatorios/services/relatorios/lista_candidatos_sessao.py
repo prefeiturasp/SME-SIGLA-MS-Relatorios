@@ -6,6 +6,7 @@ from django.conf import settings
 
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.candidatos_api_service import CandidatosService
+from relatorios.services.agendas_api_service import AgendasService
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class ListaCandidatosSessao(RelatorioBase):
 
     def __init__(self):
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
+        self.agendas_service = AgendasService(base_url=settings.AGENDAS_API_URL)
 
     def _fetch_candidatos(self, candidatos_uuids: List[str], order_by: str = 'ranking_escolha') -> List[Dict[str, Any]]:
         if not candidatos_uuids:
@@ -58,9 +60,9 @@ class ListaCandidatosSessao(RelatorioBase):
             'cpf': cand.get('cpf') or item.get('cpf'),
         }
 
-    def _build_context(self, candidatos: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_context(self, candidatos: List[Dict[str, Any]], agenda_data: Dict[str, Any]) -> Dict[str, Any]:
         linhas = [self._flatten_candidato(c) for c in candidatos]
-        return {'candidatos': linhas}
+        return {'candidatos': linhas, 'agenda': agenda_data}
 
     def _render_xls(self, context: Dict[str, Any], filename: str = 'lista_candidatos_sessao.xlsx') -> HttpResponse:
         if not OPENPYXL_AVAILABLE:
@@ -77,16 +79,59 @@ class ListaCandidatosSessao(RelatorioBase):
         left = Alignment(horizontal='left', vertical='center')
         border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
+        # Título e informações da agenda acima da tabela
+        row_idx = 1
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        title_cell = ws.cell(row=row_idx, column=1)
+        title_cell.value = "Lista de Candidatos por Sessão"
+        title_cell.font = Font(bold=True, size=14)
+        title_cell.alignment = center
+        row_idx += 2  # linha em branco após o título
+        agenda = context.get('agenda') or {}
+        escolha_em = agenda.get('escolha_em') or ''
+        hora_ini = agenda.get('hora_convocacao_inicio') or ''
+        hora_fim = agenda.get('hora_convocacao_fim') or ''
+        sessao = agenda.get('sessao') or ''
+        def _fmt_data(date_str: str) -> str:
+            return f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}" if len(date_str) >= 10 else date_str
+        def _fmt_hora(time_str: str) -> str:
+            return time_str[:5] if len(time_str) >= 5 else time_str
+        if escolha_em:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1)
+            c.value = f"Data: {_fmt_data(escolha_em)}"
+            c.font = Font(bold=True, size=12)
+            c.alignment = left
+            row_idx += 1
+        if hora_ini or hora_fim:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1)
+            ini = _fmt_hora(hora_ini) if hora_ini else ''
+            fim = _fmt_hora(hora_fim) if hora_fim else ''
+            c.value = f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}"
+            c.font = Font(bold=True, size=12)
+            c.alignment = left
+            row_idx += 1
+        if sessao:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1)
+            c.value = str(sessao)
+            c.font = Font(bold=True, size=12)
+            c.alignment = left
+            row_idx += 1
+        if row_idx > 1:
+            row_idx += 1
+
         headers = ['Classificação', 'Classificação NNA', 'Classificação PCD', 'Inscrição', 'Nome', 'CPF']
         for col, h in enumerate(headers, start=1):
-            cell = ws.cell(row=1, column=col)
+            cell = ws.cell(row=row_idx, column=col)
             cell.value = h
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = center
             cell.border = border
 
-        for i, row in enumerate(context.get('candidatos', []), start=2):
+        for i, row in enumerate(context.get('candidatos', []), start=row_idx + 1):
             values = [
                 row.get('classificacao'),
                 row.get('classificacao_nna'),
@@ -126,6 +171,24 @@ class ListaCandidatosSessao(RelatorioBase):
 
         doc = Document()
         doc.add_heading('Lista de Candidatos por Sessão', level=1)
+        # Informações da agenda no topo
+        agenda = context.get('agenda') or {}
+        escolha_em = agenda.get('escolha_em') or ''
+        hora_ini = agenda.get('hora_convocacao_inicio') or ''
+        hora_fim = agenda.get('hora_convocacao_fim') or ''
+        sessao = agenda.get('sessao') or ''
+        def _fmt_data(date_str: str) -> str:
+            return f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}" if len(date_str) >= 10 else date_str
+        def _fmt_hora(time_str: str) -> str:
+            return time_str[:5] if len(time_str) >= 5 else time_str
+        if escolha_em:
+            doc.add_paragraph(f"Data: {_fmt_data(escolha_em)}")
+        if hora_ini or hora_fim:
+            ini = _fmt_hora(hora_ini) if hora_ini else ''
+            fim = _fmt_hora(hora_fim) if hora_fim else ''
+            doc.add_paragraph(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
+        if sessao:
+            doc.add_paragraph(str(sessao))
         rows = len(context.get('candidatos', [])) + 1
         table = doc.add_table(rows=rows, cols=6)
         hdr_cells = table.rows[0].cells
@@ -152,14 +215,20 @@ class ListaCandidatosSessao(RelatorioBase):
         resp['Content-Disposition'] = f'attachment; filename="{filename}"'
         return resp
 
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', candidatos_uuids: List[str] = None, **kwargs) -> Tuple[HttpResponse, Dict[str, Any]]:
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', agenda_uuid: str = None, **kwargs) -> Tuple[HttpResponse, Dict[str, Any]]:
         """
         Gera a lista de candidatos por sessão a partir de UUIDs.
         """
         try:
-            candidatos_uuids = candidatos_uuids or []
+            # Buscar detalhes da agenda para extrair os candidatos_uuids
+            agenda_resp = self.agendas_service.buscar_agenda_por_uuid(str(agenda_uuid) if agenda_uuid else '')
+            agenda_data = agenda_resp.json()
+            candidatos_uuids = []
+            if isinstance(agenda_data, dict):
+                candidatos_uuids = agenda_data.get('candidatos_uuids') or []
+            # Buscar candidatos pelos UUIDs obtidos da agenda
             candidatos = self._fetch_candidatos(candidatos_uuids)
-            context = self._build_context(candidatos)
+            context = self._build_context(candidatos, agenda_data)
             # Cabeçalho compatível com demais relatórios
             cabecalho_input = (cabecalho or '').strip()
             cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
@@ -169,7 +238,7 @@ class ListaCandidatosSessao(RelatorioBase):
                 'cabecalho_padrao': cabecalho_padrao,
             })
         except Exception as exc:
-            logger.error('Erro ao buscar candidatos por UUIDs: %s', exc, exc_info=True)
+            logger.error('Erro ao processar agenda/candidatos: %s', exc, exc_info=True)
             raise
 
         if formato == 'pdf':
