@@ -53,8 +53,6 @@ class ResultadoEscolha(RelatorioBase):
             - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou DOCX)
             - dados: estrutura de dados do relatório (cargos_list) para salvar no banco
         """
-        # Buscar cargos do processo para mapear código -> nome (fallback caso descricao_cargo não venha)
-        print(f"Tipo de relatório: {self.tipo}")
 
         cargos_map = {}
         try:
@@ -392,20 +390,10 @@ class ResultadoEscolha(RelatorioBase):
         Args:
             cargos_list: Lista de cargos (da agenda) com suas agendas e candidatos
         """
-        print("\n" + "="*100)
-        print("RESULTADO DA ESCOLHA DE VAGAS - GERAL")
-        print("="*100 + "\n")
+
         
         for cargo in cargos_list:
-            cargo_descricao = cargo.get('descricao', '')
-            print(f"\n{'='*100}")
-            print(f"CARGO: {cargo_descricao}")
-            print(f"{'='*100}\n")
-            
-            # Cabeçalho da tabela
-            # Primeira coluna: "Qual a agenda" (bloco = número da agenda), depois informações do candidato
-            print(f"{'Agenda':<30} {'Class. geral':<15} {'Class. Def.':<15} {'Class. NNA':<15} {'NOME':<40} {'R.G.':<20} {'CPF':<15} {'ESCOLHA':<10}")
-            print("-" * 100)
+            cargo_descricao = cargo.get('descricao', '')   
             
             # Iterar pelas agendas e numerá-las (bloco 1, 2, 3, etc.)
             bloco_numero = 1
@@ -446,19 +434,9 @@ class ResultadoEscolha(RelatorioBase):
                     # Formatar valores para exibição
                     class_geral_str = str(classificacao_geral) if classificacao_geral != '-' else '-'
                     class_def_str = str(classificacao_def) if classificacao_def != '-' else '-'
-                    class_nna_str = str(classificacao_nna) if classificacao_nna != '-' else '-'
-                    
-                    # Bloco = número da agenda (1, 2, 3, etc.) exibido como identificação da agenda
-                    print(f"{agenda_label:<30} {class_geral_str:<15} {class_def_str:<15} {class_nna_str:<15} {nome:<40} {rg:<20} {cpf:<15} {escolha_valor:<10}")
-                
-                # Incrementar bloco para próxima agenda
+                    class_nna_str = str(classificacao_nna) if classificacao_nna != '-' else '-'   
+
                 bloco_numero += 1
-            
-            print()
-        
-        print("\n" + "="*100)
-        print("FIM DO RELATÓRIO")
-        print("="*100 + "\n")
     
     def render_to_xls(self, cargos_list, cabecalho, filename='resultado_escolha.xlsx'):
         """
