@@ -5,7 +5,6 @@ import logging
 from django.conf import settings
 from django.shortcuts import render
 from relatorios.services.escolhas_api_service import EscolhasService
-from relatorios.utils import render_to_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +19,16 @@ class LaudaVagasService:
     def __init__(self):
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     
-    def gerar_relatorio(self, processo_uuid: str, request, gerar_pdf: bool = False):
+    def gerar_relatorio(self, processo_uuid: str, request):
         """
         Gera o relatório de Lauda de Vagas.
         
         Args:
             processo_uuid: UUID do processo de convocação
             request: Objeto request do Django
-            gerar_pdf: Se True, retorna PDF; caso contrário, retorna HTML
         
         Returns:
-            HttpResponse com o relatório gerado (HTML ou PDF)
+            HttpResponse com o relatório gerado (HTML)
         """
         # Buscar vagas das escolas do microserviço de escolhas
         try:
@@ -47,21 +45,12 @@ class LaudaVagasService:
         
         cargos_list = self._preparar_dados_template(vagas_agrupadas)
         
-        if gerar_pdf:
-            filename = f'relatorio_vagas_{processo_uuid}.pdf'
-            logger.info('Gerando PDF: %s', filename)
-            return render_to_pdf(
-                self.TEMPLATE_NAME,
-                {'cargos': cargos_list},
-                filename=filename
-            )
-        else:
-            logger.info('Gerando HTML')
-            return render(
-                request,
-                self.TEMPLATE_NAME,
-                {'cargos': cargos_list}
-            )
+        logger.info('Gerando HTML')
+        return render(
+            request,
+            self.TEMPLATE_NAME,
+            {'cargos': cargos_list}
+        )
     
     def _agrupar_vagas(self, vagas: list) -> dict:
         """

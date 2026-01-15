@@ -19,6 +19,16 @@ try:
 except ImportError:
     OPENPYXL_AVAILABLE = False
 
+try:
+    from docx import Document
+    from docx.shared import Pt, RGBColor, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +40,7 @@ class ResultadoEscolha(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/resultado_escolha_sim.html'
     
-    def __init__(self, tipo: str):
+    def __init__(self, tipo: str, **kwargs):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
@@ -244,6 +254,11 @@ class ResultadoEscolha(RelatorioBase):
             logger.info('Gerando Excel: %s', filename)
             response = self.render_to_xls(cargos_list, cabecalho_final, filename=filename)
             return response, cargos_list
+        elif formato == 'docx' or formato == 'doc':
+            filename = f'resultado_escolha_{processo_uuid}.docx'
+            logger.info('Gerando Word: %s', filename)
+            response = self.render_to_docx(cargos_list, cabecalho_final, filename=filename)
+            return response, cargos_list
         elif formato == 'pdf':
             filename = f'resultado_escolha_{processo_uuid}.pdf'
             logger.info('Gerando PDF: %s', filename)
@@ -380,63 +395,7 @@ class ResultadoEscolha(RelatorioBase):
         # Ordenar cargos por descrição
         cargos_list.sort(key=lambda x: x['descricao'])
         
-        return cargos_list
-    
-    def _imprimir_no_console(self, cargos_list: list):
-        """
-        Imprime o relatório no console para visualização.
-        Estrutura: Cargo (da agenda) > Bloco (número da agenda) > Informações do candidato
-        
-        Args:
-            cargos_list: Lista de cargos (da agenda) com suas agendas e candidatos
-        """
-
-        
-        for cargo in cargos_list:
-            cargo_descricao = cargo.get('descricao', '')   
-            
-            # Iterar pelas agendas e numerá-las (bloco 1, 2, 3, etc.)
-            bloco_numero = 1
-            for agenda in cargo.get('agendas', []):
-                agenda_nome = agenda.get('nome', '-')
-                agenda_data = agenda.get('data', '-')
-                agenda_sessao = agenda.get('sessao', '-')
-                
-                # Formatar informações da agenda para exibição
-                if agenda_data and agenda_data != '-':
-                    # Formatar data se necessário
-                    if isinstance(agenda_data, str) and 'T' in agenda_data:
-                        # Se for formato ISO com timestamp, pegar apenas a data
-                        agenda_data_formatada = agenda_data.split('T')[0]
-                    else:
-                        agenda_data_formatada = str(agenda_data)
-                else:
-                    agenda_data_formatada = '-'
-                agenda_label = f"Bloco {bloco_numero}"
-                if agenda_nome and agenda_nome != '-':
-                    agenda_label += f" - {agenda_nome}"
-                if agenda_data_formatada and agenda_data_formatada != '-':
-                    agenda_label += f" ({agenda_data_formatada}"
-                    if agenda_sessao and agenda_sessao != '-':
-                        agenda_label += f" / {agenda_sessao}"
-                    agenda_label += ")"
-                
-                # Dados dos candidatos desta agenda
-                for candidato in agenda.get('candidatos', []):
-                    classificacao_geral = candidato.get('classificacao_geral', '-')
-                    classificacao_def = candidato.get('classificacao_def', '-')
-                    classificacao_nna = candidato.get('classificacao_nna', '-')
-                    nome = candidato.get('nome', '-')
-                    rg = candidato.get('rg', '-')
-                    cpf = candidato.get('cpf', '-')
-                    escolha_valor = candidato.get('escolha', '-')
-                    
-                    # Formatar valores para exibição
-                    class_geral_str = str(classificacao_geral) if classificacao_geral != '-' else '-'
-                    class_def_str = str(classificacao_def) if classificacao_def != '-' else '-'
-                    class_nna_str = str(classificacao_nna) if classificacao_nna != '-' else '-'   
-
-                bloco_numero += 1
+        return cargos_list   
     
     def render_to_xls(self, cargos_list, cabecalho, filename='resultado_escolha.xlsx'):
         """
@@ -590,5 +549,154 @@ class ResultadoEscolha(RelatorioBase):
             
         except Exception as exc:
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
+            raise
+    
+    def render_to_docx(self, cargos_list, cabecalho, filename='resultado_escolha.docx'):
+        """
+        Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
+        
+        Args:
+            cargos_list: Lista de cargos com suas agendas e candidatos (estrutura hierárquica)
+            cabecalho: Texto do cabeçalho do relatório
+            filename: Nome do arquivo Word gerado
+        
+        Returns:
+            HttpResponse com o arquivo Word gerado
+        """
+        if not DOCX_AVAILABLE:
+            raise ImportError(
+                "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"
+            )
+        
+        try:
+            doc = Document()
+            
+            # Configurar margens da página
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+            
+            # Cores (em RGB)
+            cargo_color = RGBColor(102, 126, 234)  # #667eea
+            table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
+            
+            # Cabeçalho
+            if cabecalho:
+                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(cabecalho_texto)
+                run.font.size = Pt(14)
+                run.font.bold = True
+                doc.add_paragraph()
+            
+            # Título do relatório
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run("RESULTADO DA ESCOLHA DE VAGAS - GERAL")
+            run.font.size = Pt(16)
+            run.font.bold = True
+            doc.add_paragraph()
+            
+            # Data do relatório
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            data_atual = timezone.now()
+            meses_pt = {
+                1: 'janeiro', 2: 'fevereiro', 3: 'março', 4: 'abril',
+                5: 'maio', 6: 'junho', 7: 'julho', 8: 'agosto',
+                9: 'setembro', 10: 'outubro', 11: 'novembro', 12: 'dezembro'
+            }
+            mes_nome = meses_pt.get(data_atual.month, '')
+            data_formatada = f"{data_atual.day} de {mes_nome} de {data_atual.year}"
+            run = p.add_run(f"REALIZADO EM: {data_formatada}")
+            run.font.size = Pt(12)
+            doc.add_paragraph()
+            doc.add_paragraph()
+            
+            # Processar cargos
+            for cargo in cargos_list:
+                cargo_descricao = cargo.get('descricao', '')
+                
+                # Título do cargo
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(cargo_descricao)
+                run.font.size = Pt(12)
+                run.font.bold = True
+                run.font.color.rgb = RGBColor(255, 255, 255)
+                p_pr = p._element.get_or_add_pPr()
+                existing_shd = p_pr.find(qn('w:shd'))
+                if existing_shd is not None:
+                    p_pr.remove(existing_shd)
+                shading_elm = OxmlElement('w:shd')
+                shading_elm.set(qn('w:fill'), '667eea')
+                shading_elm.set(qn('w:val'), 'clear')
+                p_pr.append(shading_elm)
+                
+                # Criar tabela
+                headers = ['Bloco', 'Geral', 'NNA', 'Def.', 'NOME', 'R.G.', 'CPF', 'ESCOLHA']
+                table = doc.add_table(rows=1, cols=len(headers))
+                table.style = 'Light Grid Accent 1'
+                
+                # Cabeçalho da tabela
+                header_cells = table.rows[0].cells
+                for i, header in enumerate(headers):
+                    cell = header_cells[i]
+                    cell.text = header
+                    cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER if i in [0, 1, 2, 3, 7] else WD_ALIGN_PARAGRAPH.LEFT
+                    cell.paragraphs[0].runs[0].font.bold = True
+                    cell.paragraphs[0].runs[0].font.size = Pt(10)
+                    tc_pr = cell._element.get_or_add_tcPr()
+                    existing_shd = tc_pr.find(qn('w:shd'))
+                    if existing_shd is not None:
+                        tc_pr.remove(existing_shd)
+                    shading_elm = OxmlElement('w:shd')
+                    shading_elm.set(qn('w:fill'), 'ECF0F1')
+                    shading_elm.set(qn('w:val'), 'clear')
+                    tc_pr.append(shading_elm)
+                
+                # Dados dos candidatos
+                for agenda in cargo.get('agendas', []):
+                    sessao = agenda.get('sessao', '-')
+                    for candidato in agenda.get('candidatos', []):
+                        row_cells = table.add_row().cells
+                        
+                        row_cells[0].text = str(sessao)
+                        row_cells[1].text = str(candidato.get('classificacao_geral', '-'))
+                        row_cells[2].text = str(candidato.get('classificacao_nna', '-'))
+                        row_cells[3].text = str(candidato.get('classificacao_def', '-'))
+                        row_cells[4].text = str(candidato.get('nome', '-'))
+                        row_cells[5].text = str(candidato.get('rg', '-'))
+                        row_cells[6].text = str(candidato.get('cpf', '-'))
+                        row_cells[7].text = str(candidato.get('escolha', '-'))
+                        
+                        # Alinhamento
+                        for i, cell in enumerate(row_cells):
+                            if i in [0, 1, 2, 3, 7]:  # Bloco, Geral, NNA, Def., ESCOLHA
+                                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            else:  # NOME, R.G., CPF
+                                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            cell.paragraphs[0].runs[0].font.size = Pt(10)
+                
+                doc.add_paragraph()
+            
+            # Salvar em buffer
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            
+            response = HttpResponse(
+                buffer.read(),
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+            
+        except Exception as exc:
+            logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
             raise
 
