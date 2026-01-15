@@ -9,7 +9,8 @@ from relatorios.services.relatorios import (
     SumulaReconvocacao,
     SumulaEscolhas,
     LaudaConvocacao,
-    ResultadoEscolha
+    ResultadoEscolha,
+    ListaCandidatosSessao,
 )
 
 
@@ -30,10 +31,10 @@ class RelatorioFactory:
         'RESULTADO_ESCOLHA_SIM': ResultadoEscolha,
         'RESULTADO_ESCOLHA_NAO': ResultadoEscolha,
         'RESULTADO_ESCOLHA_RECONVOCACAO': ResultadoEscolha,
+        'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao,
         # TODO: Adicionar outros tipos quando implementados
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
         # 'RESULTADO_ESCOLHA_VAGAS': ResultadoEscolhaVagas,
-        # 'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao,
     }
 
     @staticmethod

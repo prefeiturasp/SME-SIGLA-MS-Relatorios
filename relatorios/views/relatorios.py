@@ -33,12 +33,12 @@ class RelatorioViewSet(viewsets.ModelViewSet):
         tipo_relatorio = serializer.validated_data.get('tipo')
         processo_uuid = serializer.validated_data.get('processo_uuid')
         # Prioriza o cabecalho vindo do request (body ou query), senão usa o validado
-        cabecalho = (
-            request.data.get('cabecalho')
-            or request.query_params.get('cabecalho')
-            or serializer.validated_data.get('cabecalho', '')
-        )
+        cabecalho = serializer.validated_data.get('cabecalho', '')
+
+        # Sanitização de cabecalho realizada no serializer (validate_cabecalho)
         usuario = serializer.validated_data.get('usuario', '')
+        candidatos_uuids = serializer.validated_data.get('candidatos_uuids', None)
+        agenda_uuid = serializer.validated_data.get('agenda_uuid', None)
 
         format_param = request.query_params.get('formato', '').lower()
         accept_header = request.META.get('HTTP_ACCEPT', '')
@@ -59,8 +59,13 @@ class RelatorioViewSet(viewsets.ModelViewSet):
         # Usar Factory para obter a instância correta do relatório
         try:
             relatorio_service = RelatorioFactory.obter_relatorio(tipo_relatorio)
-            response, dados = relatorio_service.gerar(processo_uuid, request, formato, cabecalho)
-
+            response, dados = relatorio_service.gerar(
+                processo_uuid,
+                request,
+                formato,
+                cabecalho,
+                agenda_uuid=agenda_uuid
+            )
             try:
                 serializer.save(dados=dados)
                 logger.info('Relatório salvo no banco de dados - tipo: %s, usuario: %s', tipo_relatorio, usuario)
