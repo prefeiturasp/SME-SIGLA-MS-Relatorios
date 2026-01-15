@@ -36,11 +36,11 @@ class LaudaVagas(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/vagas_escolas.html'
     
-    def __init__(self):
+    def __init__(self, tipo: str = 'LAUDA_VAGAS'):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Lauda de Vagas.
         
@@ -116,7 +116,7 @@ class LaudaVagas(RelatorioBase):
                 context
             )
             return response, cargos_list
-    
+
     def _agrupar_vagas(self, vagas: list) -> dict:
         """
         Agrupa vagas por cargo_codigo e depois por DRE codigo.

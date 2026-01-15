@@ -20,7 +20,7 @@ class RelatorioBase(ABC):
     """
     
     @abstractmethod
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Método abstrato que deve ser implementado por todas as classes filhas.
         

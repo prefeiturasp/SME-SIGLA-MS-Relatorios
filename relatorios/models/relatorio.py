@@ -13,6 +13,7 @@ class Relatorio(BaseModel):
     dados = models.JSONField(max_length=20000, verbose_name="JSON do Relatório", default={})
     processo_uuid = models.UUIDField(verbose_name="UUID do Processo")
     cabecalho = models.CharField(max_length=255, verbose_name="Cabeçalho do Relatório", blank=True, null=True)
+    agenda_uuid = models.UUIDField(verbose_name="UUID da Agenda", blank=True, null=True)
 
     class Meta:
         verbose_name = "Relatório"

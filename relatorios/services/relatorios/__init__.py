@@ -7,6 +7,7 @@ from .sumula_escolhas import SumulaEscolhas
 from .reconvocacao import SumulaReconvocacao
 from .lauda_convocacao import LaudaConvocacao
 from .resultado_escolha import ResultadoEscolha
+from .lista_candidatos_sessao import ListaCandidatosSessao
 
 __all__ = [
     'LaudaVagas', 
@@ -18,4 +19,5 @@ __all__ = [
     'SumulaReconvocacao', 
     'LaudaConvocacao', 
     'ResultadoEscolha',
+    'ListaCandidatosSessao',
 ]

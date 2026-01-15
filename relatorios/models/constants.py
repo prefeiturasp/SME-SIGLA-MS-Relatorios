@@ -14,6 +14,7 @@ TIPOS_RELATORIOS = [
     ('RESULTADO_ESCOLHA_SIM', 'Resultado de Escolha de vagas - Sim'),
     ('RESULTADO_ESCOLHA_NAO', 'Resultado de Escolha de vagas - Não'),
     ('RESULTADO_ESCOLHA_RECONVOCACAO', 'Resultado de Escolha de vagas - Reconvocação'),
+    ('LISTA_CANDIDATOS_SESSAO', 'Lista de Candidatos por Sessão'),
     # Adicione outros tipos de relatórios aqui conforme necessário
 ]
 

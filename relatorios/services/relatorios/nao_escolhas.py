@@ -42,7 +42,7 @@ class SumulaNaoEscolhas(RelatorioBase):
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
         self.processos_service = ProcessosService(base_url=settings.PROCESSOS_API_URL)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Não Escolhas.
         
