@@ -5,6 +5,7 @@ from .agendas_api_service import AgendasService
 from .lauda_convocacao_service import LaudaConvocacaoService
 from .factory.relatorio_factory import RelatorioFactory
 from .base.relatorio_base import RelatorioBase
+from .relatorios.resultado_escolha import ResultadoEscolha
 
 __all__ = [
     'EscolhasService',
@@ -13,5 +14,6 @@ __all__ = [
     'AgendasService',
     'LaudaConvocacaoService',
     'RelatorioFactory',
-    'RelatorioBase'
+    'RelatorioBase',    
+    'ResultadoEscolha',
 ]
