@@ -15,6 +15,8 @@ class AgendasService:
     """
 
     def __init__(self, base_url: str = 'https://example.com', timeout_seconds: int = 30):
+        print("AGENDAS_SERVICE")
+        print('base_url', base_url)
         """'123456789-=
         Inicializa o serviço de agendas.
 
@@ -22,6 +24,8 @@ class AgendasService:
             base_url: URL base da API de agendas
             timeout_seconds: Timeout em segundos para as requisições
         """
+        print("AGENDAS_SERVICE __init__")
+        print('base_url', base_url)
         self.base_url = base_url.rstrip('/')
         self.timeout_seconds = timeout_seconds
         self._default_headers = {
@@ -97,7 +101,8 @@ class AgendasService:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}"
-
+        print("AGENDAS_SERVICE buscar_agenda_por_uuid")
+        print('url', url)
         try:
             response = requests.get(
                 url,

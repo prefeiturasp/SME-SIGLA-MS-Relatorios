@@ -34,6 +34,8 @@ class ListaCandidatosSessao(RelatorioBase):
     TEMPLATE_NAME = 'relatorios/lista_candidatos_sessao.html'
 
     def __init__(self, tipo: str = 'LISTA_CANDIDATOS_SESSAO'):
+        print("LISTA_CANDIDATOS_SESSAO")
+        print('AGENDAS_API_URL', settings.AGENDAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
         self.agendas_service = AgendasService(base_url=settings.AGENDAS_API_URL)
 
