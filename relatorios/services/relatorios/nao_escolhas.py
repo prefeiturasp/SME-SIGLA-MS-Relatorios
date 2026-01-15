@@ -36,7 +36,7 @@ class SumulaNaoEscolhas(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/nao_escolhas.html'
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)

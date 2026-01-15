@@ -18,6 +18,16 @@ try:
 except ImportError:
     OPENPYXL_AVAILABLE = False
 
+try:
+    from docx import Document
+    from docx.shared import Pt, RGBColor, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +38,7 @@ class ListagemEscolhasDres(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/listagem_escolhas_dres.html'
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
@@ -193,6 +203,143 @@ class ListagemEscolhasDres(RelatorioBase):
             
         except Exception as exc:
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
+            raise
+    
+    def render_to_docx(self, escolhas_list, cabecalho, filename='listagem_escolhas_dres.docx'):
+        """
+        Gera um arquivo Word (DOCX) com a listagem de escolhas.
+        
+        Args:
+            escolhas_list: Lista de escolhas com dados dos candidatos
+            cabecalho: Texto do cabeçalho do relatório
+            filename: Nome do arquivo Word gerado
+        
+        Returns:
+            HttpResponse com o arquivo Word gerado
+        """
+        if not DOCX_AVAILABLE:
+            raise ImportError(
+                "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"
+            )
+        
+        try:
+            doc = Document()
+            
+            # Configurar margens da página
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+            
+            # Cores (em RGB)
+            table_header_color = RGBColor(74, 85, 104)  # #4a5568
+            
+            # Cabeçalho
+            if cabecalho:
+                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(cabecalho_texto)
+                run.font.size = Pt(12)
+                run.font.bold = True
+                doc.add_paragraph()
+            
+            # Título
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run("Listagem de Escolhas por DREs")
+            run.font.size = Pt(14)
+            run.font.bold = True
+            doc.add_paragraph()
+            
+            # Criar tabela
+            headers = [
+                'Cargo', 'Class', 'Def', 'NNA', 'RF', 'RG', 'CPF',
+                'Inscrição', 'Nome', 'Telefone', 'DRE', 'Código EOL',
+                'Tipo da unidade', 'Unidade', 'Tipo da vaga'
+            ]
+            table = doc.add_table(rows=1, cols=len(headers))
+            table.style = 'Light Grid Accent 1'
+            
+            # Cabeçalho da tabela
+            header_cells = table.rows[0].cells
+            for i, header in enumerate(headers):
+                cell = header_cells[i]
+                cell.text = header
+                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER if i in [1, 2, 3, 11, 14] else WD_ALIGN_PARAGRAPH.LEFT
+                cell.paragraphs[0].runs[0].font.bold = True
+                cell.paragraphs[0].runs[0].font.size = Pt(9)
+                cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
+                tc_pr = cell._element.get_or_add_tcPr()
+                existing_shd = tc_pr.find(qn('w:shd'))
+                if existing_shd is not None:
+                    tc_pr.remove(existing_shd)
+                shading_elm = OxmlElement('w:shd')
+                shading_elm.set(qn('w:fill'), '4a5568')
+                shading_elm.set(qn('w:val'), 'clear')
+                tc_pr.append(shading_elm)
+            
+            # Dados das escolhas
+            for item in escolhas_list:
+                row_cells = table.add_row().cells
+                
+                row_cells[0].text = str(item.get('cargo', '-'))
+                row_cells[1].text = str(item.get('classificacao', '-'))
+                row_cells[2].text = str(item.get('classificacao_deficiente', '-'))
+                row_cells[3].text = str(item.get('classificacao_nna', '-'))
+                row_cells[4].text = str(item.get('rf', '-'))
+                row_cells[5].text = str(item.get('rg', '-'))
+                row_cells[6].text = str(item.get('cpf', '-'))
+                row_cells[7].text = str(item.get('inscricao', '-'))
+                row_cells[8].text = str(item.get('nome', '-'))
+                row_cells[9].text = str(item.get('telefone', '-'))
+                row_cells[10].text = str(item.get('dre', '-'))
+                row_cells[11].text = str(item.get('codigo_eol', '-'))
+                row_cells[12].text = str(item.get('tipo_ue', '-'))
+                row_cells[13].text = str(item.get('unidade', '-'))
+                
+                # Tipo da vaga com estilo especial
+                tipo_vaga = item.get('tipo_vaga', '-')
+                row_cells[14].text = str(tipo_vaga)
+                if tipo_vaga == 'D':
+                    row_cells[14].paragraphs[0].runs[0].font.bold = True
+                    row_cells[14].paragraphs[0].runs[0].font.color.rgb = RGBColor(45, 80, 22)  # #2d5016
+                elif tipo_vaga == 'P':
+                    row_cells[14].paragraphs[0].runs[0].font.bold = True
+                    row_cells[14].paragraphs[0].runs[0].font.color.rgb = RGBColor(217, 119, 6)  # #d97706
+                
+                # Alinhamento
+                for i, cell in enumerate(row_cells):
+                    if i in [1, 2, 3, 11, 14]:  # Colunas centralizadas
+                        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    else:
+                        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    cell.paragraphs[0].runs[0].font.size = Pt(9)
+            
+            # Rodapé com total
+            doc.add_paragraph()
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            run = p.add_run(f"Total de escolhas: {len(escolhas_list)}")
+            run.font.size = Pt(9)
+            run.font.bold = True
+            
+            # Salvar em buffer
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            
+            response = HttpResponse(
+                buffer.read(),
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+            
+        except Exception as exc:
+            logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
             raise
     
     def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
@@ -375,6 +522,11 @@ class ListagemEscolhasDres(RelatorioBase):
             filename = f'listagem_escolhas_dres_{processo_uuid}.xlsx'
             logger.info('Gerando Excel: %s', filename)
             response = self.render_to_xls(escolhas_ordenadas_export, cabecalho_final, filename=filename)
+            return response, dados
+        elif formato == 'docx' or formato == 'doc':
+            filename = f'listagem_escolhas_dres_{processo_uuid}.docx'
+            logger.info('Gerando Word: %s', filename)
+            response = self.render_to_docx(escolhas_ordenadas_export, cabecalho_final, filename=filename)
             return response, dados
         elif formato == 'pdf':
             filename = f'listagem_escolhas_dres_{processo_uuid}.pdf'
