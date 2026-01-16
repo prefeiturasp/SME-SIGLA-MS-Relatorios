@@ -100,7 +100,7 @@ class AgendasService:
         Raises:
             RequestException: Em caso de erro na requisição
         """
-        url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}"
+        url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}/"
         print("AGENDAS_SERVICE buscar_agenda_por_uuid")
         print('url', url)
         try:
