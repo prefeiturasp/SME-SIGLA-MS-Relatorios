@@ -660,7 +660,6 @@ class LaudaConvocacaoService:
                             # Candidatos com status_especial não recebem ordem_escolha
                             candidato['ordem_escolha'] = None
 
-            # Reestruturar resultado conforme a estrutura dos prints
             # A estrutura principal será organizada por cargos e sessões
             resultado_estruturado = {
                 'processo_uuid': resultado.get('processo_uuid'),
@@ -671,7 +670,6 @@ class LaudaConvocacaoService:
                 'cargos': []
             }
 
-            # Estruturar cada cargo com suas sessões (conforme estrutura dos prints)
             for cargo_info in cargos_com_sessoes:
                 cargo_estruturado = {
                     'cargo_nome': cargo_info['cargo_nome'],

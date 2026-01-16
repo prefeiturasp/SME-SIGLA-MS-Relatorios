@@ -48,7 +48,7 @@ class ResultadoEscolha(RelatorioBase):
         self.agendas_service = AgendasService(base_url=settings.AGENDAS_API_URL)
         self.tipo = tipo
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', agenda_uuid: str = None, **kwargs):
         """
         Gera o relatório de Resultado da Escolha SIM.
         

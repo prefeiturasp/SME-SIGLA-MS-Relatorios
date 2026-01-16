@@ -439,10 +439,7 @@ class ListagemEscolhasDres(RelatorioBase):
                 tipo_vaga = 'D'
             else:
                 tipo_vaga = '-'
-            
-            # Print dos dados conforme solicitado
-            print(f"Nome: {nome} | Classificação: {classificacao} | Classificação Deficiente: {classificacao_deficiente} | NNA: {classificacao_nna} | CPF: {cpf} | Unidade: {nome_oficial} | DRE: {dre_nome} | Código EOL: {codigo_eol} | Tipo UE: {tipo_ue} | Tipo Vaga: {tipo_vaga}")
-            
+
             escolhas_com_candidatos.append({
                 'cargo': cargo_descricao,
                 'classificacao': classificacao if classificacao != '-' else '',
