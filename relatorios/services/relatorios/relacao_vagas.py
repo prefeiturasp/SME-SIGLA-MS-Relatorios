@@ -37,7 +37,7 @@ class RelacaoVagas(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/relacao_vagas.html'
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     

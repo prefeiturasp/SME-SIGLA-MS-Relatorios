@@ -36,7 +36,7 @@ class LaudaVagas(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/vagas_escolas.html'
     
-    def __init__(self, tipo: str = 'LAUDA_VAGAS'):
+    def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     
