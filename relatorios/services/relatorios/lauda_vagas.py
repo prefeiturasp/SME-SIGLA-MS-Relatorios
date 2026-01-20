@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from io import BytesIO
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.escolhas_api_service import EscolhasService
+from relatorios.utils import convert_uuids_to_strings
 
 try:
     from openpyxl import Workbook
@@ -15,6 +16,16 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
+
+try:
+    from docx import Document
+    from docx.shared import Pt, RGBColor, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -25,23 +36,23 @@ class LaudaVagas(RelatorioBase):
     
     TEMPLATE_NAME = 'relatorios/vagas_escolas.html'
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Lauda de Vagas.
         
         Args:
             processo_uuid: UUID do processo de convocação
             request: Objeto request do Django
-            formato: Formato do relatório ('html', 'pdf' ou 'xls')
+            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx')
             cabecalho: Texto do cabeçalho do relatório (opcional)
         
         Returns:
             Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
+            - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou DOCX)
             - dados: estrutura de dados do relatório (cargos_list) para salvar no banco
         """
         # Buscar vagas das escolas do microserviço de escolhas
@@ -59,18 +70,25 @@ class LaudaVagas(RelatorioBase):
         vagas_agrupadas = self._agrupar_vagas(vagas)
         
         cargos_list = self._preparar_dados_template(vagas_agrupadas)
+        
+        # Converter todos os UUIDs para strings para garantir serialização JSON
+        cargos_list = convert_uuids_to_strings(cargos_list)
 
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
         cabecalho_input = (cabecalho or '').strip()
         cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
         cabecalho_padrao = settings.RELATORIO_CABECALHO_PADRAO
         
-        if formato == 'xls':
+        if formato == 'xls' or formato == 'csv':
             filename = f'relatorio_vagas_{processo_uuid}.xlsx'
             logger.info('Gerando Excel: %s', filename)
             response = self.render_to_xls(cargos_list, cabecalho_final, filename=filename)
             return response, cargos_list
-        
+        elif formato == 'docx' or formato == 'doc':
+            filename = f'relatorio_vagas_{processo_uuid}.docx'
+            logger.info('Gerando Word: %s', filename)
+            response = self.render_to_docx(cargos_list, cabecalho_final, filename=filename)
+            return response, cargos_list
         elif formato == 'pdf':
             filename = f'relatorio_vagas_{processo_uuid}.pdf'
             logger.info('Gerando PDF: %s', filename)
@@ -98,7 +116,7 @@ class LaudaVagas(RelatorioBase):
                 context
             )
             return response, cargos_list
-    
+
     def _agrupar_vagas(self, vagas: list) -> dict:
         """
         Agrupa vagas por cargo_codigo e depois por DRE codigo.
@@ -292,5 +310,146 @@ class LaudaVagas(RelatorioBase):
             
         except Exception as exc:
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
+            raise
+    
+    def render_to_docx(self, cargos_list, cabecalho, filename='relatorio_vagas.docx'):
+        """
+        Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
+        Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL AO XLS.
+        
+        Args:
+            cargos_list: Lista de cargos com suas DREs e vagas (estrutura hierárquica)
+            cabecalho: Texto do cabeçalho do relatório
+            filename: Nome do arquivo Word gerado
+        
+        Returns:
+            HttpResponse com o arquivo Word gerado
+        """
+        if not DOCX_AVAILABLE:
+            raise ImportError(
+                "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"
+            )
+        
+        try:
+            doc = Document()
+            
+            # Configurar margens da página
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+            
+            # Cores (em RGB)
+            cargo_color = RGBColor(102, 126, 234)  # #667eea
+            dre_color = RGBColor(52, 73, 94)  # #34495e
+            table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
+            
+            # Cabeçalho
+            if cabecalho:
+                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(cabecalho_texto)
+                run.font.size = Pt(14)
+                run.font.bold = True
+                doc.add_paragraph()
+            
+            # Processar cargos
+            for cargo in cargos_list:
+                cargo_descricao = cargo.get('descricao', '')
+                
+                # Título do cargo
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(f"Cargo: {cargo_descricao}")
+                run.font.size = Pt(12)
+                run.font.bold = True
+                run.font.color.rgb = RGBColor(255, 255, 255)
+                p_pr = p._element.get_or_add_pPr()
+                existing_shd = p_pr.find(qn('w:shd'))
+                if existing_shd is not None:
+                    p_pr.remove(existing_shd)
+                shading_elm = OxmlElement('w:shd')
+                shading_elm.set(qn('w:fill'), '667eea')
+                shading_elm.set(qn('w:val'), 'clear')
+                p_pr.append(shading_elm)
+                
+                for dre in cargo.get('dres', []):
+                    dre_nome = dre.get('nome', '')
+                    
+                    # Título da DRE
+                    p = doc.add_paragraph()
+                    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    run = p.add_run(f"DRE - {dre_nome}")
+                    run.font.size = Pt(11)
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(255, 255, 255)
+                    p_pr = p._element.get_or_add_pPr()
+                    existing_shd = p_pr.find(qn('w:shd'))
+                    if existing_shd is not None:
+                        p_pr.remove(existing_shd)
+                    shading_elm = OxmlElement('w:shd')
+                    shading_elm.set(qn('w:fill'), '34495e')
+                    shading_elm.set(qn('w:val'), 'clear')
+                    p_pr.append(shading_elm)
+                    
+                    # Criar tabela
+                    headers = ['Tipo de unidade', 'Unidade', 'Vagas Definitivas', 'Vagas Precárias']
+                    table = doc.add_table(rows=1, cols=len(headers))
+                    table.style = 'Light Grid Accent 1'
+                    
+                    # Cabeçalho da tabela
+                    header_cells = table.rows[0].cells
+                    for i, header in enumerate(headers):
+                        cell = header_cells[i]
+                        cell.text = header
+                        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        cell.paragraphs[0].runs[0].font.bold = True
+                        cell.paragraphs[0].runs[0].font.size = Pt(10)
+                        tc_pr = cell._element.get_or_add_tcPr()
+                        existing_shd = tc_pr.find(qn('w:shd'))
+                        if existing_shd is not None:
+                            tc_pr.remove(existing_shd)
+                        shading_elm = OxmlElement('w:shd')
+                        shading_elm.set(qn('w:fill'), 'ECF0F1')
+                        shading_elm.set(qn('w:val'), 'clear')
+                        tc_pr.append(shading_elm)
+                    
+                    # Dados das vagas
+                    for vaga in dre.get('vagas', []):
+                        escola = vaga.get('escola', {})
+                        row_cells = table.add_row().cells
+                        
+                        row_cells[0].text = escola.get('tipo_ue', '-')
+                        row_cells[1].text = escola.get('nome_oficial', '-')
+                        row_cells[2].text = str(vaga.get('vagas_definitivas', 0))
+                        row_cells[3].text = str(vaga.get('vagas_precarias', 0))
+                        
+                        # Alinhamento
+                        for i, cell in enumerate(row_cells):
+                            if i in [2, 3]:
+                                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            else:
+                                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            cell.paragraphs[0].runs[0].font.size = Pt(10)
+                    
+                    doc.add_paragraph()
+            
+            # Salvar em buffer
+            buffer = BytesIO()
+            doc.save(buffer)
+            buffer.seek(0)
+            
+            response = HttpResponse(
+                buffer.read(),
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+            
+        except Exception as exc:
+            logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
             raise
 

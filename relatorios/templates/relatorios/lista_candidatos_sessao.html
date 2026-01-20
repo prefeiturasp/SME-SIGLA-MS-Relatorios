@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Candidatos por Sessão</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: white;
+            padding: 0;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background-color: white;
+            padding: 0;
+        }
+
+        .cabecalho {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #3498db;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            table-layout: fixed;
+        }
+
+        thead {
+            background-color: #ecf0f1;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .center { text-align: center; }
+
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cabecalho">
+            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
+        </div>
+
+        <h1>Lista de Candidatos por Sessão</h1>
+        <h4>Data: {{ agenda.escolha_em|slice:"8:10" }}/{{ agenda.escolha_em|slice:"5:7" }}/{{ agenda.escolha_em|slice:":4" }}</h4>
+        <h4>Horário: {{ agenda.hora_convocacao_inicio|slice:":5" }} às {{ agenda.hora_convocacao_fim|slice:":5" }}</h4>
+        <h4>{{ agenda.sessao }}</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="center">Classificação</th>
+                        <th class="center">Classificação NNA</th>
+                        <th class="center">Classificação PCD</th>
+                        <th>Inscrição</th>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidatos %}
+                    <tr>
+                        <td class="center">{{ c.classificacao|default_if_none:"" }}</td>
+                        <td class="center">{{ c.classificacao_nna|default_if_none:"" }}</td>
+                        <td class="center">{{ c.classificacao_pcd|default_if_none:"" }}</td>
+                        <td>{{ c.inscricao }}</td>
+                        <td>{{ c.nome }}</td>
+                        <td>{{ c.cpf }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="center">Sem candidatos.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+

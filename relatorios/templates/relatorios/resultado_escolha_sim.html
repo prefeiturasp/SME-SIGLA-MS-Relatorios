@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado da Escolha de Vagas - Geral</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: white;
+            padding: 0;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background-color: white;
+            padding: 20px;
+        }
+
+        .cabecalho {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .titulo-relatorio {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .data-relatorio {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .cargo-section {
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+        
+        .cargo-section:first-child {
+            margin-top: 0;
+        }
+
+        .cargo-header {
+            background-color: #667eea;
+            color: white;
+            padding: 10px 15px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-bottom: 20px;
+        }
+        
+        table thead {
+            display: table-header-group;
+        }
+        
+        table tbody {
+            display: table-row-group;
+        }
+
+        thead {
+            background-color: #ecf0f1;
+        }
+
+        th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+            border-top: 2px solid #bdc3c7;
+            font-size: 13px;
+        }
+
+        th.text-center {
+            text-align: center;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
+            font-size: 13px;
+        }
+        
+        td:first-child,
+        th:first-child {
+            border-left: 1px solid #ecf0f1;
+        }
+        
+        td:last-child,
+        th:last-child {
+            border-right: 1px solid #ecf0f1;
+        }
+
+        td.text-center {
+            text-align: center;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .container {
+                padding: 0;
+            }
+            
+            .cargo-section {
+                page-break-inside: avoid;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if cabecalho %}
+        <div class="cabecalho">
+            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
+        </div>
+        {% endif %}
+        
+        <h1 class="titulo-relatorio">RESULTADO DA ESCOLHA DE VAGAS - GERAL</h1>
+        
+        <div class="data-relatorio">
+            REALIZADO EM: {{ data_atual|date:"d \d\e F \d\e Y" }}
+        </div>
+
+        {% for cargo in cargos %}
+            <div class="cargo-section">
+                <div class="cargo-header">
+                    {{ cargo.descricao }}
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bloco</th>
+                                <th class="text-center">Geral</th>
+                                <th class="text-center">NNA</th>
+                                <th class="text-center">Def.</th>
+                                <th>NOME</th>
+                                <th>R.G.</th>
+                                <th>CPF</th>
+                                <th class="text-center">ESCOLHA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agenda in cargo.agendas %}
+                                {% for candidato in agenda.candidatos %}
+                                    <tr>
+                                        <td class="text-center">{{ agenda.sessao|default:"-" }}</td>
+                                        <td class="text-center">{{ candidato.classificacao_geral|default:"-" }}</td>
+                                        <td class="text-center">{{ candidato.classificacao_nna|default:"-" }}</td>
+                                        <td class="text-center">{{ candidato.classificacao_def|default:"-" }}</td>
+                                        <td>{{ candidato.nome|default:"-" }}</td>
+                                        <td>{{ candidato.rg|default:"-" }}</td>
+                                        <td>{{ candidato.cpf|default:"-" }}</td>
+                                        <td class="text-center">{{ candidato.escolha|default:"-" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

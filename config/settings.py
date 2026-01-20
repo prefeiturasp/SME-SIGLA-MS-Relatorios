@@ -168,7 +168,11 @@ SPECTACULAR_SETTINGS = {
 }
 
 # External services configuration
+PROCESSOS_API_URL = os.environ.get('PROCESSOS_API_URL', 'http://localhost:8000')
 ESCOLHAS_API_URL = os.environ.get('ESCOLHAS_API_URL', 'http://localhost:8004')
+CONVOCACAO_API_URL = os.environ.get('CONVOCACAO_API_URL', 'http://localhost:8000')
+CANDIDATOS_API_URL = os.environ.get('CANDIDATOS_API_URL', 'http://localhost:8002')
+AGENDAS_API_URL = os.environ.get('AGENDAS_API_URL', 'http://localhost:8005')
 
 # Relatórios configuration
 RELATORIO_CABECALHO_PADRAO = (
