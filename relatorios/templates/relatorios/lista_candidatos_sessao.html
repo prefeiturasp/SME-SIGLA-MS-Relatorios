@@ -91,37 +91,44 @@
         </div>
 
         <h1>Lista de Candidatos por Sessão</h1>
-        <h4>Data: {{ agenda.escolha_em|slice:"8:10" }}/{{ agenda.escolha_em|slice:"5:7" }}/{{ agenda.escolha_em|slice:":4" }}</h4>
-        <h4>Horário: {{ agenda.hora_convocacao_inicio|slice:":5" }} às {{ agenda.hora_convocacao_fim|slice:":5" }}</h4>
-        <h4>{{ agenda.sessao }}</h4>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="center">Classificação</th>
-                        <th class="center">Classificação NNA</th>
-                        <th class="center">Classificação PCD</th>
-                        <th>Inscrição</th>
-                        <th>Nome</th>
-                        <th>CPF</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in candidatos %}
-                    <tr>
-                        <td class="center">{{ c.classificacao|default_if_none:"" }}</td>
-                        <td class="center">{{ c.classificacao_nna|default_if_none:"" }}</td>
-                        <td class="center">{{ c.classificacao_pcd|default_if_none:"" }}</td>
-                        <td>{{ c.inscricao }}</td>
-                        <td>{{ c.nome }}</td>
-                        <td>{{ c.cpf }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="6" class="center">Sem candidatos.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        {% for sec in agendas %}
+            <h4>Data: {{ sec.agenda.escolha_em|slice:"8:10" }}/{{ sec.agenda.escolha_em|slice:"5:7" }}/{{ sec.agenda.escolha_em|slice:":4" }}</h4>
+            <h4>Horário: {{ sec.agenda.hora_convocacao_inicio|slice:":5" }} às {{ sec.agenda.hora_convocacao_fim|slice:":5" }}</h4>
+            <h4>{{ sec.agenda.sessao }}</h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="center">Classificação</th>
+                            <th class="center">Classificação NNA</th>
+                            <th class="center">Classificação PCD</th>
+                            <th>Inscrição</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in sec.candidatos %}
+                        <tr>
+                            <td class="center">{{ c.classificacao|default_if_none:"" }}</td>
+                            <td class="center">{{ c.classificacao_nna|default_if_none:"" }}</td>
+                            <td class="center">{{ c.classificacao_pcd|default_if_none:"" }}</td>
+                            <td>{{ c.inscricao }}</td>
+                            <td>{{ c.nome }}</td>
+                            <td>{{ c.cpf }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="center">Sem candidatos.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not forloop.last %}
+            <br/>
+            {% endif %}
+        {% empty %}
+            <h4>Sem agendas.</h4>
+        {% endfor %}
     </div>
 </body>
 </html>

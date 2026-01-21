@@ -62,7 +62,13 @@ class ListaCandidatosSessao(RelatorioBase):
 
     def _build_context(self, candidatos: List[Dict[str, Any]], agenda_data: Dict[str, Any]) -> Dict[str, Any]:
         linhas = [self._flatten_candidato(c) for c in candidatos]
-        return {'candidatos': linhas, 'agenda': agenda_data}
+        # Contexto compatível com modo antigo (single agenda)
+        return {
+            'candidatos': linhas,
+            'agenda': agenda_data,
+            # Novo formato preferencial: lista de seções
+            'agendas': [{'agenda': agenda_data, 'candidatos': linhas}],
+        }
 
     def _render_xls(self, context: Dict[str, Any], filename: str = 'lista_candidatos_sessao.xlsx') -> HttpResponse:
         if not OPENPYXL_AVAILABLE:
@@ -79,7 +85,7 @@ class ListaCandidatosSessao(RelatorioBase):
         left = Alignment(horizontal='left', vertical='center')
         border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-        # Título e informações da agenda acima da tabela
+        # Título e informações da(s) agenda(s) acima das tabelas
         row_idx = 1
         ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
         title_cell = ws.cell(row=row_idx, column=1)
@@ -87,65 +93,76 @@ class ListaCandidatosSessao(RelatorioBase):
         title_cell.font = Font(bold=True, size=14)
         title_cell.alignment = center
         row_idx += 2  # linha em branco após o título
-        agenda = context.get('agenda') or {}
-        escolha_em = agenda.get('escolha_em') or ''
-        hora_ini = agenda.get('hora_convocacao_inicio') or ''
-        hora_fim = agenda.get('hora_convocacao_fim') or ''
-        sessao = agenda.get('sessao') or ''
+
         def _fmt_data(date_str: str) -> str:
             return f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}" if len(date_str) >= 10 else date_str
         def _fmt_hora(time_str: str) -> str:
             return time_str[:5] if len(time_str) >= 5 else time_str
-        if escolha_em:
-            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
-            c = ws.cell(row=row_idx, column=1)
-            c.value = f"Data: {_fmt_data(escolha_em)}"
-            c.font = Font(bold=True, size=12)
-            c.alignment = left
-            row_idx += 1
-        if hora_ini or hora_fim:
-            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
-            c = ws.cell(row=row_idx, column=1)
-            ini = _fmt_hora(hora_ini) if hora_ini else ''
-            fim = _fmt_hora(hora_fim) if hora_fim else ''
-            c.value = f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}"
-            c.font = Font(bold=True, size=12)
-            c.alignment = left
-            row_idx += 1
-        if sessao:
-            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
-            c = ws.cell(row=row_idx, column=1)
-            c.value = str(sessao)
-            c.font = Font(bold=True, size=12)
-            c.alignment = left
-            row_idx += 1
-        if row_idx > 1:
-            row_idx += 1
 
-        headers = ['Classificação', 'Classificação NNA', 'Classificação PCD', 'Inscrição', 'Nome', 'CPF']
-        for col, h in enumerate(headers, start=1):
-            cell = ws.cell(row=row_idx, column=col)
-            cell.value = h
-            cell.fill = header_fill
-            cell.font = header_font
-            cell.alignment = center
-            cell.border = border
+        sections = context.get('agendas') or []
+        # Fallback para modo antigo (single)
+        if not sections:
+            sections = [{'agenda': context.get('agenda') or {}, 'candidatos': context.get('candidatos') or []}]
 
-        for i, row in enumerate(context.get('candidatos', []), start=row_idx + 1):
-            values = [
-                row.get('classificacao'),
-                row.get('classificacao_nna'),
-                row.get('classificacao_pcd'),
-                row.get('inscricao'),
-                row.get('nome'),
-                row.get('cpf'),
-            ]
-            for col, val in enumerate(values, start=1):
-                cell = ws.cell(row=i, column=col)
-                cell.value = val
-                cell.font = normal_font
-                cell.alignment = center if col in (1, 2, 3) else left
+        for idx, sec in enumerate(sections):
+            agenda = sec.get('agenda') or {}
+            escolha_em = agenda.get('escolha_em') or ''
+            hora_ini = agenda.get('hora_convocacao_inicio') or ''
+            hora_fim = agenda.get('hora_convocacao_fim') or ''
+            sessao = agenda.get('sessao') or ''
+
+            if escolha_em:
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+                c = ws.cell(row=row_idx, column=1)
+                c.value = f"Data: {_fmt_data(escolha_em)}"
+                c.font = Font(bold=True, size=12)
+                c.alignment = left
+                row_idx += 1
+            if hora_ini or hora_fim:
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+                c = ws.cell(row=row_idx, column=1)
+                ini = _fmt_hora(hora_ini) if hora_ini else ''
+                fim = _fmt_hora(hora_fim) if hora_fim else ''
+                c.value = f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}"
+                c.font = Font(bold=True, size=12)
+                c.alignment = left
+                row_idx += 1
+            if sessao:
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+                c = ws.cell(row=row_idx, column=1)
+                c.value = str(sessao)
+                c.font = Font(bold=True, size=12)
+                c.alignment = left
+                row_idx += 1
+            if idx == 0 or escolha_em or hora_ini or hora_fim or sessao:
+                row_idx += 1  # linha em branco antes da tabela da sessão
+
+            headers = ['Classificação', 'Classificação NNA', 'Classificação PCD', 'Inscrição', 'Nome', 'CPF']
+            for col, h in enumerate(headers, start=1):
+                cell = ws.cell(row=row_idx, column=col)
+                cell.value = h
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center
                 cell.border = border
+
+            for i, row in enumerate(sec.get('candidatos', []), start=row_idx + 1):
+                values = [
+                    row.get('classificacao'),
+                    row.get('classificacao_nna'),
+                    row.get('classificacao_pcd'),
+                    row.get('inscricao'),
+                    row.get('nome'),
+                    row.get('cpf'),
+                ]
+                for col, val in enumerate(values, start=1):
+                    cell = ws.cell(row=i, column=col)
+                    cell.value = val
+                    cell.font = normal_font
+                    cell.alignment = center if col in (1, 2, 3) else left
+                    cell.border = border
+            # Atualiza row_idx para após a última linha de dados desta sessão
+            row_idx = row_idx + 1 + len(sec.get('candidatos', [])) + 1  # +1 linha em branco entre sessões
 
         ws.column_dimensions['A'].width = 16
         ws.column_dimensions['B'].width = 22
@@ -171,38 +188,47 @@ class ListaCandidatosSessao(RelatorioBase):
 
         doc = Document()
         doc.add_heading('Lista de Candidatos por Sessão', level=1)
-        # Informações da agenda no topo
-        agenda = context.get('agenda') or {}
-        escolha_em = agenda.get('escolha_em') or ''
-        hora_ini = agenda.get('hora_convocacao_inicio') or ''
-        hora_fim = agenda.get('hora_convocacao_fim') or ''
-        sessao = agenda.get('sessao') or ''
+        # Informações da(s) agenda(s) no topo, com tabelas separadas por sessão
         def _fmt_data(date_str: str) -> str:
             return f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}" if len(date_str) >= 10 else date_str
         def _fmt_hora(time_str: str) -> str:
             return time_str[:5] if len(time_str) >= 5 else time_str
-        if escolha_em:
-            doc.add_paragraph(f"Data: {_fmt_data(escolha_em)}")
-        if hora_ini or hora_fim:
-            ini = _fmt_hora(hora_ini) if hora_ini else ''
-            fim = _fmt_hora(hora_fim) if hora_fim else ''
-            doc.add_paragraph(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
-        if sessao:
-            doc.add_paragraph(str(sessao))
-        rows = len(context.get('candidatos', [])) + 1
-        table = doc.add_table(rows=rows, cols=6)
-        hdr_cells = table.rows[0].cells
-        headers = ['Classificação', 'Classificação NNA', 'Classificação PCD', 'Inscrição', 'Nome', 'CPF']
-        for idx, h in enumerate(headers):
-            hdr_cells[idx].text = h
-        for i, row in enumerate(context.get('candidatos', []), start=1):
-            cells = table.rows[i].cells
-            cells[0].text = str(row.get('classificacao') or '')
-            cells[1].text = str(row.get('classificacao_nna') or '')
-            cells[2].text = str(row.get('classificacao_pcd') or '')
-            cells[3].text = str(row.get('inscricao') or '')
-            cells[4].text = str(row.get('nome') or '')
-            cells[5].text = str(row.get('cpf') or '')
+
+        sections = context.get('agendas') or []
+        if not sections:
+            sections = [{'agenda': context.get('agenda') or {}, 'candidatos': context.get('candidatos') or []}]
+
+        for idx, sec in enumerate(sections):
+            agenda = sec.get('agenda') or {}
+            escolha_em = agenda.get('escolha_em') or ''
+            hora_ini = agenda.get('hora_convocacao_inicio') or ''
+            hora_fim = agenda.get('hora_convocacao_fim') or ''
+            sessao = agenda.get('sessao') or ''
+            if escolha_em:
+                doc.add_paragraph(f"Data: {_fmt_data(escolha_em)}")
+            if hora_ini or hora_fim:
+                ini = _fmt_hora(hora_ini) if hora_ini else ''
+                fim = _fmt_hora(hora_fim) if hora_fim else ''
+                doc.add_paragraph(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
+            if sessao:
+                doc.add_paragraph(str(sessao))
+
+            rows = len(sec.get('candidatos', [])) + 1
+            table = doc.add_table(rows=rows, cols=6)
+            hdr_cells = table.rows[0].cells
+            headers = ['Classificação', 'Classificação NNA', 'Classificação PCD', 'Inscrição', 'Nome', 'CPF']
+            for j, h in enumerate(headers):
+                hdr_cells[j].text = h
+            for i, row in enumerate(sec.get('candidatos', []), start=1):
+                cells = table.rows[i].cells
+                cells[0].text = str(row.get('classificacao') or '')
+                cells[1].text = str(row.get('classificacao_nna') or '')
+                cells[2].text = str(row.get('classificacao_pcd') or '')
+                cells[3].text = str(row.get('inscricao') or '')
+                cells[4].text = str(row.get('nome') or '')
+                cells[5].text = str(row.get('cpf') or '')
+            if idx < len(sections) - 1:
+                doc.add_paragraph()
 
         import io
         buf = io.BytesIO()
@@ -215,20 +241,53 @@ class ListaCandidatosSessao(RelatorioBase):
         resp['Content-Disposition'] = f'attachment; filename="{filename}"'
         return resp
 
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', agenda_uuid: str = None, **kwargs) -> Tuple[HttpResponse, Dict[str, Any]]:
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', agenda_uuid: str = '', **kwargs) -> Tuple[HttpResponse, Dict[str, Any]]:
         """
         Gera a lista de candidatos por sessão a partir de UUIDs.
         """
         try:
-            # Buscar detalhes da agenda para extrair os candidatos_uuids
-            agenda_resp = self.agendas_service.buscar_agenda_por_uuid(str(agenda_uuid) if agenda_uuid else '')
-            agenda_data = agenda_resp.json()
-            candidatos_uuids = []
-            if isinstance(agenda_data, dict):
-                candidatos_uuids = agenda_data.get('candidatos_uuids') or []
-            # Buscar candidatos pelos UUIDs obtidos da agenda
-            candidatos = self._fetch_candidatos(candidatos_uuids)
-            context = self._build_context(candidatos, agenda_data)
+            # Buscar detalhes da(s) agenda(s) e extrair os candidatos_uuids
+            if agenda_uuid:
+                agenda_resp = self.agendas_service.buscar_agenda_por_uuid(str(agenda_uuid))
+            else:
+                agenda_resp = self.agendas_service.buscar_agendas(processo_convocacao_uuid=str(processo_uuid))
+
+            raw = agenda_resp.json()
+            # Normaliza para lista de agendas
+            if isinstance(raw, dict) and 'results' in raw and isinstance(raw['results'], list):
+                agendas_list: List[Dict[str, Any]] = raw['results']
+            elif isinstance(raw, list):
+                agendas_list = [a for a in raw if isinstance(a, dict)]
+            elif isinstance(raw, dict):
+                agendas_list = [raw]
+            else:
+                agendas_list = []
+
+            sections: List[Dict[str, Any]] = []
+            for a in agendas_list:
+                # Considera apenas agendas com retardatario == False
+                if a.get('retardatario') is not False:
+                    continue
+                uuids = a.get('candidatos_uuids') or []
+                uuids = [u for u in uuids if isinstance(u, str)]
+                cand_list = self._fetch_candidatos(uuids)
+                linhas = [self._flatten_candidato(c) for c in cand_list]
+                sections.append({'agenda': a, 'candidatos': linhas})
+
+            # Se não houver agendas, mantém contexto vazio compatível
+            if not sections:
+                context = {'agendas': [], 'agenda': {}, 'candidatos': []}
+            elif len(sections) == 1:
+                # Compatibilidade com modo antigo (single)
+                context = {
+                    'agendas': sections,
+                    'agenda': sections[0]['agenda'],
+                    'candidatos': sections[0]['candidatos'],
+                }
+            else:
+                context = {
+                    'agendas': sections,
+                }
             # Cabeçalho compatível com demais relatórios
             cabecalho_input = (cabecalho or '').strip()
             cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
