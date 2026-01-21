@@ -56,6 +56,7 @@ def test_html_success_and_flatten_mapping(settings, monkeypatch):
         'buscar_agenda_por_uuid',
         lambda agenda_uuid: _Resp({
             'candidatos_uuids': ['u1', 'u2'],
+            'retardatario': False,
             'escolha_em': '2026-01-13',
             'hora_convocacao_inicio': '08:00:00',
             'hora_convocacao_fim': '09:00:00',
@@ -91,7 +92,7 @@ def test_pdf_success_calls_render_to_pdf(settings, monkeypatch):
     monkeypatch.setattr(
         svc.agendas_service,
         'buscar_agenda_por_uuid',
-        lambda agenda_uuid: _Resp({'candidatos_uuids': []})
+        lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
     with patch.object(svc, 'render_to_pdf', return_value=HttpResponse(b'%PDF', content_type='application/pdf')) as m_pdf:
         response, ctx = svc.gerar('p1', _req(), 'pdf', cabecalho='', agenda_uuid='ag-1')
@@ -105,7 +106,7 @@ def test_default_json_return(settings, monkeypatch):
     monkeypatch.setattr(
         svc.agendas_service,
         'buscar_agenda_por_uuid',
-        lambda agenda_uuid: _Resp({'candidatos_uuids': []})
+        lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
     response, ctx = svc.gerar('p1', _req(), 'json', cabecalho='', agenda_uuid='ag-1')
     assert isinstance(response, JsonResponse)
@@ -118,7 +119,7 @@ def test_xls_importerror_when_lib_missing(settings, monkeypatch):
     monkeypatch.setattr(
         svc.agendas_service,
         'buscar_agenda_por_uuid',
-        lambda agenda_uuid: _Resp({'candidatos_uuids': []})
+        lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
     # Forçar indisponibilidade do openpyxl
     monkeypatch.setattr('relatorios.services.relatorios.lista_candidatos_sessao.OPENPYXL_AVAILABLE', False)
@@ -132,7 +133,7 @@ def test_docx_importerror_when_lib_missing(settings, monkeypatch):
     monkeypatch.setattr(
         svc.agendas_service,
         'buscar_agenda_por_uuid',
-        lambda agenda_uuid: _Resp({'candidatos_uuids': []})
+        lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
     # Forçar indisponibilidade do python-docx
     monkeypatch.setattr('relatorios.services.relatorios.lista_candidatos_sessao.DOCX_AVAILABLE', False)
@@ -146,10 +147,66 @@ def test_header_fallback_uses_settings_default(settings, monkeypatch):
     monkeypatch.setattr(
         svc.agendas_service,
         'buscar_agenda_por_uuid',
-        lambda agenda_uuid: _Resp({'candidatos_uuids': []})
+        lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
     response, ctx = svc.gerar('p1', _req(), 'html', cabecalho=None, agenda_uuid='ag-1')
     assert ctx['cabecalho'] == 'HEADER_PADRAO'
+
+def test_multiple_agendas_filtered_and_separated(settings, monkeypatch):
+    svc = _make_service(settings)
+    # Simula agendas: apenas uma com retardatario == False deve ser considerada
+    agendas_payload = {
+        'results': [
+            {
+                'uuid': 'ag-1',
+                'retardatario': False,
+                'candidatos_uuids': ['u1', 'u2'],
+                'escolha_em': '2026-02-01',
+                'hora_convocacao_inicio': '09:00:00',
+                'hora_convocacao_fim': '10:00:00',
+                'sessao': 'Sessão A',
+            },
+            {
+                'uuid': 'ag-2',
+                'retardatario': True,
+                'candidatos_uuids': ['u3'],
+                'escolha_em': '2026-02-02',
+                'hora_convocacao_inicio': '11:00:00',
+                'hora_convocacao_fim': '12:00:00',
+                'sessao': 'Sessão B',
+            },
+            {
+                'uuid': 'ag-3',
+                # sem retardatario explicitamente (deve ser ignorada)
+                'candidatos_uuids': ['u4'],
+                'escolha_em': '2026-02-03',
+                'hora_convocacao_inicio': '13:00:00',
+                'hora_convocacao_fim': '14:00:00',
+                'sessao': 'Sessão C',
+            },
+        ]
+    }
+    def _cand_resp(**kw):
+        # retorna dois candidatos simples para qualquer chamada
+        return _Resp({'results': [
+            {'classificacao': 1, 'inscricao': 'I1', 'nome': 'N1', 'cpf': 'C1'},
+            {'classificacao': 2, 'inscricao': 'I2', 'nome': 'N2', 'cpf': 'C2'},
+        ]})
+    monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', _cand_resp)
+    monkeypatch.setattr(
+        svc.agendas_service,
+        'buscar_agendas',
+        lambda **kw: _Resp(agendas_payload),
+    )
+    # Chama sem agenda_uuid para pegar lista por processo
+    response, ctx = svc.gerar('proc-1', _req(), 'html', cabecalho='', agenda_uuid=None)
+    assert isinstance(response, HttpResponse)
+    # Apenas uma sessão deve ser considerada (retardatario == False)
+    assert 'agendas' in ctx and isinstance(ctx['agendas'], list)
+    assert len(ctx['agendas']) == 1
+    sec = ctx['agendas'][0]
+    assert sec['agenda']['uuid'] == 'ag-1'
+    assert len(sec['candidatos']) == 2
 
 
 def test_render_docx_success_with_fake_python_docx(settings, monkeypatch):
