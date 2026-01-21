@@ -110,6 +110,7 @@ class ListaCandidatosSessao(RelatorioBase):
             hora_ini = agenda.get('hora_convocacao_inicio') or ''
             hora_fim = agenda.get('hora_convocacao_fim') or ''
             sessao = agenda.get('sessao') or ''
+            cargo_nome = agenda.get('cargo_nome') or ''
 
             if escolha_em:
                 ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
@@ -131,6 +132,13 @@ class ListaCandidatosSessao(RelatorioBase):
                 ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
                 c = ws.cell(row=row_idx, column=1)
                 c.value = str(sessao)
+                c.font = Font(bold=True, size=12)
+                c.alignment = left
+                row_idx += 1
+            if cargo_nome:
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+                c = ws.cell(row=row_idx, column=1)
+                c.value = f"Cargo: {cargo_nome}"
                 c.font = Font(bold=True, size=12)
                 c.alignment = left
                 row_idx += 1
@@ -204,6 +212,7 @@ class ListaCandidatosSessao(RelatorioBase):
             hora_ini = agenda.get('hora_convocacao_inicio') or ''
             hora_fim = agenda.get('hora_convocacao_fim') or ''
             sessao = agenda.get('sessao') or ''
+            cargo_nome = agenda.get('cargo_nome') or ''
             if escolha_em:
                 doc.add_paragraph(f"Data: {_fmt_data(escolha_em)}")
             if hora_ini or hora_fim:
@@ -212,6 +221,8 @@ class ListaCandidatosSessao(RelatorioBase):
                 doc.add_paragraph(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
             if sessao:
                 doc.add_paragraph(str(sessao))
+            if cargo_nome:
+                doc.add_paragraph(f"Cargo: {cargo_nome}")
 
             rows = len(sec.get('candidatos', [])) + 1
             table = doc.add_table(rows=rows, cols=6)

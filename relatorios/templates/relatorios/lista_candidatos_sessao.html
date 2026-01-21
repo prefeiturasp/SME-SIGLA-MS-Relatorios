@@ -95,6 +95,9 @@
             <h4>Data: {{ sec.agenda.escolha_em|slice:"8:10" }}/{{ sec.agenda.escolha_em|slice:"5:7" }}/{{ sec.agenda.escolha_em|slice:":4" }}</h4>
             <h4>Horário: {{ sec.agenda.hora_convocacao_inicio|slice:":5" }} às {{ sec.agenda.hora_convocacao_fim|slice:":5" }}</h4>
             <h4>{{ sec.agenda.sessao }}</h4>
+            {% if sec.agenda.cargo_nome %}
+            <h4>Cargo: {{ sec.agenda.cargo_nome }}</h4>
+            {% endif %}
             <div class="table-container">
                 <table>
                     <thead>
