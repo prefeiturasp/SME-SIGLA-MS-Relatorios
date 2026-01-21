@@ -20,6 +20,12 @@ try:
 except ImportError:
     DOCX_AVAILABLE = False
 
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 logger = logging.getLogger(__name__)
 
 
@@ -88,6 +94,15 @@ class LaudaConvocacao(RelatorioBase):
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME,
                 context,
+                filename=filename
+            )
+            return response, dados_lauda
+        elif formato in ('xls', 'xlsx'):
+            filename = f'lauda_convocacao_{processo_uuid}.xlsx'
+            logger.info('Gerando XLS: %s', filename)
+            response = self._render_xls(
+                dados_lauda.get('cargos', []),
+                cabecalho_final,
                 filename=filename
             )
             return response, dados_lauda
@@ -243,12 +258,12 @@ class LaudaConvocacao(RelatorioBase):
                             elif categoria_efetiva == 'PCD' and candidato.get('classificacao_pcd'):
                                 nome += " (PCD)"
                             row_cells[2].text = nome
-                        
+
                         # Classificações
-                        row_cells[3].text = str(candidato.get('classificacao', '-'))
-                        row_cells[4].text = str(candidato.get('classificacao_pcd', '-'))
-                        row_cells[5].text = str(candidato.get('classificacao_nna', '-'))
-                        
+                        row_cells[3].text = '-' if str(candidato.get('classificacao', '-')) == 'None' else str(candidato.get('classificacao', '-'))
+                        row_cells[4].text = '-' if str(candidato.get('classificacao_pcd', '-')) == 'None' else str(candidato.get('classificacao_pcd', '-'))
+                        row_cells[5].text = '-' if str(candidato.get('classificacao_nna', '-')) == 'None' else str(candidato.get('classificacao_nna', '-'))
+
                         # Alinhamento
                         for i, cell in enumerate(row_cells):
                             if i in [0, 1, 3, 4, 5]:  # Colunas centralizadas
@@ -274,3 +289,142 @@ class LaudaConvocacao(RelatorioBase):
         except Exception as exc:
             logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
             raise
+
+    def _render_xls(self, cargos_list, cabecalho, filename='lauda_convocacao.xlsx'):
+        """
+        Gera um arquivo Excel (XLSX) com a estrutura da Lauda de Convocação.
+        """
+        if not OPENPYXL_AVAILABLE:
+            raise ImportError(
+                "openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0"
+            )
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Lauda de Convocação"
+
+        header_fill = PatternFill(start_color="ECF0F1", end_color="ECF0F1", fill_type="solid")
+        header_font = Font(bold=True, size=11)
+        title_font = Font(bold=True, size=14)
+        label_font = Font(bold=True, size=12)
+        normal_font = Font(size=10)
+        center = Alignment(horizontal='center', vertical='center')
+        left = Alignment(horizontal='left', vertical='center')
+        border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
+        # Título
+        row_idx = 1
+        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+        c = ws.cell(row=row_idx, column=1)
+        c.value = "Lauda de Convocação"
+        c.font = title_font
+        c.alignment = center
+        row_idx += 1
+
+        # Cabeçalho institucional (opcional)
+        if cabecalho:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1)
+            # texto simples (sem HTML); se precisar, poderia limpar tags com BeautifulSoup
+            c.value = cabecalho
+            c.font = label_font
+            c.alignment = left
+            row_idx += 1
+
+        # Espaço
+        row_idx += 1
+
+        # Percorre cargos e sessões
+        headers = ['Ordem de Escolha', 'Inscrição', 'Nome', 'Class. Geral', 'Class. PcD', 'Class. NNA']
+
+        for cargo in cargos_list or []:
+            cargo_nome = cargo.get('cargo_nome', '')
+            sessoes = cargo.get('sessoes', []) or []
+
+            for sessao in sessoes:
+                numero_sessao = sessao.get('numero_sessao', '')
+                horario_formatado = sessao.get('horario_formatado', '')
+                sessao_texto = f"{numero_sessao}ª SESSÃO"
+                if horario_formatado:
+                    sessao_texto += f" - Horário: {horario_formatado}"
+
+                # Linha de sessão
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+                c = ws.cell(row=row_idx, column=1)
+                c.value = sessao_texto
+                c.font = label_font
+                c.alignment = left
+                row_idx += 1
+
+                # Linha de cargo
+                ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+                c = ws.cell(row=row_idx, column=1)
+                c.value = f"CARGO: {cargo_nome}"
+                c.font = label_font
+                c.alignment = left
+                row_idx += 1
+
+                # Cabeçalho da tabela
+                for col, h in enumerate(headers, start=1):
+                    cell = ws.cell(row=row_idx, column=col)
+                    cell.value = h
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = center if col in (1, 2, 4, 5, 6) else left
+                    cell.border = border
+
+                # Dados
+                for r, cand in enumerate(sessao.get('candidatos', []), start=row_idx + 1):
+                    values = [
+                        cand.get('ordem_escolha'),
+                        cand.get('codigo_inscricao') or cand.get('uuid'),
+                    ]
+                    # Nome com sufixos de categoria
+                    nome = ''
+                    status_especial = cand.get('status_especial', '')
+                    if status_especial:
+                        nome = status_especial
+                    else:
+                        candidato_obj = cand.get('candidato', {})
+                        nome = candidato_obj.get('nome', 'N/A') if isinstance(candidato_obj, dict) else 'N/A'
+                        categoria_efetiva = cand.get('categoria_efetiva', '')
+                        if categoria_efetiva == 'NNA' and cand.get('classificacao_nna'):
+                            nome += " (NNA)"
+                        elif categoria_efetiva == 'PCD' and cand.get('classificacao_pcd'):
+                            nome += " (PCD)"
+                    values.append(nome)
+                    values.extend([
+                        '-' if str(cand.get('classificacao', '-')) == 'None' else cand.get('classificacao', '-'),
+                        '-' if str(cand.get('classificacao_pcd', '-')) == 'None' else cand.get('classificacao_pcd', '-'),
+                        '-' if str(cand.get('classificacao_nna', '-')) == 'None' else cand.get('classificacao_nna', '-'),
+                    ])
+
+                    for col, val in enumerate(values, start=1):
+                        cell = ws.cell(row=r, column=col)
+                        cell.value = val
+                        cell.font = normal_font
+                        cell.alignment = center if col in (1, 2, 4, 5, 6) else left
+                        cell.border = border
+
+                # Atualiza row_idx após os dados da sessão + linha em branco
+                row_idx = row_idx + 1 + len(sessao.get('candidatos', [])) + 1
+
+        # Largura das colunas
+        ws.column_dimensions['A'].width = 18
+        ws.column_dimensions['B'].width = 18
+        ws.column_dimensions['C'].width = 45
+        ws.column_dimensions['D'].width = 16
+        ws.column_dimensions['E'].width = 16
+        ws.column_dimensions['F'].width = 16
+
+        # Salvar em buffer
+        from io import BytesIO
+        buf = BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        resp = HttpResponse(
+            buf.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        resp['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return resp
