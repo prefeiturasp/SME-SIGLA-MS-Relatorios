@@ -43,7 +43,7 @@ class ParametrizacaoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Parametrização', {
-            'fields': ('cabeçalho', 'logo')
+            'fields': ('cabecalho', 'logo')
         }),
         ('Datas', {
             'fields': ('criado_em', 'atualizado_em')
