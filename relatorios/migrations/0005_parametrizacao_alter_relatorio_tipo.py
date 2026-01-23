@@ -1,0 +1,81 @@
+import uuid
+from django.db import migrations, models
+
+
+def criar_parametrizacao_inicial(apps, schema_editor):
+    """Cria um registro inicial de parametrização com logo vazia."""
+    Parametrizacao = apps.get_model('relatorios', 'Parametrizacao')
+    Parametrizacao.objects.create(
+        cabecalho="",
+        logo=None
+    )
+
+
+def reverter_parametrizacao_inicial(apps, schema_editor):
+    """Remove o registro inicial de parametrização."""
+    Parametrizacao = apps.get_model('relatorios', 'Parametrizacao')
+    Parametrizacao.objects.all().delete()
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("relatorios", "0004_relatorio_agenda_uuid_alter_relatorio_tipo"),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="Parametrizacao",
+            fields=[
+                (
+                    "uuid",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "criado_em",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Data de Criação"
+                    ),
+                ),
+                (
+                    "atualizado_em",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Data de Atualização"
+                    ),
+                ),
+                (
+                    "cabecalho",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Cabeçalho padrão em HTML para os relatórios",
+                        verbose_name="Cabeçalho Padrão",
+                    ),
+                ),
+                (
+                    "logo",
+                    models.ImageField(
+                        blank=True,
+                        help_text="Logo para os relatórios",
+                        null=True,
+                        upload_to="parametrizacao/logos/",
+                        verbose_name="Logo",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "Parametrização",
+                "verbose_name_plural": "Parametrizações",
+                "ordering": ["-criado_em"],
+            },
+        ),
+        migrations.RunPython(
+            criar_parametrizacao_inicial,
+            reverter_parametrizacao_inicial
+        ),
+        
+    ]
