@@ -67,7 +67,7 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                 agenda_uuid=agenda_uuid
             )
             try:
-                serializer.save(dados=dados)
+                # serializer.save(dados=dados)
                 logger.info('Relatório salvo no banco de dados - tipo: %s, usuario: %s', tipo_relatorio, usuario)
             except Exception as exc:
                 logger.error('Erro ao salvar relatório no banco de dados: %s', exc, exc_info=True)

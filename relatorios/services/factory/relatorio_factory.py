@@ -11,6 +11,7 @@ from relatorios.services.relatorios import (
     LaudaConvocacao,
     ResultadoEscolha,
     ListaCandidatosSessao,
+    AtaEscolha,
 )
 
 
@@ -32,6 +33,7 @@ class RelatorioFactory:
         'RESULTADO_ESCOLHA_NAO': ResultadoEscolha,
         'RESULTADO_ESCOLHA_RECONVOCACAO': ResultadoEscolha,
         'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao,
+        'ATA_ESCOLHA': AtaEscolha,
         # TODO: Adicionar outros tipos quando implementados
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
         # 'RESULTADO_ESCOLHA_VAGAS': ResultadoEscolhaVagas,
