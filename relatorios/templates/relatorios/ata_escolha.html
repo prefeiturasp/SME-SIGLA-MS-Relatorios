@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ata de Escolha</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: white;
+            padding: 0;
+            margin: 0;
+            color: #333;
+            font-size: 11px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background-color: white;
+            padding: 0;
+        }
+
+        .cabecalho {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .titulo-relatorio {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .lei-referencia {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        .sessao-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+
+        .sessao-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .cargo-header {
+            background-color: #667eea;
+            color: white;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .relatorio-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            font-size: 10px;
+        }
+
+        .relatorio-table thead {
+            background-color: #ecf0f1;
+        }
+
+        .relatorio-table th {
+            padding: 6px 4px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border: 1px solid #bdc3c7;
+            background-color: #f8f9fa;
+            font-size: 9px;
+        }
+
+        .relatorio-table th.centro {
+            text-align: center;
+        }
+
+        .relatorio-table td {
+            padding: 4px 4px;
+            border: 1px solid #e0e0e0;
+            font-size: 9px;
+        }
+
+        .relatorio-table td.centro {
+            text-align: center;
+        }
+
+        .relatorio-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .relatorio-table tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        .classificacao {
+            text-align: center;
+            width: 50px;
+        }
+
+        .classificacao-vazia {
+            color: #95a5a6;
+        }
+
+        .rf {
+            text-align: center;
+            width: 80px;
+        }
+
+        .rg {
+            text-align: center;
+            width: 100px;
+        }
+
+        .cpf {
+            text-align: center;
+            width: 100px;
+        }
+
+        .nome {
+            width: auto;
+            min-width: 150px;
+        }
+
+        .eol {
+            text-align: center;
+            width: 70px;
+        }
+
+        .dre {
+            text-align: center;
+            width: 80px;
+        }
+
+        .tipo-unidade {
+            text-align: center;
+            width: 80px;
+        }
+
+        .escola {
+            width: auto;
+            min-width: 150px;
+        }
+
+        .vaga {
+            text-align: center;
+            width: 40px;
+        }
+
+        .assinatura {
+            text-align: center;
+            width: 90px;
+        }
+
+        {% if is_pdf %}
+        @page {
+            size: A3 landscape;
+            margin: 1cm;
+        }
+        {% else %}
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        {% endif %}
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            .sessao-section {
+                page-break-inside: avoid;
+            }
+
+            .relatorio-table {
+                font-size: 8px;
+            }
+
+            .relatorio-table th,
+            .relatorio-table td {
+                padding: 3px 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if cabecalho %}
+        <div class="cabecalho">
+            {{ cabecalho|default:cabecalho_padrao|linebreaksbr }}
+        </div>
+        {% endif %}
+
+        <h1 class="titulo-relatorio">ATA DE ESCOLHA</h1>
+
+
+        {% if cargos %}
+            {% for cargo in cargos %}
+                {% for sessao in cargo.sessoes %}
+                    <div class="sessao-section">
+                        <div class="sessao-header">
+                            {{ sessao.numero_sessao }}ª SESSÃO{% if sessao.horario_formatado %} - Horário: {{ sessao.horario_formatado }}{% endif %}
+                        </div>
+
+                        <div class="cargo-header">
+                            CARGO: {{ cargo.cargo_nome }}
+                        </div>
+
+                        <div class="table-container">
+                            <table class="relatorio-table">
+                                <thead>
+                                    <tr>
+                                        <th class="centro classificacao">Class. Geral</th>
+                                        <th class="centro classificacao">Class. Def.</th>
+                                        <th class="centro classificacao">Class. NNA</th>
+                                        <th class="centro rf">RF</th>
+                                        <th class="centro rg">RG</th>
+                                        <th class="centro cpf">CPF</th>
+                                        <th class="nome">Nome</th>
+                                        <th class="centro eol">Código EOL</th>
+                                        <th class="centro dre">DRE</th>
+                                        <th class="centro tipo-unidade">Tipo Unidade</th>
+                                        <th class="escola">Unidade Escolhida</th>
+                                        <th class="centro vaga">Tipo Vaga</th>
+                                        <th class="centro assinatura">Assinatura</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for candidato in sessao.candidatos %}
+                                        <tr>
+                                            <td class="centro classificacao">
+                                                {% if candidato.classificacao %}
+                                                    {{ candidato.classificacao }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro classificacao">
+                                                {% if candidato.classificacao_pcd %}
+                                                    {{ candidato.classificacao_pcd }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro classificacao">
+                                                {% if candidato.classificacao_nna %}
+                                                    {{ candidato.classificacao_nna }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro rf">
+                                                {% if candidato.rf %}
+                                                    {{ candidato.rf }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro rg">
+                                                {% if candidato.rg %}
+                                                    {{ candidato.rg }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro cpf">
+                                                {% if candidato.cpf %}
+                                                    {{ candidato.cpf }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="nome">
+                                                {% if candidato.status_especial %}
+                                                    {{ candidato.status_especial }}
+                                                {% else %}
+                                                    {% if candidato.nome %}
+                                                        {{ candidato.nome }}
+                                                    {% else %}
+                                                        {% if candidato.candidato.nome %}
+                                                            {{ candidato.candidato.nome }}
+                                                        {% else %}
+                                                            N/A
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro eol">
+                                                {% if candidato.codigo_eol %}
+                                                    {{ candidato.codigo_eol }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro dre">
+                                                {% if candidato.dre_codigo %}
+                                                    {{ candidato.dre_codigo }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro tipo-unidade">
+                                                {% if candidato.tipo_unidade %}
+                                                    {{ candidato.tipo_unidade }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="escola">
+                                                {% if candidato.nome_escola_escolhida %}
+                                                    {{ candidato.nome_escola_escolhida }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro vaga">
+                                                {% if candidato.tipo_vaga %}
+                                                    {{ candidato.tipo_vaga }}
+                                                {% else %}
+                                                    <span class="classificacao-vazia">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="centro assinatura">
+                                                {% if candidato.assinatura %}
+                                                    {{ candidato.assinatura }}
+                                                {% else %}
+                                                    Não Escolha
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p>Nenhum dado disponível para exibição.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
