@@ -84,18 +84,18 @@
             margin-top: 10px;
         }
 
-        table {
+        .relatorio-table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
             font-size: 10px;
         }
 
-        thead {
+        .relatorio-table thead {
             background-color: #ecf0f1;
         }
 
-        th {
+        .relatorio-table th {
             padding: 6px 4px;
             text-align: left;
             font-weight: 600;
@@ -105,25 +105,25 @@
             font-size: 9px;
         }
 
-        th.centro {
+        .relatorio-table th.centro {
             text-align: center;
         }
 
-        td {
+        .relatorio-table td {
             padding: 4px 4px;
             border: 1px solid #e0e0e0;
             font-size: 9px;
         }
 
-        td.centro {
+        .relatorio-table td.centro {
             text-align: center;
         }
 
-        tbody tr:nth-child(even) {
+        .relatorio-table tbody tr:nth-child(even) {
             background-color: #f9f9f9;
         }
 
-        tbody tr:hover {
+        .relatorio-table tbody tr:hover {
             background-color: #f0f0f0;
         }
 
@@ -186,10 +186,17 @@
             width: 90px;
         }
 
+        {% if is_pdf %}
         @page {
-            size: A4 landscape;
+            size: A3 landscape;
             margin: 1cm;
         }
+        {% else %}
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        {% endif %}
 
         @media print {
             body {
@@ -205,11 +212,12 @@
                 page-break-inside: avoid;
             }
 
-            table {
+            .relatorio-table {
                 font-size: 8px;
             }
 
-            th, td {
+            .relatorio-table th,
+            .relatorio-table td {
                 padding: 3px 2px;
             }
         }
@@ -239,7 +247,7 @@
                         </div>
 
                         <div class="table-container">
-                            <table>
+                            <table class="relatorio-table">
                                 <thead>
                                     <tr>
                                         <th class="centro classificacao">Class. Geral</th>

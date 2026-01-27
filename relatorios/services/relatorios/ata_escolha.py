@@ -92,7 +92,8 @@ class AtaEscolha(RelatorioBase):
             context = {
                 'cargos': dados_ata.get('cargos', []),
                 'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao
+                'cabecalho_padrao': cabecalho_padrao,
+                'is_pdf': True
             }
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME,
@@ -114,7 +115,8 @@ class AtaEscolha(RelatorioBase):
             context = {
                 'cargos': dados_ata.get('cargos', []),
                 'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao
+                'cabecalho_padrao': cabecalho_padrao,
+                'is_pdf': False
             }
             response = render(
                 request,
