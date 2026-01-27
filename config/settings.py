@@ -115,7 +115,12 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files (uploads)
-MEDIA_URL = '/media/'
+if DJANGO_ENVIRONMENT == 'local':
+    MEDIA_URL = '/media/'
+else:
+    # Prefixa MS_PATH antes de /media/
+    base_prefix = MS_PATH.rstrip('/')
+    MEDIA_URL = f"{base_prefix}/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
