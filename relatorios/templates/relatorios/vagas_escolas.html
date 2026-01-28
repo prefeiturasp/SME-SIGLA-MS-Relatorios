@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Vagas por Cargo e DRE</title>
+{% extends "relatorios/relatorio_base.html" %}
+
+{% block title %}Relatório de Vagas por Cargo e DRE{% endblock %}
+
+{% block extra_styles %}
     <style>
         * {
             margin: 0;
@@ -171,13 +170,9 @@
             
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
-        
+{% endblock %}
+
+{% block content %}
         <h1>Relação de Vagas</h1>
 
         {% for cargo in cargos %}
@@ -224,6 +219,4 @@
                 {% endfor %}
             </div>
         {% endfor %}
-    </div>
-</body>
-</html>
+{% endblock %}

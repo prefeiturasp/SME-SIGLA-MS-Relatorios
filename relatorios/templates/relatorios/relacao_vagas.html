@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relação de Vagas</title>
+{% extends "relatorios/relatorio_base.html" %}
+
+{% block title %}Relação de Vagas{% endblock %}
+
+{% block extra_styles %}
     <style>
         * {
             margin: 0;
@@ -221,6 +220,4 @@
                 {% endfor %}
             </div>
         {% endfor %}
-    </div>
-</body>
-</html>
+{% endblock %}

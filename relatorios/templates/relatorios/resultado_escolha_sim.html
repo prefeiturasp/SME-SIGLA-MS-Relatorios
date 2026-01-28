@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultado da Escolha de Vagas - Geral</title>
+{% extends "relatorios/relatorio_base.html" %}
+
+{% block title %}Resultado da Escolha de Vagas - Geral{% endblock %}
+
+{% block extra_styles %}
     <style>
         * {
             margin: 0;
@@ -176,15 +175,9 @@
             }
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        {% if cabecalho %}
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
-        {% endif %}
-        
+{% endblock %}
+
+{% block content %}
         <h1 class="titulo-relatorio">RESULTADO DA ESCOLHA DE VAGAS - GERAL</h1>
         
         <div class="data-relatorio">
@@ -231,6 +224,4 @@
                 </div>
             </div>
         {% endfor %}
-    </div>
-</body>
-</html>
+{% endblock %}

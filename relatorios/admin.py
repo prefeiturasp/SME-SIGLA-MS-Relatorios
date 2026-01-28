@@ -2,7 +2,7 @@
 Django admin configuration for the processes module.
 """
 from django.contrib import admin
-from .models import Relatorio, Parametrizacao
+from .models import Relatorio, Parametrizacao, ConfiguracaoRelatorio
 
 
 @admin.register(Relatorio)
@@ -19,7 +19,10 @@ class RelatorioAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Relatório', {
-            'fields': ('tipo', 'usuario')
+            'fields': ('tipo', 'usuario', 'processo_uuid', 'agenda_uuid')
+        }),
+        ('Configurações', {
+            'fields': ('cabecalho', 'usou_cabecalho_padrao', 'usou_logotipo', 'texto_final')
         }),
         ('Datas', {
             'fields': ('criado_em', 'atualizado_em')
@@ -44,6 +47,35 @@ class ParametrizacaoAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Parametrização', {
             'fields': ('cabecalho', 'logo')
+        }),
+        ('Datas', {
+            'fields': ('criado_em', 'atualizado_em')
+        }),
+        ('Metadados', {
+            'fields': ('uuid',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(ConfiguracaoRelatorio)
+class ConfiguracaoRelatorioAdmin(admin.ModelAdmin):
+    """Admin for ConfiguracaoRelatorio model."""
+
+    list_display = (
+        'tipo', 'usar_logotipo', 'usar_cabecalho_padrao', 'criado_em'
+    )
+    list_filter = ('tipo', 'usar_logotipo', 'usar_cabecalho_padrao')
+    search_fields = ('tipo', 'cabecalho', 'texto_final')
+    readonly_fields = ('uuid', 'criado_em', 'atualizado_em')
+    ordering = ('tipo',)
+
+    fieldsets = (
+        ('Configuração', {
+            'fields': ('tipo', 'usar_logotipo', 'usar_cabecalho_padrao')
+        }),
+        ('Conteúdo', {
+            'fields': ('cabecalho', 'texto_final')
         }),
         ('Datas', {
             'fields': ('criado_em', 'atualizado_em')

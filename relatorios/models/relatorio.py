@@ -14,6 +14,10 @@ class Relatorio(BaseModel):
     processo_uuid = models.UUIDField(verbose_name="UUID do Processo")
     cabecalho = models.CharField(max_length=255, verbose_name="Cabeçalho do Relatório", blank=True, null=True)
     agenda_uuid = models.UUIDField(verbose_name="UUID da Agenda", blank=True, null=True)
+    usou_cabecalho_padrao = models.BooleanField(verbose_name="Usou Cabeçalho Padrão", default=False)
+    usou_logotipo = models.BooleanField(verbose_name="Usou Logotipo", default=False)
+    texto_final = models.TextField(verbose_name="Texto Final", blank=True, null=True)
+    
 
     class Meta:
         verbose_name = "Relatório"

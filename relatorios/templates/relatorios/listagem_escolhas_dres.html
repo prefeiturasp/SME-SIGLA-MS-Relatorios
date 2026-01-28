@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listagem de Escolhas por DREs</title>
+{% extends "relatorios/relatorio_base.html" %}
+
+{% block title %}Listagem de Escolhas por DREs{% endblock %}
+
+{% block extra_styles %}
     <style>
         * {
             margin: 0;
@@ -323,6 +322,4 @@
         <div class="total-rodape">
             <strong>Total de escolhas:</strong> {{ total_escolhas }}
         </div>
-    </div>
-</body>
-</html>
+{% endblock %}
