@@ -23,15 +23,19 @@ class ConfiguracaoRelatorio(BaseModel):
         verbose_name="Usar Cabeçalho Padrão",
         default=False
     )
-    cabecalho = models.CharField(
-        max_length=500,
+    cabecalho = models.TextField(        
         verbose_name="Cabeçalho",
         default="",
         blank=True
     )
-    texto_final = models.CharField(
-        max_length=1000,
+    texto_final = models.TextField(        
         verbose_name="Texto Final",
+        default="",
+        blank=True
+    )
+
+    cabecalho_capa_ata = models.TextField(        
+        verbose_name="Cabeçalho Capa da Ata",
         default="",
         blank=True
     )
@@ -40,7 +44,7 @@ class ConfiguracaoRelatorio(BaseModel):
         verbose_name = "Configuração de Relatório"
         verbose_name_plural = "Configurações de Relatórios"
         ordering = ['tipo']
-        db_table = 'configuracao_relatorio'
+        db_table = 'relatorios_configuracao'
     
     def __str__(self):
         return f"Configuração - {self.get_tipo_display()}"

@@ -17,7 +17,7 @@ class Relatorio(BaseModel):
     usou_cabecalho_padrao = models.BooleanField(verbose_name="Usou Cabeçalho Padrão", default=False)
     usou_logotipo = models.BooleanField(verbose_name="Usou Logotipo", default=False)
     texto_final = models.TextField(verbose_name="Texto Final", blank=True, null=True)
-    
+    cabecalho_capa_ata = models.TextField(verbose_name="Cabeçalho Capa da Ata", blank=True, null=True)
 
     class Meta:
         verbose_name = "Relatório"
