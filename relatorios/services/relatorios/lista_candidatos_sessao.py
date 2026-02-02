@@ -19,7 +19,10 @@ except Exception:
 
 try:
     from docx import Document
-    from docx.shared import Pt
+    from docx.shared import Pt, RGBColor, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
     DOCX_AVAILABLE = True
 except Exception:
     DOCX_AVAILABLE = False
@@ -195,50 +198,124 @@ class ListaCandidatosSessao(RelatorioBase):
             raise ImportError("python-docx não está instalado. Instale com: pip install python-docx>=0.8.11")
 
         doc = Document()
-        doc.add_heading('Lista de Candidatos por Sessão', level=1)
+        
+        # Configurar margens da página
+        doc_sections = doc.sections
+        for section in doc_sections:
+            section.top_margin = Inches(1)
+            section.bottom_margin = Inches(1)
+            section.left_margin = Inches(1)
+            section.right_margin = Inches(1)
+        
+        # Título
+        title = doc.add_paragraph()
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        title_run = title.add_run('Lista de Candidatos por Sessão')
+        title_run.font.size = Pt(14)
+        title_run.font.bold = True
+        doc.add_paragraph()  # linha em branco após o título
+        
         # Informações da(s) agenda(s) no topo, com tabelas separadas por sessão
         def _fmt_data(date_str: str) -> str:
             return f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}" if len(date_str) >= 10 else date_str
         def _fmt_hora(time_str: str) -> str:
             return time_str[:5] if len(time_str) >= 5 else time_str
 
-        sections = context.get('agendas') or []
-        if not sections:
-            sections = [{'agenda': context.get('agenda') or {}, 'candidatos': context.get('candidatos') or []}]
+        sections_list = context.get('agendas') or []
+        if not sections_list:
+            sections_list = [{'agenda': context.get('agenda') or {}, 'candidatos': context.get('candidatos') or []}]
 
-        for idx, sec in enumerate(sections):
+        for idx, sec in enumerate(sections_list):
             agenda = sec.get('agenda') or {}
             escolha_em = agenda.get('escolha_em') or ''
             hora_ini = agenda.get('hora_convocacao_inicio') or ''
             hora_fim = agenda.get('hora_convocacao_fim') or ''
             sessao = agenda.get('sessao') or ''
             cargo_nome = agenda.get('cargo_nome') or ''
+            
+            # Formatar informações da agenda com negrito e tamanho 12 (igual ao XLS)
             if escolha_em:
-                doc.add_paragraph(f"Data: {_fmt_data(escolha_em)}")
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(f"Data: {_fmt_data(escolha_em)}")
+                run.font.size = Pt(12)
+                run.font.bold = True
             if hora_ini or hora_fim:
                 ini = _fmt_hora(hora_ini) if hora_ini else ''
                 fim = _fmt_hora(hora_fim) if hora_fim else ''
-                doc.add_paragraph(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
+                run.font.size = Pt(12)
+                run.font.bold = True
             if sessao:
-                doc.add_paragraph(str(sessao))
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(str(sessao))
+                run.font.size = Pt(12)
+                run.font.bold = True
             if cargo_nome:
-                doc.add_paragraph(f"Cargo: {cargo_nome}")
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(f"Cargo: {cargo_nome}")
+                run.font.size = Pt(12)
+                run.font.bold = True
+            
+            # Linha em branco antes da tabela
+            doc.add_paragraph()
 
+            # Criar tabela
             rows = len(sec.get('candidatos', [])) + 1
             table = doc.add_table(rows=rows, cols=6)
-            hdr_cells = table.rows[0].cells
+            table.style = 'Light Grid Accent 1'
+            
+            # Cabeçalho da tabela
             headers = ['Classificação', 'Classificação NNA', 'Classificação PCD', 'Inscrição', 'Nome', 'CPF']
+            hdr_cells = table.rows[0].cells
             for j, h in enumerate(headers):
-                hdr_cells[j].text = h
+                cell = hdr_cells[j]
+                cell.text = h
+                # Formatação do cabeçalho: negrito, tamanho 10, centralizado (igual ao XLS)
+                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                cell.paragraphs[0].runs[0].font.bold = True
+                cell.paragraphs[0].runs[0].font.size = Pt(10)
+                
+                # Aplicar cor de fundo #ECF0F1 no cabeçalho
+                tc_pr = cell._element.get_or_add_tcPr()
+                existing_shd = tc_pr.find(qn('w:shd'))
+                if existing_shd is not None:
+                    tc_pr.remove(existing_shd)
+                shading_elm = OxmlElement('w:shd')
+                shading_elm.set(qn('w:fill'), 'ECF0F1')
+                shading_elm.set(qn('w:val'), 'clear')
+                tc_pr.append(shading_elm)
+            
+            # Dados dos candidatos
             for i, row in enumerate(sec.get('candidatos', []), start=1):
                 cells = table.rows[i].cells
-                cells[0].text = str(row.get('classificacao') or '')
-                cells[1].text = str(row.get('classificacao_nna') or '')
-                cells[2].text = str(row.get('classificacao_pcd') or '')
-                cells[3].text = str(row.get('inscricao') or '')
-                cells[4].text = str(row.get('nome') or '')
-                cells[5].text = str(row.get('cpf') or '')
-            if idx < len(sections) - 1:
+                values = [
+                    str(row.get('classificacao') or ''),
+                    str(row.get('classificacao_nna') or ''),
+                    str(row.get('classificacao_pcd') or ''),
+                    str(row.get('inscricao') or ''),
+                    str(row.get('nome') or ''),
+                    str(row.get('cpf') or ''),
+                ]
+                
+                for col_idx, val in enumerate(values):
+                    cell = cells[col_idx]
+                    cell.text = val
+                    # Alinhamento: centralizado para colunas 0, 1, 2 (Classificação, Classificação NNA, Classificação PCD)
+                    # Esquerda para colunas 3, 4, 5 (Inscrição, Nome, CPF) - igual ao XLS
+                    if col_idx in (0, 1, 2):
+                        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    else:
+                        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    # Fonte tamanho 10
+                    cell.paragraphs[0].runs[0].font.size = Pt(10)
+            
+            # Espaço entre sessões
+            if idx < len(sections_list) - 1:
                 doc.add_paragraph()
 
         import io
