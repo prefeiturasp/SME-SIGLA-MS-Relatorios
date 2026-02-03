@@ -5,6 +5,7 @@ Baseado no padrão da Ata de Convocação, mas com informações da escola escol
 import json
 import logging
 import re
+import requests
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -28,6 +29,7 @@ except ImportError:
 try:
     from openpyxl import Workbook
     from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XLImage
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
@@ -151,8 +153,7 @@ class AtaEscolha(RelatorioBase):
             filename = f'ata_escolha_{processo_uuid}.xlsx'
             logger.info('Gerando XLS: %s', filename)
             response = self._render_xls(
-                dados_ata.get('cargos', []),
-                context_data['cabecalho'],
+                context_data,
                 filename=filename
             )
             return response, dados_ata
@@ -356,7 +357,7 @@ class AtaEscolha(RelatorioBase):
             logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
             raise
 
-    def _render_xls(self, cargos_list, cabecalho, filename='ata_escolha.xlsx'):
+    def _render_xls(self, context_data, filename='ata_escolha.xlsx'):
         """
         Gera um arquivo Excel (XLSX) com a estrutura da Ata de Escolha.
         """
@@ -379,38 +380,54 @@ class AtaEscolha(RelatorioBase):
 
         # Título
         row_idx = 1
-        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=13)
-        c = ws.cell(row=row_idx, column=1)
-        c.value = "ATA DE ESCOLHA"
-        c.font = title_font
-        c.alignment = center
-        row_idx += 1
-
-        # Lei de referência
-        ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=13)
-        c = ws.cell(row=row_idx, column=1)
-        c.value = ""
-        c.font = Font(size=10, italic=True)
-        c.alignment = center
-        row_idx += 1
+        temp_image_paths = []
+        # Inserir logotipo no topo, se disponível
+        logo_url = (context_data or self.context).get('logo_url') if context_data or self.context else ''
+        if context_data.get('usar_logotipo') and logo_url:
+            image_path = None
+            try:
+                if logo_url.startswith('http://') or logo_url.startswith('https://'):
+                    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpf:
+                        resp = requests.get(logo_url, timeout=15)
+                        resp.raise_for_status()
+                        tmpf.write(resp.content)
+                        image_path = tmpf.name
+                        temp_image_paths.append(image_path)
+                elif os.path.exists(logo_url):
+                    image_path = logo_url
+                if image_path:
+                    img = XLImage(image_path)
+                    # opcional: ajustar tamanho
+                    try:
+                        # Reduz o tamanho da imagem
+                        img.width = 220
+                        img.height = 90
+                    except Exception:
+                        pass
+                    # Aproxima o alinhamento central ancorando em uma coluna intermediária
+                    # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado
+                    ws.add_image(img, 'G1')
+                    # Avança algumas linhas para não sobrepor conteúdo
+                    row_idx = max(row_idx, 8)
+            except Exception as exc:
+                logger.warning('Não foi possível inserir o logotipo no XLS: %s', exc)
 
         # Cabeçalho institucional (opcional)
+        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
         if cabecalho:
-            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=13)
-            c = ws.cell(row=row_idx, column=1)
-            c.value = cabecalho
-            c.font = Font(size=10, bold=True)
-            c.alignment = left
-            row_idx += 1
-
-        # Espaço
-        row_idx += 1
+            ws.merge_cells(f'A{row_idx}:M{row_idx}')
+            cell = ws[f'A{row_idx}']
+            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            cell.value = cabecalho_texto
+            cell.font = title_font
+            cell.alignment = center
+            row_idx += 2
 
         # Percorre cargos e sessões
         headers = ['Class. Geral', 'Class. Def.', 'Class. NNA', 'RF', 'RG', 'CPF', 'Nome', 
                   'Código EOL', 'DRE', 'Tipo Unidade', 'Unidade Escolhida', 'Tipo Vaga', 'Assinatura']
 
-        for cargo in cargos_list or []:
+        for cargo in context_data.get('cargos', []) or []:
             cargo_nome = cargo.get('cargo_nome', '')
             sessoes = cargo.get('sessoes', []) or []
 
@@ -514,12 +531,30 @@ class AtaEscolha(RelatorioBase):
         
         for col_letter, width in column_widths.items():
             ws.column_dimensions[col_letter].width = width
+        
+        # Adiciona texto final ao término do relatório, se houver
+        texto_final = self.context.get('texto_final')
+        if texto_final:
+            row_idx += 1
+            ws.merge_cells(f'A{row_idx}:D{row_idx}')
+            cell = ws[f'A{row_idx}']
+            cell.value = self.processar_cabecalho_html(texto_final)
+            cell.font = normal_font
+            cell.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
 
         # Salvar em buffer
         from io import BytesIO
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
+
+        for p in temp_image_paths:
+            try:
+                if os.path.exists(p):
+                    os.unlink(p)
+            except Exception:
+                pass
+
         resp = HttpResponse(
             buf.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
