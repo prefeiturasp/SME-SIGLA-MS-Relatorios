@@ -9,7 +9,6 @@ TIPOS_RELATORIOS = [
     ('LISTAGEM_ESCOLHAS_DRES', 'Listagem de Escolhas por DREs'),
     ('SUMULA_RECONVOCACAO', 'Súmula de Reconvocados'),
     ('SUMULA_ESCOLHAS', 'Súmula de Escolhas'),
-    ('RECONVOCACAO', 'Súmula de Reconvocados'),
     ('LAUDA_CONVOCACAO', 'Lauda de Convocação'),
     ('RESULTADO_ESCOLHA_SIM', 'Resultado de Escolha de vagas - Sim'),
     ('RESULTADO_ESCOLHA_NAO', 'Resultado de Escolha de vagas - Não'),

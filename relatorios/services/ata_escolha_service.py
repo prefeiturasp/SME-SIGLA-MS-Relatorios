@@ -366,6 +366,78 @@ class AtaEscolhaService:
             'tipo_vaga': tipo_vaga
         }
 
+    def _contar_escolhas_por_situacao(self, escolhas: List[Dict]) -> Dict[str, int]:
+        """
+        Conta quantas escolhas existem por situação.
+        A situação pode ser: 'escolha', 'nao-escolha' ou 'reconvocacao'.
+        Retorna um dicionário com as chaves 'escolha', 'nao_escolha' e 'reconvocacao'.
+        Também inclui alias 'nao-escolha' para compatibilidade de acesso.
+        """
+        contadores = {
+            'escolha': 0,
+            'nao_escolha': 0,
+            'reconvocacao': 0,
+        }
+
+        normalizar = {
+            'escolha': 'escolha',
+            'nao-escolha': 'nao_escolha',
+            'nao_escolha': 'nao_escolha',
+            'reconvocacao': 'reconvocacao',
+        }
+        for escolha in escolhas:
+            situacao_raw = escolha.get('situacao')
+            if not isinstance(situacao_raw, str):
+                continue
+            situacao = situacao_raw.strip().lower()
+            chave = normalizar.get(situacao)
+            if chave in contadores:
+                contadores[chave] += 1
+
+        # Alias com hífen para acesso alternativo se necessário
+        contadores['nao-escolha'] = contadores['nao_escolha']
+        return contadores
+
+    def _contar_escolhas_por_situacao_por_tipo(
+        self,
+        candidatos_sep_cargo: Dict[str, List[Dict]],
+        escolhas_map: Dict[str, Dict]
+    ) -> Dict[str, Dict[str, int]]:
+        """
+        Conta as escolhas por situação separadas por tipo de candidato (pcd, geral, nna).
+        - candidatos_sep_cargo: {'pcd': [...], 'geral': [...], 'nna': [...]}
+        - escolhas_map: {candidato_uuid: { 'situacao': 'escolha'|'nao-escolha'|'reconvocacao', ...}}
+        """
+        resultado: Dict[str, Dict[str, int]] = {}
+        normalizar = {
+            'escolha': 'escolha',
+            'nao-escolha': 'nao_escolha',
+            'nao_escolha': 'nao_escolha',
+            'reconvocacao': 'reconvocacao',
+        }
+        for tipo in ('pcd', 'geral', 'nna'):
+            candidatos_tipo = candidatos_sep_cargo.get(tipo) or []
+            uuids_tipo = {
+                str(c.get('uuid'))
+                for c in candidatos_tipo
+                if c.get('uuid') is not None
+            }
+            cont = {'escolha': 0, 'nao_escolha': 0, 'reconvocacao': 0}
+            for cand_uuid in uuids_tipo:
+                esc = escolhas_map.get(cand_uuid)
+                if not esc:
+                    continue
+                situacao_raw = esc.get('situacao')
+                if not isinstance(situacao_raw, str):
+                    continue
+                situacao = situacao_raw.strip().lower()
+                chave = normalizar.get(situacao)
+                if chave:
+                    cont[chave] += 1
+            cont['nao-escolha'] = cont['nao_escolha']
+            resultado[tipo] = cont
+        return resultado
+
     def processar_ata_escolha(
         self,
         processo_uuid: str,
@@ -500,6 +572,9 @@ class AtaEscolhaService:
             # 2. Processar cada cargo e separar por sessões/agendas
             cargos_com_sessoes = []
 
+            response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
+            processo_data = response_processo.json()
+
             for cargo_info in agendas_por_cargo.values():
                 cargo_nome = cargo_info['cargo_nome']
                 cargo_codigo = cargo_info['cargo_codigo']
@@ -546,14 +621,12 @@ class AtaEscolhaService:
                 if lacunas_geral or lacunas_nna or lacunas_pcd:
                     if resultado.get('concurso_uuid') is None:
                         logger.info('Buscando detalhes do processo para processo_uuid=%s', processo_uuid)
-                        response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
-                        processo_data = response_processo.json()
                         concurso_uuid = processo_data.get('concurso_uuid')
                         resultado['concurso_uuid'] = concurso_uuid
                         if concurso_uuid:
                             logger.info('Buscando todos os processos do concurso %s', concurso_uuid)
                             processo_uuid_principal, outros_processos_uuid = self.processo_service.separar_processos_por_principal(
-                                processo_uuid_principal=processo_uuid
+                                processo_data=processo_data
                             )
                             resultado['todos_processos_uuid'] = [processo_uuid_principal] + outros_processos_uuid
                             resultado['outros_processos_uuid'] = outros_processos_uuid
@@ -827,11 +900,20 @@ class AtaEscolhaService:
 
             # A estrutura principal será organizada por cargos e sessões
             resultado_estruturado = {
-                'processo_uuid': resultado.get('processo_uuid'),
+                'processo_uuid': processo_data.get('uuid'),
+                'processo_nome': processo_data.get('nome'),
                 'concurso_uuid': resultado.get('concurso_uuid'),
                 'todos_processos_uuid': resultado.get('todos_processos_uuid'),
                 'outros_processos_uuid': resultado.get('outros_processos_uuid'),
                 'total_cargos': len(cargos_com_sessoes),
+                'candidatos_sep_cargo': candidatos_sep_cargo,
+                # Totais agregados por situação (todas as escolhas)
+                'escolhas_totais': self._contar_escolhas_por_situacao(list(escolhas_map.values())),
+                # Totais por situação separados por tipo (pcd/geral/nna)
+                'escolhas_totais_por_tipo': self._contar_escolhas_por_situacao_por_tipo(
+                    candidatos_sep_cargo=candidatos_sep_cargo,
+                    escolhas_map=escolhas_map
+                ),
                 'cargos': []
             }
 
@@ -865,7 +947,6 @@ class AtaEscolhaService:
                     cargo_estruturado['sessoes'].append(sessao_estruturada)
 
                 resultado_estruturado['cargos'].append(cargo_estruturado)
-
             # Retornar a estrutura organizada
             return resultado_estruturado
 

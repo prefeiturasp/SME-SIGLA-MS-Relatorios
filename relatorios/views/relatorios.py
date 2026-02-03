@@ -32,9 +32,6 @@ class RelatorioViewSet(viewsets.ModelViewSet):
 
         tipo_relatorio = serializer.validated_data.get('tipo')
         processo_uuid = serializer.validated_data.get('processo_uuid')
-        # Prioriza o cabecalho vindo do request (body ou query), senão usa o validado
-        cabecalho = serializer.validated_data.get('cabecalho', '')
-
         # Sanitização de cabecalho realizada no serializer (validate_cabecalho)
         usuario = serializer.validated_data.get('usuario', '')
         candidatos_uuids = serializer.validated_data.get('candidatos_uuids', None)
@@ -63,7 +60,6 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                 processo_uuid,
                 request,
                 formato,
-                cabecalho,
                 agenda_uuid=agenda_uuid
             )
             try:

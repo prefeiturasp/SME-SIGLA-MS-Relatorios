@@ -1,43 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ata de Escolha</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "relatorios/relatorio_base.html" %}
 
-        body {
-            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
-            background-color: white;
-            padding: 0;
-            margin: 0;
-            color: #333;
-            font-size: 11px;
-        }
+{% block title %}Ata de Escolha{% endblock %}
 
-        .container {
-            max-width: 100%;
-            margin: 0;
-            background-color: white;
-            padding: 0;
-        }
-
-        .cabecalho {
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #3498db;
-        }
-
+{% block extra_styles %}
+        {% if not is_docx %}
         .titulo-relatorio {
             text-align: center;
             color: #2c3e50;
@@ -186,28 +152,7 @@
             width: 90px;
         }
 
-        {% if is_pdf %}
-        @page {
-            size: A3 landscape;
-            margin: 1cm;
-        }
-        {% else %}
-        @page {
-            size: A4;
-            margin: 1cm;
-        }
-        {% endif %}
-
         @media print {
-            body {
-                background-color: white;
-                padding: 0;
-            }
-
-            .container {
-                padding: 0;
-            }
-
             .sessao-section {
                 page-break-inside: avoid;
             }
@@ -221,18 +166,11 @@
                 padding: 3px 2px;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        {% if cabecalho %}
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|linebreaksbr }}
-        </div>
         {% endif %}
+{% endblock %}
 
-        <h1 class="titulo-relatorio">ATA DE ESCOLHA</h1>
-
+{% block content %}
+        <h1 class="titulo-relatorio">ATA DE ESCOLHAAAAAA</h1>
 
         {% if cargos %}
             {% for cargo in cargos %}
@@ -378,6 +316,4 @@
         {% else %}
             <p>Nenhum dado disponível para exibição.</p>
         {% endif %}
-    </div>
-</body>
-</html>
+{% endblock %}

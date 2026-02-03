@@ -2,10 +2,15 @@
 Implementação concreta do relatório de Listagem de Escolhas por DREs.
 """
 import logging
+import tempfile
+import os
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse
 from io import BytesIO
+import tempfile
+import os
+import requests
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.escolhas_api_service import EscolhasService
 from relatorios.services.candidatos_api_service import CandidatosService
@@ -14,6 +19,7 @@ from relatorios.utils import convert_uuids_to_strings
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XLImage
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
@@ -40,16 +46,16 @@ class ListagemEscolhasDres(RelatorioBase):
     
     def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
+        super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
     
-    def render_to_xls(self, escolhas_list, cabecalho, filename='listagem_escolhas_dres.xlsx'):
+    def render_to_xls(self, context={}, filename='listagem_escolhas_dres.xlsx'):
         """
         Gera um arquivo Excel (XLSX) com a listagem de escolhas.
         
         Args:
-            escolhas_list: Lista de escolhas com dados dos candidatos
-            cabecalho: Texto do cabeçalho do relatório
+            context: Contexto do relatório
             filename: Nome do arquivo Excel gerado
         
         Returns:
@@ -82,7 +88,40 @@ class ListagemEscolhasDres(RelatorioBase):
             
             row = 1
             
+            temp_image_paths = []
+            # Inserir logotipo no topo, se disponível
+            logo_url = (context or self.context).get('logo_url') if context or self.context else ''
+            if context.get('usar_logotipo') and logo_url:
+                image_path = None
+                try:
+                    if logo_url.startswith('http://') or logo_url.startswith('https://'):
+                        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpf:
+                            resp = requests.get(logo_url, timeout=15)
+                            resp.raise_for_status()
+                            tmpf.write(resp.content)
+                            image_path = tmpf.name
+                            temp_image_paths.append(image_path)
+                    elif os.path.exists(logo_url):
+                        image_path = logo_url
+                    if image_path:
+                        img = XLImage(image_path)
+                        # opcional: ajustar tamanho
+                        try:
+                            # Reduz o tamanho da imagem
+                            img.width = 220
+                            img.height = 90
+                        except Exception:
+                            pass
+                        # Aproxima o alinhamento central ancorando em uma coluna intermediária
+                        # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado
+                        ws.add_image(img, 'B1')
+                        # Avança algumas linhas para não sobrepor conteúdo
+                        row = max(row, 8)
+                except Exception as exc:
+                    logger.warning('Não foi possível inserir o logotipo no XLS (listagem_escolhas_dres): %s', exc)
+
             # Cabeçalho
+            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 ws.merge_cells(f'A{row}:O{row}')
@@ -120,7 +159,7 @@ class ListagemEscolhasDres(RelatorioBase):
             row += 1
             
             # Dados das escolhas
-            for item in escolhas_list:
+            for item in context.get('escolhas', []):
                 ws.cell(row=row, column=1).value = item.get('cargo', '-')
                 ws.cell(row=row, column=2).value = item.get('classificacao', '-')
                 ws.cell(row=row, column=3).value = item.get('classificacao_deficiente', '-')
@@ -160,7 +199,7 @@ class ListagemEscolhasDres(RelatorioBase):
             # Rodapé com total
             ws.merge_cells(f'A{row}:O{row}')
             cell = ws[f'A{row}']
-            cell.value = f"Total de escolhas: {len(escolhas_list)}"
+            cell.value = f"Total de escolhas: {len(context.get('escolhas', []))}"
             cell.font = Font(bold=True, size=9)
             cell.alignment = Alignment(horizontal='right', vertical='center')
             row += 1
@@ -189,11 +228,27 @@ class ListagemEscolhasDres(RelatorioBase):
             
             # Congelar primeira linha de dados (cabeçalhos da tabela)
             ws.freeze_panes = f'A{header_row + 1}'
+
+            if context.get('texto_final'):
+                row += 1
+                ws.merge_cells(f'A{row}:O{row}')
+                cell = ws[f'A{row}']
+                cell.value = self.processar_cabecalho_html(context.get('texto_final'))
+                cell.font = normal_font
+                cell.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
             
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
             
+            # Limpar temporários de imagem
+            for p in temp_image_paths:
+                try:
+                    if os.path.exists(p):
+                        os.unlink(p)
+                except Exception:
+                    pass
+
             response = HttpResponse(
                 buffer.read(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -205,13 +260,14 @@ class ListagemEscolhasDres(RelatorioBase):
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
             raise
     
-    def render_to_docx(self, escolhas_list, cabecalho, filename='listagem_escolhas_dres.docx'):
+    def render_to_docx(self, escolhas_list, cabecalho, texto_final, filename='listagem_escolhas_dres.docx'):
         """
         Gera um arquivo Word (DOCX) com a listagem de escolhas.
         
         Args:
             escolhas_list: Lista de escolhas com dados dos candidatos
             cabecalho: Texto do cabeçalho do relatório
+            texto_final: Texto final do relatório
             filename: Nome do arquivo Word gerado
         
         Returns:
@@ -237,6 +293,7 @@ class ListagemEscolhasDres(RelatorioBase):
             table_header_color = RGBColor(74, 85, 104)  # #4a5568
             
             # Cabeçalho
+            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 p = doc.add_paragraph()
@@ -325,6 +382,13 @@ class ListagemEscolhasDres(RelatorioBase):
             run = p.add_run(f"Total de escolhas: {len(escolhas_list)}")
             run.font.size = Pt(9)
             run.font.bold = True
+
+            if texto_final:
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(self.processar_cabecalho_html(texto_final))
+                run.font.size = Pt(10)
+                doc.add_paragraph()
             
             # Salvar em buffer
             buffer = BytesIO()
@@ -488,9 +552,8 @@ class ListagemEscolhasDres(RelatorioBase):
             })
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_input = (cabecalho or '').strip()
-        cabecalho_final = cabecalho_input if cabecalho_input else getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
-        cabecalho_padrao = getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
+        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
         
         # Preparar dados para salvar no banco
         dados = {
@@ -508,35 +571,69 @@ class ListagemEscolhasDres(RelatorioBase):
             escolhas_ordenadas_export.extend(cargo_item['escolhas'])
         
         # Preparar contexto comum para todos os formatos
-        context = {
+        self.context.update({
             'cargos': cargos_list,
-            'cabecalho': cabecalho_final,
-            'cabecalho_padrao': cabecalho_padrao,
             'total_escolhas': len(escolhas_com_candidatos),
-        }
+            'logo_url': logo_url,
+            'is_pdf': False,
+            'escolhas': escolhas_ordenadas_export,
+        })
         
         if formato == 'xls' or formato == 'xlsx' or formato == 'csv':
             filename = f'listagem_escolhas_dres_{processo_uuid}.xlsx'
             logger.info('Gerando Excel: %s', filename)
-            response = self.render_to_xls(escolhas_ordenadas_export, cabecalho_final, filename=filename)
+            response = self.render_to_xls(context=self.context, filename=filename)
             return response, dados
         elif formato == 'docx' or formato == 'doc':
+            self.context["is_pdf"] = True
             filename = f'listagem_escolhas_dres_{processo_uuid}.docx'
-            logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(escolhas_ordenadas_export, cabecalho_final, filename=filename)
+            logger.info('Gerando Word (via PDF -> DOCX): %s', filename)
+            try:
+                from pdf2docx import parse as pdf_to_docx_parse
+            except Exception as exc:
+                logger.error('pdf2docx não está instalado ou falhou ao importar: %s', exc)
+                raise ImportError("pdf2docx não está instalado. Instale com: pip install pdf2docx")
+
+            pdf_response = self.render_to_pdf(self.TEMPLATE_NAME, self.context, filename=f'listagem_escolhas_dres_{processo_uuid}.pdf')
+            pdf_bytes = pdf_response.content
+
+            # 2) Grava PDF em arquivo temporário e converte para DOCX
+            try:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    pdf_path = os.path.join(tmpdir, 'input.pdf')
+                    docx_path = os.path.join(tmpdir, 'output.docx')
+                    with open(pdf_path, 'wb') as f:
+                        f.write(pdf_bytes)
+                    # Converter PDF -> DOCX
+                    pdf_to_docx_parse(pdf_path, docx_path)
+                    with open(docx_path, 'rb') as f:
+                        docx_content = f.read()
+            except Exception as exc:
+                logger.error('Falha ao converter PDF em DOCX: %s', exc, exc_info=True)
+                raise
+
+            # 3) Retorna o DOCX como resposta
+            response = HttpResponse(
+                docx_content,
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response, dados
         elif formato == 'pdf':
             filename = f'listagem_escolhas_dres_{processo_uuid}.pdf'
             logger.info('Gerando PDF: %s', filename)
+            self.context.update({
+                'is_pdf': True,
+            })
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME,
-                context,
+                self.context,
                 filename=filename
             )
             return response, dados
         elif formato == 'html':
             # Gerar HTML
-            response = render(request, self.TEMPLATE_NAME, context)
+            response = render(request, self.TEMPLATE_NAME, self.context)
             return response, dados
         else:
             # Para outros formatos, retornar JSON por enquanto

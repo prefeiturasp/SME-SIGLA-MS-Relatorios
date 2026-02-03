@@ -3,7 +3,9 @@ from typing import List, Dict, Any, Tuple
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.conf import settings
-
+import tempfile
+import os
+import requests
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.candidatos_api_service import CandidatosService
 from relatorios.services.agendas_api_service import AgendasService
@@ -13,6 +15,7 @@ logger = logging.getLogger(__name__)
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from openpyxl.drawing.image import Image as XLImage
     OPENPYXL_AVAILABLE = True
 except Exception:
     OPENPYXL_AVAILABLE = False
@@ -36,7 +39,8 @@ class ListaCandidatosSessao(RelatorioBase):
 
     TEMPLATE_NAME = 'relatorios/lista_candidatos_sessao.html'
 
-    def __init__(self, tipo: str = 'LISTA_CANDIDATOS_SESSAO'):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
         self.agendas_service = AgendasService(base_url=settings.AGENDAS_API_URL)
 
@@ -90,6 +94,48 @@ class ListaCandidatosSessao(RelatorioBase):
 
         # Título e informações da(s) agenda(s) acima das tabelas
         row_idx = 1
+        temp_image_paths = []
+        # Inserir logotipo no topo, se disponível
+        logo_url = (context or self.context).get('logo_url') if context or self.context else ''
+        if context.get('usar_logotipo') and logo_url:
+            image_path = None
+            try:
+                if logo_url.startswith('http://') or logo_url.startswith('https://'):
+                    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpf:
+                        resp = requests.get(logo_url, timeout=15)
+                        resp.raise_for_status()
+                        tmpf.write(resp.content)
+                        image_path = tmpf.name
+                        temp_image_paths.append(image_path)
+                elif os.path.exists(logo_url):
+                    image_path = logo_url
+                if image_path:
+                    img = XLImage(image_path)
+                    # opcional: ajustar tamanho
+                    try:
+                        # Reduz o tamanho da imagem
+                        img.width = 220
+                        img.height = 90
+                    except Exception:
+                        pass
+                    # Aproxima o alinhamento central ancorando em uma coluna intermediária
+                    # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado
+                    ws.add_image(img, 'B1')
+                    # Avança algumas linhas para não sobrepor conteúdo
+                    row_idx = max(row_idx, 8)
+            except Exception as exc:
+                logger.warning('Não foi possível inserir o logotipo no XLS (lista_candidatos_sessao): %s', exc)
+
+        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        if cabecalho:
+            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            title_cell = ws.cell(row=row_idx, column=1)
+            title_cell.value = cabecalho_texto
+            title_cell.font = Font(bold=True, size=14)
+            title_cell.alignment = center
+            row_idx += 2  # linha em branco após o título
+
         ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
         title_cell = ws.cell(row=row_idx, column=1)
         title_cell.value = "Lista de Candidatos por Sessão"
@@ -182,10 +228,27 @@ class ListaCandidatosSessao(RelatorioBase):
         ws.column_dimensions['E'].width = 40
         ws.column_dimensions['F'].width = 20
 
+        if context.get('texto_final'):
+            row_idx += 1
+            ws.merge_cells(f'A{row_idx}:C{row_idx}')
+            cell = ws[f'A{row_idx}']
+            cell.value = self.processar_cabecalho_html(context.get('texto_final'))
+            cell.font = normal_font
+            cell.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+
         import io
         buf = io.BytesIO()
         wb.save(buf)
         buf.seek(0)
+
+        # Limpar temporários de imagem
+        for p in temp_image_paths:
+            try:
+                if os.path.exists(p):
+                    os.unlink(p)
+            except Exception:
+                pass
+
         resp = HttpResponse(
             buf.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -207,13 +270,15 @@ class ListaCandidatosSessao(RelatorioBase):
             section.left_margin = Inches(1)
             section.right_margin = Inches(1)
         
-        # Título
-        title = doc.add_paragraph()
-        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title_run = title.add_run('Lista de Candidatos por Sessão')
-        title_run.font.size = Pt(14)
-        title_run.font.bold = True
-        doc.add_paragraph()  # linha em branco após o título
+        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        if cabecalho:
+            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run(cabecalho_texto)
+            run.font.size = Pt(14)
+            run.font.bold = True
+            doc.add_paragraph()
         
         # Informações da(s) agenda(s) no topo, com tabelas separadas por sessão
         def _fmt_data(date_str: str) -> str:
@@ -238,7 +303,7 @@ class ListaCandidatosSessao(RelatorioBase):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Data: {_fmt_data(escolha_em)}")
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             if hora_ini or hora_fim:
                 ini = _fmt_hora(hora_ini) if hora_ini else ''
@@ -246,19 +311,19 @@ class ListaCandidatosSessao(RelatorioBase):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             if sessao:
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(str(sessao))
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             if cargo_nome:
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Cargo: {cargo_nome}")
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             
             # Linha em branco antes da tabela
@@ -278,7 +343,7 @@ class ListaCandidatosSessao(RelatorioBase):
                 # Formatação do cabeçalho: negrito, tamanho 10, centralizado (igual ao XLS)
                 cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                 cell.paragraphs[0].runs[0].font.bold = True
-                cell.paragraphs[0].runs[0].font.size = Pt(10)
+                cell.paragraphs[0].runs[0].font.size = Pt(9)
                 
                 # Aplicar cor de fundo #ECF0F1 no cabeçalho
                 tc_pr = cell._element.get_or_add_tcPr()
@@ -312,11 +377,19 @@ class ListaCandidatosSessao(RelatorioBase):
                     else:
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                     # Fonte tamanho 10
-                    cell.paragraphs[0].runs[0].font.size = Pt(10)
+                    cell.paragraphs[0].runs[0].font.size = Pt(9)
             
             # Espaço entre sessões
             if idx < len(sections_list) - 1:
                 doc.add_paragraph()
+
+        if context.get('texto_final'):
+            doc.add_paragraph()
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            run = p.add_run(self.processar_cabecalho_html(context.get('texto_final')))
+            run.font.size = Pt(10)
+            doc.add_paragraph()
 
         import io
         buf = io.BytesIO()
@@ -377,31 +450,32 @@ class ListaCandidatosSessao(RelatorioBase):
                     'agendas': sections,
                 }
             # Cabeçalho compatível com demais relatórios
-            cabecalho_input = (cabecalho or '').strip()
-            cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
-            cabecalho_padrao = settings.RELATORIO_CABECALHO_PADRAO
-            context.update({
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao,
-            })
+            cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+            logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+            self.context['is_pdf'] = False
+            self.context['logo_url'] = logo_url
+            self.context.update(context)
         except Exception as exc:
             logger.error('Erro ao processar agenda/candidatos: %s', exc, exc_info=True)
             raise
 
         if formato == 'pdf':
+            self.context.update({
+                'is_pdf': True,
+            })
             logger.info('Gerando PDF lista_candidatos_sessao')
-            return self.render_to_pdf(self.TEMPLATE_NAME, context, filename='lista_candidatos_sessao.pdf'), context
+            return self.render_to_pdf(self.TEMPLATE_NAME, self.context, filename='lista_candidatos_sessao.pdf'), context
         if formato == 'html':
             logger.info('Gerando HTML lista_candidatos_sessao')
-            return render(request, self.TEMPLATE_NAME, context), context
+            return render(request, self.TEMPLATE_NAME, self.context), context
         if formato in ('xls', 'xlsx'):
             logger.info('Gerando XLS lista_candidatos_sessao')
-            return self._render_xls(context), context
+            return self._render_xls(self.context), self.context
         if formato in ('doc', 'docx'):
             logger.info('Gerando DOCX lista_candidatos_sessao')
-            return self._render_docx(context), context
+            return self._render_docx(self.context), self.context
 
         # padrão: JSON (útil para depuração)
-        return JsonResponse(context, safe=False), context
+        return JsonResponse(self.context, safe=False), self.context
 
 

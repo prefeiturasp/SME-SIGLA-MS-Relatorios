@@ -92,33 +92,29 @@ class ProcessoConvocacaoService:
 
     def separar_processos_por_principal(
         self, 
-        processo_uuid_principal: str
+        processo_data: dict
     ) -> Tuple[str, List[str]]:
         """
         Busca o processo principal e outros processos do mesmo concurso,
         separando-os em duas variáveis.
         
         Args:
-            processo_uuid_principal: UUID do processo principal (vindo do front)
+            processo_data: Dicionário com os dados do processo principal
             
         Returns:
             Tupla contendo:
-            - processo_uuid_principal: UUID do processo principal
+            - processo_data.get('uuid'): UUID do processo principal
             - outros_processos_uuid: Lista de UUIDs dos outros processos (excluindo o principal)
             
         Raises:
             RequestException: Em caso de erro nas requisições
             ValueError: Se o processo principal não for encontrado ou não tiver concurso_uuid
         """
-        # 1. Buscar o processo principal
-        response_principal = self.buscar_processo_convocacao(processo_uuid_principal)
-        processo_principal = response_principal.json()
-        
-        # 2. Obter o concurso_uuid do processo principal
-        concurso_uuid = processo_principal.get('concurso_uuid')
+        # 1. Obter o concurso_uuid do processo principal
+        concurso_uuid = processo_data.get('concurso_uuid')
         if not concurso_uuid:
             raise ValueError(
-                f'Processo {processo_uuid_principal} não possui concurso_uuid'
+                f'Processo {processo_data.get('uuid')} não possui concurso_uuid'
             )
         
         # 3. Buscar todos os processos do mesmo concurso
@@ -138,14 +134,14 @@ class ProcessoConvocacaoService:
         
         for processo in processos_list:
             processo_uuid = processo.get('uuid') or processo.get('id')
-            if processo_uuid and processo_uuid != processo_uuid_principal:
+            if processo_uuid and processo_uuid != processo_data.get('uuid'):
                 outros_processos_uuid.append(processo_uuid)
         
         logger.info(
             'Processos separados - Principal: %s, Outros: %s',
-            processo_uuid_principal,
+            processo_data.get('uuid'),
             outros_processos_uuid
         )
         
-        return processo_uuid_principal, outros_processos_uuid
+        return processo_data.get('uuid'), outros_processos_uuid
 

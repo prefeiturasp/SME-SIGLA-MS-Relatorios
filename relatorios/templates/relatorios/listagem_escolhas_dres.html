@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listagem de Escolhas por DREs</title>
-    <style>
+{% extends "relatorios/relatorio_base.html" %}
+
+{% block title %}Listagem de Escolhas por DREs{% endblock %}
+
+{% block extra_styles %}
         * {
             margin: 0;
             padding: 0;
@@ -255,16 +253,10 @@
             color: #666;
             border-top: 1px solid #e0e0e0;
         }
-    </style>
-</head>
-<body>
+{% endblock %}
+{% block content %}
+    <h1>Listagem de Escolhas por DREs</h1>
     <div class="container">
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
-        
-        <h1>Listagem de Escolhas por DREs</h1>
-
         <div class="table-container">
             <table>
                 <thead>
@@ -323,6 +315,4 @@
         <div class="total-rodape">
             <strong>Total de escolhas:</strong> {{ total_escolhas }}
         </div>
-    </div>
-</body>
-</html>
+{% endblock %}

@@ -1,42 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Súmula de Escolhas</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "relatorios/relatorio_base.html" %}
 
-        body {
-            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
-            background-color: white;
-            padding: 0;
-            margin: 0;
-            color: #333;
-        }
+{% block title %}Súmula de Escolhas{% endblock %}
 
-        .container {
-            max-width: 100%;
-            margin: 0;
-            background-color: white;
-            padding: 0;
-        }
-
-        .cabecalho {
-            text-align: center;
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #3498db;
-        }
-
+{% block extra_styles %}
         h1 {
             color: #2c3e50;
             margin-top: 0;
@@ -123,33 +89,12 @@
             border-bottom: none;
         }
 
-        @page {
-            size: A4;
-            margin: 1.5cm;
-        }
-
         .text-center {
             text-align: center;
         }
+{% endblock %}
 
-        @media print {
-            body {
-                background-color: white;
-                padding: 0;
-            }
-
-            .container {
-                padding: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
-        
+{% block content %}
         <h1>Súmula de Escolhas</h1>
 
         {% for cargo in cargos %}
@@ -196,7 +141,5 @@
                 {% endfor %}
             </div>
         {% endfor %}
-    </div>
-</body>
-</html>
+{% endblock %}
 

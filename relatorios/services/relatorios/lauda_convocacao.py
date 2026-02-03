@@ -7,6 +7,9 @@ from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from io import BytesIO
+import tempfile
+import os
+import requests
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.lauda_convocacao_service import LaudaConvocacaoService
 
@@ -23,6 +26,7 @@ except ImportError:
 try:
     from openpyxl import Workbook
     from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XLImage
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
@@ -38,6 +42,7 @@ class LaudaConvocacao(RelatorioBase):
     
     def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
+        super().__init__(**kwargs)
         self.lauda_service = LaudaConvocacaoService(
             candidatos_base_url=settings.CANDIDATOS_API_URL,
             processo_base_url=settings.CONVOCACAO_API_URL,
@@ -70,30 +75,30 @@ class LaudaConvocacao(RelatorioBase):
             raise
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_input = (cabecalho or '').strip()
-        cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
-        cabecalho_padrao = settings.RELATORIO_CABECALHO_PADRAO
-
+        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+        self.context['is_pdf'] = False
+        self.context['logo_url'] = logo_url
         if formato == 'docx' or formato == 'doc':
             filename = f'lauda_convocacao_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)
             response = self.render_to_docx(
                 dados_lauda.get('cargos', []),
                 cabecalho_final,
+                self.context['texto_final'],
                 filename=filename
             )
             return response, dados_lauda
         elif formato == 'pdf':
             filename = f'lauda_convocacao_{processo_uuid}.pdf'
             logger.info('Gerando PDF: %s', filename)
-            context = {
+            self.context.update({
+                'is_pdf': True,
                 'cargos': dados_lauda.get('cargos', []),
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao
-            }
+            })
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME,
-                context,
+                self.context,
                 filename=filename
             )
             return response, dados_lauda
@@ -102,21 +107,19 @@ class LaudaConvocacao(RelatorioBase):
             logger.info('Gerando XLS: %s', filename)
             response = self._render_xls(
                 dados_lauda.get('cargos', []),
-                cabecalho_final,
+                context=self.context,
                 filename=filename
             )
             return response, dados_lauda
         elif formato == 'html':
             logger.info('Gerando HTML')
-            context = {
+            self.context.update({
                 'cargos': dados_lauda.get('cargos', []),
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao
-            }
+            })
             response = render(
                 request,
                 self.TEMPLATE_NAME,
-                context
+                self.context
             )
             return response, dados_lauda
         else:
@@ -125,7 +128,7 @@ class LaudaConvocacao(RelatorioBase):
         
         return response, dados_lauda
     
-    def render_to_docx(self, cargos_list, cabecalho, filename='lauda_convocacao.docx'):
+    def render_to_docx(self, cargos_list, cabecalho, texto_final, filename='lauda_convocacao.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
         
@@ -274,6 +277,13 @@ class LaudaConvocacao(RelatorioBase):
                     
                     doc.add_paragraph()
             
+            if texto_final:
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(self.processar_cabecalho_html(texto_final))
+                run.font.size = Pt(10)
+                doc.add_paragraph()
+
             # Salvar em buffer
             buffer = BytesIO()
             doc.save(buffer)
@@ -290,7 +300,7 @@ class LaudaConvocacao(RelatorioBase):
             logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
             raise
 
-    def _render_xls(self, cargos_list, cabecalho, filename='lauda_convocacao.xlsx'):
+    def _render_xls(self, cargos_list, context={}, filename='lauda_convocacao.xlsx'):
         """
         Gera um arquivo Excel (XLSX) com a estrutura da Lauda de Convocação.
         """
@@ -312,8 +322,36 @@ class LaudaConvocacao(RelatorioBase):
         left = Alignment(horizontal='left', vertical='center')
         border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-        # Título
+        # Inserir logotipo (opcional)
+        temp_image_paths = []
         row_idx = 1
+        logo_url = (context or self.context).get('logo_url') if context or self.context else ''
+        if context.get('usar_logotipo') and logo_url:
+            image_path = None
+            try:
+                if logo_url.startswith('http://') or logo_url.startswith('https://'):
+                    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpf:
+                        resp = requests.get(logo_url, timeout=15)
+                        resp.raise_for_status()
+                        tmpf.write(resp.content)
+                        image_path = tmpf.name
+                        temp_image_paths.append(image_path)
+                elif os.path.exists(logo_url):
+                    image_path = logo_url
+                if image_path:
+                    img = XLImage(image_path)
+                    try:
+                        img.width = 220
+                        img.height = 90
+                    except Exception:
+                        pass
+                    # Ancorar próximo ao centro (planilha com 6 colunas -> coluna C aparenta centralizada)
+                    ws.add_image(img, 'C1')
+                    row_idx = max(row_idx, 8)
+            except Exception as exc:
+                logger.warning('Não foi possível inserir o logotipo no XLS (lauda_convocacao): %s', exc)
+
+        # Título
         ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
         c = ws.cell(row=row_idx, column=1)
         c.value = "Lauda de Convocação"
@@ -321,12 +359,13 @@ class LaudaConvocacao(RelatorioBase):
         c.alignment = center
         row_idx += 1
 
-        # Cabeçalho institucional (opcional)
+        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
         if cabecalho:
             ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
             c = ws.cell(row=row_idx, column=1)
             # texto simples (sem HTML); se precisar, poderia limpar tags com BeautifulSoup
-            c.value = cabecalho
+            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            c.value = cabecalho_texto
             c.font = label_font
             c.alignment = left
             row_idx += 1
@@ -417,11 +456,27 @@ class LaudaConvocacao(RelatorioBase):
         ws.column_dimensions['E'].width = 16
         ws.column_dimensions['F'].width = 16
 
+        # Texto final ao término do relatório (se houver)
+        texto_final = (context or self.context).get('texto_final') if context or self.context else ''
+        if texto_final:
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1)
+            c.value = self.processar_cabecalho_html(texto_final)
+            c.font = normal_font
+            c.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+
         # Salvar em buffer
         from io import BytesIO
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
+        # Limpar temporários de imagem
+        for p in temp_image_paths:
+            try:
+                if os.path.exists(p):
+                    os.unlink(p)
+            except Exception:
+                pass
         resp = HttpResponse(
             buf.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

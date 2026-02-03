@@ -1,42 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lauda de Convocação</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "relatorios/relatorio_base.html" %}
 
-        body {
-            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
-            background-color: white;
-            padding: 0;
-            margin: 0;
-            color: #333;
-        }
+{% block title %}Lauda de Convocação{% endblock %}
 
-        .container {
-            max-width: 100%;
-            margin: 0;
-            background-color: white;
-            padding: 0;
-        }
-
-        .cabecalho {
-            text-align: center;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #3498db;
-        }
-
+{% block extra_styles %}
         .sessao-section {
             margin-bottom: 30px;
             page-break-inside: avoid;
@@ -129,35 +95,14 @@
             color: #95a5a6;
         }
 
-        @page {
-            size: A4;
-            margin: 1.5cm;
-        }
-
         @media print {
-            body {
-                background-color: white;
-                padding: 0;
-            }
-
-            .container {
-                padding: 0;
-            }
-
             .sessao-section {
                 page-break-inside: avoid;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        {% if cabecalho %}
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|linebreaksbr }}
-        </div>
-        {% endif %}
+{% endblock %}
 
+{% block content %}
         {% if cargos %}
             {% for cargo in cargos %}
                 {% for sessao in cargo.sessoes %}
@@ -238,6 +183,4 @@
         {% else %}
             <p>Nenhum dado disponível para exibição.</p>
         {% endif %}
-    </div>
-</body>
-</html>
+{% endblock %}
