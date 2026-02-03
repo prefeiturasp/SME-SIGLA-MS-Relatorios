@@ -14,13 +14,17 @@ class Migration(migrations.Migration):
             name="Relatorio",
             fields=[
                 (
-                    "uuid",
-                    models.UUIDField(
-                        default=uuid.uuid4,
-                        editable=False,
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
                         primary_key=True,
                         serialize=False,
+                        verbose_name="ID",
                     ),
+                ),
+                (
+                    "uuid",
+                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
                 ),
                 (
                     "criado_em",

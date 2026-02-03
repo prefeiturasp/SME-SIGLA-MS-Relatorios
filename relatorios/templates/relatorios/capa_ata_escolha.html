@@ -1,0 +1,118 @@
+<style>
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+th, td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    text-align: center;
+}
+th:first-child, td:first-child {
+    text-align: left;
+}
+h3 {
+    margin: 10px 0;
+}
+.linhas-curtas p {
+    margin: 4px 0;
+}
+</style>
+
+{% if is_pdf %}
+<style>
+@page capa {
+    size: A4 portrait;
+    margin: 1cm;
+}
+.cover-page {
+    page: capa;
+}
+</style>
+{% endif %}
+
+<div class="cover-page">
+{% if usar_logotipo and logo_url %}
+    <div class="logo-container">
+        <img src="{{ logo_url }}" alt="Logo">
+    </div>
+{% endif %}
+
+{% if cabecalho_capa_ata %}
+<div class="cabecalho">
+    {{ cabecalho_capa_ata|safe }}
+</div>
+{% endif %}
+
+<h3>{{ processo_nome }}</h3>
+
+<div class="linhas-curtas">
+    <p>{{ linha1|default_if_none:"" }}</p>
+    <p>{{ linha2|default_if_none:"" }}</p>
+    <p>{{ linha3|default_if_none:"" }}</p>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Cargo/Componente</th>
+            <th>Total de candidatos convocados</th>
+            <th>Escolha</th>
+            <th>Reconvocação</th>
+            <th>Não escolha</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ cargos.0.cargo_nome }} Geral</td>
+            <td>{{ candidatos_sep_cargo.geral|length }}</td>
+            <td>{{ escolhas_totais_por_tipo.geral.escolha }}</td>
+            <td>{{ escolhas_totais_por_tipo.geral.reconvocacao }}</td>
+            <td>{{ escolhas_totais_por_tipo.geral.nao_escolha }}</td>
+        </tr>
+        <tr>
+            <td>{{ cargos.0.cargo_nome }} NNA</td>
+            <td>{{ candidatos_sep_cargo.nna|length }}</td>
+            <td>{{ escolhas_totais_por_tipo.nna.escolha }}</td>
+            <td>{{ escolhas_totais_por_tipo.nna.reconvocacao }}</td>
+            <td>{{ escolhas_totais_por_tipo.nna.nao_escolha }}</td>
+        </tr>
+        <tr>
+            <td>{{ cargos.0.cargo_nome }} PCD</td>
+            <td>{{ candidatos_sep_cargo.pcd|length }}</td>
+            <td>{{ escolhas_totais_por_tipo.pcd.escolha }}</td>
+            <td>{{ escolhas_totais_por_tipo.pcd.reconvocacao }}</td>
+            <td>{{ escolhas_totais_por_tipo.pcd.nao_escolha }}</td>
+        </tr>
+        <tr>
+            <td>Total</td>
+            <td>
+                {% with total_pcd=candidatos_sep_cargo.pcd|length total_nna=candidatos_sep_cargo.nna|length total_geral=candidatos_sep_cargo.geral|length %}
+                    {{ total_pcd|add:total_nna|add:total_geral }}
+                {% endwith %}
+            </td>
+            <td>
+                {% with total_escolha_geral=escolhas_totais_por_tipo.geral.escolha total_escolha_nna=escolhas_totais_por_tipo.nna.escolha total_escolha_pcd=escolhas_totais_por_tipo.pcd.escolha %}
+                    {{ total_escolha_geral|add:total_escolha_nna|add:total_escolha_pcd }}
+                {% endwith %}
+            </td>
+            <td>
+                {% with total_reconvocacao_geral=escolhas_totais_por_tipo.geral.reconvocacao total_reconvocacao_nna=escolhas_totais_por_tipo.nna.reconvocacao total_reconvocacao_pcd=escolhas_totais_por_tipo.pcd.reconvocacao %}
+                    {{ total_reconvocacao_geral|add:total_reconvocacao_nna|add:total_reconvocacao_pcd }}
+                {% endwith %}
+            </td>
+            <td>
+                {% with total_nao_escolha_geral=escolhas_totais_por_tipo.geral.nao_escolha total_nao_escolha_nna=escolhas_totais_por_tipo.nna.nao_escolha total_nao_escolha_pcd=escolhas_totais_por_tipo.pcd.nao_escolha %}
+                    {{ total_nao_escolha_geral|add:total_nao_escolha_nna|add:total_nao_escolha_pcd }}
+                {% endwith %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+</div>
+
+{% if is_pdf %}
+<div style="page-break-after: always;"></div>
+{% endif %}

@@ -7,9 +7,12 @@ import re
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+
 from weasyprint import HTML
 from io import BytesIO
 import logging
+
+from .utils import ajustar_logo_caminho
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +21,23 @@ class RelatorioBase(ABC):
     """
     Classe abstrata que define a interface comum para todos os tipos de relatórios.
     """
-    
+    def __init__(self, *, configuracao, parametrizacao, **kwargs):
+        self.configuracao = configuracao
+        self.parametrizacao = parametrizacao
+        # Contexto padrão derivado de Configuração e Parametrização
+        # Pode ser atualizado/estendido pelas subclasses conforme necessário
+        self.context: Dict[str, Any] = {
+            'cabecalho': configuracao.cabecalho,
+            'cabecalho_capa_ata': configuracao.cabecalho_capa_ata or '',
+            'texto_final': configuracao.texto_final,
+            'usar_logotipo': bool(configuracao.usar_logotipo),
+            'logo_url': ajustar_logo_caminho(parametrizacao.logo.url) or '',
+            'usar_cabecalho_padrao': bool(configuracao.usar_cabecalho_padrao),
+            'cabecalho_padrao': parametrizacao.cabecalho,
+        }
+
     @abstractmethod
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', **kwargs):
         """
         Método abstrato que deve ser implementado por todas as classes filhas.
         
@@ -28,7 +45,6 @@ class RelatorioBase(ABC):
             processo_uuid: UUID do processo de convocação
             request: Objeto request do Django
             formato: Formato do relatório ('html', 'pdf' ou 'xls')
-            cabecalho: Texto do cabeçalho do relatório (opcional)
         
         Returns:
             Tupla (HttpResponse, dados) onde:

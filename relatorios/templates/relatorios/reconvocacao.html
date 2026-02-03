@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Reconvocados</title>
-    <style>
+{% extends "relatorios/relatorio_base.html" %}
+
+{% block title %}Relatório de Reconvocados{% endblock %}
+
+{% block extra_styles %}
         * {
             margin: 0;
             padding: 0;
@@ -117,14 +115,9 @@
                 padding: 0;
             }
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
-        
+{% endblock %}
+
+{% block content %}
         <h1>Relatório de Reconvocados</h1>
 
         {% for cargo in cargos %}
@@ -157,7 +150,5 @@
                 </div>
             </div>
         {% endfor %}
-    </div>
-</body>
-</html>
+{% endblock %}
 

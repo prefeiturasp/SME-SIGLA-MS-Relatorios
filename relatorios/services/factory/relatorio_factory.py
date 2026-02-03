@@ -11,7 +11,10 @@ from relatorios.services.relatorios import (
     LaudaConvocacao,
     ResultadoEscolha,
     ListaCandidatosSessao,
+    AtaEscolha,
 )
+
+from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 
 
 class RelatorioFactory:
@@ -32,6 +35,7 @@ class RelatorioFactory:
         'RESULTADO_ESCOLHA_NAO': ResultadoEscolha,
         'RESULTADO_ESCOLHA_RECONVOCACAO': ResultadoEscolha,
         'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao,
+        'ATA_ESCOLHA': AtaEscolha,
         # TODO: Adicionar outros tipos quando implementados
         # 'ETIQUETAS_CONVOCADOS': EtiquetasConvocados,
         # 'RESULTADO_ESCOLHA_VAGAS': ResultadoEscolhaVagas,
@@ -53,8 +57,9 @@ class RelatorioFactory:
             ValueError: Se o tipo fornecido não for um relatório válido
         """
         classe = RelatorioFactory._MAPA.get(tipo_slug.upper())
-
+        configuracao = ConfiguracaoRelatorio.objects.get(tipo=tipo_slug.upper())
+        parametrizacao = Parametrizacao.objects.first()
         if not classe:
             raise ValueError(f"O tipo '{tipo_slug}' não é um relatório válido.")
 
-        return classe(tipo=tipo_slug) 
+        return classe(tipo=tipo_slug, configuracao=configuracao, parametrizacao=parametrizacao) 
