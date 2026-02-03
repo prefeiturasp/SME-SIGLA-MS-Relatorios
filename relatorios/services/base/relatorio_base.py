@@ -7,9 +7,12 @@ import re
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+
 from weasyprint import HTML
 from io import BytesIO
 import logging
+
+from .utils import ajustar_logo_caminho
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +31,7 @@ class RelatorioBase(ABC):
             'cabecalho_capa_ata': configuracao.cabecalho_capa_ata or '',
             'texto_final': configuracao.texto_final,
             'usar_logotipo': bool(configuracao.usar_logotipo),
-            'logo_url': parametrizacao.logo.url or '',
+            'logo_url': ajustar_logo_caminho(parametrizacao.logo.url) or '',
             'usar_cabecalho_padrao': bool(configuracao.usar_cabecalho_padrao),
             'cabecalho_padrao': parametrizacao.cabecalho,
         }
