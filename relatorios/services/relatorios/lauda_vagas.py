@@ -69,7 +69,7 @@ class LaudaVagas(RelatorioBase):
         except Exception as exc:
             logger.error('Falha ao buscar vagas de escolas da API externa: %s', exc)
             raise
-        
+
         vagas = vagas_escolas.json().get('vagas', [])
         vagas_agrupadas = self._agrupar_vagas(vagas)
         cargos_list = self._preparar_dados_template(vagas_agrupadas)
@@ -77,7 +77,7 @@ class LaudaVagas(RelatorioBase):
         cargos_list = convert_uuids_to_strings(cargos_list)
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
         cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+        logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context.update({
             'logo_url': logo_url,
             'cargos': cargos_list,

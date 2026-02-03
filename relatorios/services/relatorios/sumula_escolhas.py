@@ -198,7 +198,7 @@ class SumulaEscolhas(RelatorioBase):
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
         cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+        logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context.update({
             'cargos': cargos_list,
             'is_pdf': False,

@@ -92,7 +92,7 @@ class AtaEscolha(RelatorioBase):
             "tipos_vagas": "PRECÁRIAS/DEFINITIVAS",
         }
         cabecalho_capa_ata = self._preencher_template(self.context['cabecalho_capa_ata'], datas_preencher_tempalte)
-        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+        logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         context_data = self.context.copy()
         context_data.update({
             'cargos': dados_ata.get('cargos', []),
