@@ -13,6 +13,7 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
             'usar_logotipo',
             'usar_cabecalho_padrao',
             'cabecalho',
+            'cabecalho_capa_ata',
             'texto_final',
             'criado_em',
             'atualizado_em',

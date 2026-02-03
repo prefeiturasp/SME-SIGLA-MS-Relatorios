@@ -3,7 +3,6 @@
 {% block title %}Relação de Vagas{% endblock %}
 
 {% block extra_styles %}
-    <style>
         * {
             margin: 0;
             padding: 0;
@@ -156,15 +155,10 @@
                 padding: 0;
             }   
 
-            
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
+{% endblock %}
+
+{% block content %}
         
         <h1>Relação de Vagas</h1>
 

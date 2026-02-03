@@ -2,6 +2,9 @@
 Implementação concreta do relatório de Relação de Vagas.
 """
 import logging
+import tempfile
+import os
+import requests
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -13,6 +16,7 @@ from relatorios.utils import convert_uuids_to_strings
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XLImage
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
@@ -39,6 +43,7 @@ class RelacaoVagas(RelatorioBase):
     
     def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
+        super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
     
     def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
@@ -66,54 +71,58 @@ class RelacaoVagas(RelatorioBase):
             raise
         
         vagas = vagas_escolas.json().get('vagas', [])
-        
         vagas_agrupadas = self._agrupar_vagas(vagas)
-        
         cargos_list = self._preparar_dados_template(vagas_agrupadas)
-        
         # Converter todos os UUIDs para strings para garantir serialização JSON
         cargos_list = convert_uuids_to_strings(cargos_list)
-        
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_input = (cabecalho or '').strip()
-        cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
-        cabecalho_padrao = settings.RELATORIO_CABECALHO_PADRAO
-        
+        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+        self.context.update({
+            'cargos': cargos_list,
+            'is_pdf': False,    
+            'logo_url': logo_url,
+        })
         if formato == 'xls' or formato == 'csv':
             filename = f'relacao_vagas_{processo_uuid}.xlsx'
             logger.info('Gerando Excel: %s', filename)
-            response = self.render_to_xls(cargos_list, cabecalho_final, filename=filename)
+            response = self.render_to_xls(
+                context=self.context,
+                filename=filename
+            )
             return response, cargos_list
         elif formato == 'docx' or formato == 'doc':
             filename = f'relacao_vagas_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(cargos_list, cabecalho_final, filename=filename)
+            response = self.render_to_docx(
+                cargos_list,
+                cabecalho_final,
+                self.context['texto_final'],
+                filename=filename
+            )
             return response, cargos_list
         elif formato == 'pdf':
             filename = f'relacao_vagas_{processo_uuid}.pdf'
             logger.info('Gerando PDF: %s', filename)
-            context = {
+            self.context.update({
+                'is_pdf': True,
                 'cargos': cargos_list,
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao
-            }
+            })
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME,
-                context,
+                self.context,
                 filename=filename
             )
             return response, cargos_list
         else:
             logger.info('Gerando HTML')
-            context = {
+            self.context.update({
                 'cargos': cargos_list,
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao
-            }
+            })
             response = render(
                 request,
                 self.TEMPLATE_NAME,
-                context
+                self.context
             )
             return response, cargos_list
     
@@ -197,14 +206,13 @@ class RelacaoVagas(RelatorioBase):
         
         return cargos_list
     
-    def render_to_xls(self, cargos_list, cabecalho, filename='relacao_vagas.xlsx'):
+    def render_to_xls(self, context={}, filename='relacao_vagas.xlsx'):
         """
         Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
         Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL AO LAUDA DE VAGAS.
         
         Args:
-            cargos_list: Lista de cargos com suas DREs e vagas (estrutura hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
+            context: Contexto do relatório
             filename: Nome do arquivo Excel gerado
         
         Returns:
@@ -239,7 +247,39 @@ class RelacaoVagas(RelatorioBase):
             left_align = Alignment(horizontal='left', vertical='center')
             
             row = 1
-            
+            temp_image_paths = []
+            # Inserir logotipo no topo, se disponível
+            logo_url = (context or self.context).get('logo_url') if context or self.context else ''
+            if context.get('usar_logotipo') and logo_url:
+                image_path = None
+                try:
+                    if logo_url.startswith('http://') or logo_url.startswith('https://'):
+                        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpf:
+                            resp = requests.get(logo_url, timeout=15)
+                            resp.raise_for_status()
+                            tmpf.write(resp.content)
+                            image_path = tmpf.name
+                            temp_image_paths.append(image_path)
+                    elif os.path.exists(logo_url):
+                        image_path = logo_url
+                    if image_path:
+                        img = XLImage(image_path)
+                        # opcional: ajustar tamanho
+                        try:
+                            # Reduz o tamanho da imagem
+                            img.width = 220
+                            img.height = 90
+                        except Exception:
+                            pass
+                        # Aproxima o alinhamento central ancorando em uma coluna intermediária
+                        # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado
+                        ws.add_image(img, 'B1')
+                        # Avança algumas linhas para não sobrepor conteúdo
+                        row = max(row, 8)
+                except Exception as exc:
+                    logger.warning('Não foi possível inserir o logotipo no XLS: %s', exc)
+
+            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             if cabecalho:
                 ws.merge_cells(f'A{row}:F{row}')
                 cell = ws[f'A{row}']
@@ -249,7 +289,7 @@ class RelacaoVagas(RelatorioBase):
                 cell.alignment = center_wrap_align
                 row += 2
             
-            for cargo in cargos_list:
+            for cargo in context.get('cargos', []):
                 cargo_descricao = cargo.get('descricao', '')
                 
                 ws.merge_cells(f'A{row}:F{row}')
@@ -319,10 +359,27 @@ class RelacaoVagas(RelatorioBase):
             for col_letter, width in column_widths.items():
                 ws.column_dimensions[col_letter].width = width
             
+            texto_final = self.context.get('texto_final')
+            if texto_final:
+                row += 1
+                ws.merge_cells(f'A{row}:F{row}')
+                cell = ws[f'A{row}']
+                cell.value = self.processar_cabecalho_html(texto_final)
+                cell.font = normal_font
+                cell.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+          
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
             
+            # Limpar temporários de imagem
+            for p in temp_image_paths:
+                try:
+                    if os.path.exists(p):
+                        os.unlink(p)
+                except Exception:
+                    pass
+
             response = HttpResponse(
                 buffer.read(),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -334,7 +391,7 @@ class RelacaoVagas(RelatorioBase):
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
             raise
     
-    def render_to_docx(self, cargos_list, cabecalho, filename='relacao_vagas.docx'):
+    def render_to_docx(self, cargos_list, cabecalho, texto_final, filename='relacao_vagas.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
         Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL AO XLS.
@@ -342,6 +399,7 @@ class RelacaoVagas(RelatorioBase):
         Args:
             cargos_list: Lista de cargos com suas DREs e vagas (estrutura hierárquica)
             cabecalho: Texto do cabeçalho do relatório
+            texto_final: Texto final do relatório
             filename: Nome do arquivo Word gerado
         
         Returns:
@@ -462,6 +520,13 @@ class RelacaoVagas(RelatorioBase):
                     
                     doc.add_paragraph()
             
+            if texto_final:
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(self.processar_cabecalho_html(texto_final))
+                run.font.size = Pt(10)
+                doc.add_paragraph()
+                
             # Salvar em buffer
             buffer = BytesIO()
             doc.save(buffer)

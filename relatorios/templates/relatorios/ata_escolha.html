@@ -3,6 +3,7 @@
 {% block title %}Ata de Escolha{% endblock %}
 
 {% block extra_styles %}
+        {% if not is_docx %}
         .titulo-relatorio {
             text-align: center;
             color: #2c3e50;
@@ -165,10 +166,11 @@
                 padding: 3px 2px;
             }
         }
+        {% endif %}
 {% endblock %}
 
 {% block content %}
-        <h1 class="titulo-relatorio">ATA DE ESCOLHA</h1>
+        <h1 class="titulo-relatorio">ATA DE ESCOLHAAAAAA</h1>
 
         {% if cargos %}
             {% for cargo in cargos %}

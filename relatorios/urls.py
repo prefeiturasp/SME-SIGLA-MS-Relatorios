@@ -12,4 +12,4 @@ router.register(r'personalizacao', PersonalizacaoViewSet, basename='personalizac
 
 urlpatterns = [
     path('', include(router.urls)),
-] 
+]

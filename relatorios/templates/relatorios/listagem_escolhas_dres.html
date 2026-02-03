@@ -3,7 +3,6 @@
 {% block title %}Listagem de Escolhas por DREs{% endblock %}
 
 {% block extra_styles %}
-    <style>
         * {
             margin: 0;
             padding: 0;
@@ -254,16 +253,10 @@
             color: #666;
             border-top: 1px solid #e0e0e0;
         }
-    </style>
-</head>
-<body>
+{% endblock %}
+{% block content %}
+    <h1>Listagem de Escolhas por DREs</h1>
     <div class="container">
-        <div class="cabecalho">
-            {{ cabecalho|default:cabecalho_padrao|safe|linebreaksbr }}
-        </div>
-        
-        <h1>Listagem de Escolhas por DREs</h1>
-
         <div class="table-container">
             <table>
                 <thead>

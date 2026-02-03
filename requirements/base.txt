@@ -13,3 +13,4 @@ cffi>=1.15.0
 cairocffi>=1.6.0
 openpyxl>=3.1.0
 python-docx>=1.1.0
+pdf2docx==0.5.8

@@ -4,12 +4,16 @@ Baseado no padrão da Ata de Convocação, mas com informações da escola escol
 """
 import json
 import logging
+import re
 from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from io import BytesIO
+import tempfile
+import os
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.ata_escolha_service import AtaEscolhaService
+from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 
 try:
     from docx import Document
@@ -40,14 +44,25 @@ class AtaEscolha(RelatorioBase):
     
     def __init__(self, **kwargs):
         """Inicializa o service com as dependências necessárias."""
+        super().__init__(**kwargs)
         self.ata_service = AtaEscolhaService(
             candidatos_base_url=settings.CANDIDATOS_API_URL,
             processo_base_url=settings.CONVOCACAO_API_URL,
             agendas_base_url=settings.AGENDAS_API_URL,
             escolhas_base_url=settings.ESCOLHAS_API_URL
         )
+
+    def _preencher_template(self, cabecalho_capa, dados):
+        # Regex para encontrar qualquer coisa entre [[ ]]
+        pattern = re.compile(r'\[\[(.*?)\]\]')
+        
+        def replace_func(match):
+            chave = match.group(1) # Pega o que está dentro de [[ ]]
+            return str(dados.get(chave, f"[[ERRO: {chave} NÃO ENCONTRADO]]"))
+
+        return pattern.sub(replace_func, cabecalho_capa)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', **kwargs):
         """
         Gera o relatório de Ata de Escolha.
         
@@ -71,58 +86,80 @@ class AtaEscolha(RelatorioBase):
         except Exception as exc:
             logger.error('Falha ao processar ata de escolha: %s', exc)
             raise
-        
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_input = (cabecalho or '').strip()
-        cabecalho_final = cabecalho_input if cabecalho_input else settings.RELATORIO_CABECALHO_PADRAO
-        cabecalho_padrao = settings.RELATORIO_CABECALHO_PADRAO    
+        mostrar_capa_ata = True
+        datas_preencher_tempalte = {
+            "cargo": dados_ata.get('cargos', [])[0]["cargo_nome"],
+            "tipos_vagas": "PRECÁRIAS/DEFINITIVAS",
+        }
+        cabecalho_capa_ata = self._preencher_template(self.context['cabecalho_capa_ata'], datas_preencher_tempalte)
+        logo_url = request.build_absolute_uri(self.parametrizacao.logo.url) if self.parametrizacao and self.parametrizacao.logo else ''
+        context_data = self.context.copy()
+        context_data.update({
+            'cargos': dados_ata.get('cargos', []),
+            'candidatos_sep_cargo': dados_ata.get('candidatos_sep_cargo', {}),
+            'cabecalho_capa_ata': cabecalho_capa_ata,
+            'mostrar_capa_ata': False,
+            'escolhas_totais_por_tipo': dados_ata.get('escolhas_totais_por_tipo', {}),
+            'logo_url': logo_url,
+            'is_pdf': False,
+        })
 
         if formato == 'docx' or formato == 'doc':
             filename = f'ata_escolha_{processo_uuid}.docx'
-            logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(
-                dados_ata.get('cargos', []),
-                cabecalho_final,
-                filename=filename
+            logger.info('Gerando Word (via PDF -> DOCX): %s', filename)
+            try:
+                from pdf2docx import parse as pdf_to_docx_parse
+            except Exception as exc:
+                logger.error('pdf2docx não está instalado ou falhou ao importar: %s', exc)
+                raise ImportError("pdf2docx não está instalado. Instale com: pip install pdf2docx")
+
+            context_data['is_pdf'] = True
+            context_data['mostrar_capa_ata'] = True
+            pdf_response = self.render_to_pdf(self.TEMPLATE_NAME, context_data, filename=f'ata_escolha_{processo_uuid}.pdf')
+            pdf_bytes = pdf_response.content
+
+            # 2) Grava PDF em arquivo temporário e converte para DOCX
+            try:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    pdf_path = os.path.join(tmpdir, 'input.pdf')
+                    docx_path = os.path.join(tmpdir, 'output.docx')
+                    with open(pdf_path, 'wb') as f:
+                        f.write(pdf_bytes)
+                    # Converter PDF -> DOCX
+                    pdf_to_docx_parse(pdf_path, docx_path)
+                    with open(docx_path, 'rb') as f:
+                        docx_content = f.read()
+            except Exception as exc:
+                logger.error('Falha ao converter PDF em DOCX: %s', exc, exc_info=True)
+                raise
+
+            # 3) Retorna o DOCX como resposta
+            response = HttpResponse(
+                docx_content,
+                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             )
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response, dados_ata
         elif formato == 'pdf':
+            context_data['mostrar_capa_ata'] = True
             filename = f'ata_escolha_{processo_uuid}.pdf'
             logger.info('Gerando PDF: %s', filename)
-            context = {
-                'cargos': dados_ata.get('cargos', []),
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao,
-                'is_pdf': True
-            }
-            response = self.render_to_pdf(
-                self.TEMPLATE_NAME,
-                context,
-                filename=filename
-            )
+            context_data['is_pdf'] = True
+            response = self.render_to_pdf(self.TEMPLATE_NAME, context_data, filename=filename)
             return response, dados_ata
         elif formato in ('xls', 'xlsx'):
             filename = f'ata_escolha_{processo_uuid}.xlsx'
             logger.info('Gerando XLS: %s', filename)
             response = self._render_xls(
                 dados_ata.get('cargos', []),
-                cabecalho_final,
+                context_data['cabecalho'],
                 filename=filename
             )
             return response, dados_ata
         elif formato == 'html':
+            print(dados_ata.get('escolhas_totais_por_tipo', {}))
             logger.info('Gerando HTML')
-            context = {
-                'cargos': dados_ata.get('cargos', []),
-                'cabecalho': cabecalho_final,
-                'cabecalho_padrao': cabecalho_padrao,
-                'is_pdf': False
-            }
-            response = render(
-                request,
-                self.TEMPLATE_NAME,
-                context
-            )
+            response = render(request, self.TEMPLATE_NAME, context_data)
             return response, dados_ata
         else:
             # Retornar JSON por padrão
