@@ -270,13 +270,15 @@ class ListaCandidatosSessao(RelatorioBase):
             section.left_margin = Inches(1)
             section.right_margin = Inches(1)
         
-        # Título
-        title = doc.add_paragraph()
-        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title_run = title.add_run('Lista de Candidatos por Sessão')
-        title_run.font.size = Pt(14)
-        title_run.font.bold = True
-        doc.add_paragraph()  # linha em branco após o título
+        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        if cabecalho:
+            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = p.add_run(cabecalho_texto)
+            run.font.size = Pt(14)
+            run.font.bold = True
+            doc.add_paragraph()
         
         # Informações da(s) agenda(s) no topo, com tabelas separadas por sessão
         def _fmt_data(date_str: str) -> str:
@@ -301,7 +303,7 @@ class ListaCandidatosSessao(RelatorioBase):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Data: {_fmt_data(escolha_em)}")
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             if hora_ini or hora_fim:
                 ini = _fmt_hora(hora_ini) if hora_ini else ''
@@ -309,19 +311,19 @@ class ListaCandidatosSessao(RelatorioBase):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Horário: {ini} às {fim}" if ini and fim else f"Horário: {ini or fim}")
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             if sessao:
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(str(sessao))
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             if cargo_nome:
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Cargo: {cargo_nome}")
-                run.font.size = Pt(12)
+                run.font.size = Pt(11)
                 run.font.bold = True
             
             # Linha em branco antes da tabela
@@ -341,7 +343,7 @@ class ListaCandidatosSessao(RelatorioBase):
                 # Formatação do cabeçalho: negrito, tamanho 10, centralizado (igual ao XLS)
                 cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                 cell.paragraphs[0].runs[0].font.bold = True
-                cell.paragraphs[0].runs[0].font.size = Pt(10)
+                cell.paragraphs[0].runs[0].font.size = Pt(9)
                 
                 # Aplicar cor de fundo #ECF0F1 no cabeçalho
                 tc_pr = cell._element.get_or_add_tcPr()
@@ -375,13 +377,14 @@ class ListaCandidatosSessao(RelatorioBase):
                     else:
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                     # Fonte tamanho 10
-                    cell.paragraphs[0].runs[0].font.size = Pt(10)
+                    cell.paragraphs[0].runs[0].font.size = Pt(9)
             
             # Espaço entre sessões
             if idx < len(sections_list) - 1:
                 doc.add_paragraph()
 
         if context.get('texto_final'):
+            doc.add_paragraph()
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
             run = p.add_run(self.processar_cabecalho_html(context.get('texto_final')))
