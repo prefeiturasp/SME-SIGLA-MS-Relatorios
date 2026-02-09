@@ -76,7 +76,8 @@ def test_separar_processos_por_principal_dict_results():
     svc.buscar_processos_por_concurso = Mock(return_value=_Resp({'results': [
         {'uuid': 'PMAIN'}, {'uuid': 'PX'}, {'uuid': 'PY'},
     ]}))
-    principal, outros = svc.separar_processos_por_principal('PMAIN')
+    processo_data = {'uuid': 'PMAIN', 'concurso_uuid': 'CU1'}
+    principal, outros = svc.separar_processos_por_principal(processo_data)
     assert principal == 'PMAIN'
     assert set(outros) == {'PX', 'PY'}
 
@@ -87,7 +88,8 @@ def test_separar_processos_por_principal_list_shape():
     svc.buscar_processos_por_concurso = Mock(return_value=_Resp([
         {'uuid': 'PMAIN'}, {'uuid': 'PA'}, {'uuid': 'PB'},
     ]))
-    principal, outros = svc.separar_processos_por_principal('PMAIN')
+    processo_data = {'uuid': 'PMAIN', 'concurso_uuid': 'CU2'}
+    principal, outros = svc.separar_processos_por_principal(processo_data)
     assert principal == 'PMAIN'
     assert outros == ['PA', 'PB']
 
@@ -97,7 +99,8 @@ def test_separar_processos_por_principal_single_object_wrapped():
     svc.buscar_processo_convocacao = Mock(return_value=_Resp({'concurso_uuid': 'CU3'}))
     # retorna um dict simples; código deve envolver em lista
     svc.buscar_processos_por_concurso = Mock(return_value=_Resp({'uuid': 'PMAIN'}))
-    principal, outros = svc.separar_processos_por_principal('PMAIN')
+    processo_data = {'uuid': 'PMAIN', 'concurso_uuid': 'CU3'}
+    principal, outros = svc.separar_processos_por_principal(processo_data)
     assert principal == 'PMAIN'
     assert outros == []
 
@@ -105,7 +108,8 @@ def test_separar_processos_por_principal_single_object_wrapped():
 def test_separar_processos_por_principal_missing_concurso_raises_value_error():
     svc = _svc()
     svc.buscar_processo_convocacao = Mock(return_value=_Resp({}))  # sem concurso_uuid
+    processo_data = {'uuid': 'PMAIN'}  # sem concurso_uuid
     with pytest.raises(ValueError):
-        svc.separar_processos_por_principal('PMAIN')
+        svc.separar_processos_por_principal(processo_data)
 
 

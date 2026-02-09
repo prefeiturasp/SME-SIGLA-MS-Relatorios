@@ -253,7 +253,8 @@ def test_processar_ata_escolha_fluxo_basico(service, agenda_basica, candidato_ba
         'tipo_vaga': 'precaria',
         'vaga_escola': {'escola': {'codigo_eol': '12345', 'nome_oficial': 'Escola A', 'tipo_ue': 'EMEF', 'dre': {'sigla': 'DRE-A', 'nome': 'DRE A'}}}
     }]
-    _setup_processamento_basico(service, agendas, candidatos, escolhas)
+    processo_data = {'uuid': 'proc-abc', 'concurso_uuid': None}
+    _setup_processamento_basico(service, agendas, candidatos, escolhas, processo_data=processo_data)
 
     resultado = service.processar_ata_escolha(processo_uuid='proc-abc', ordering='ranking_escolha')
 

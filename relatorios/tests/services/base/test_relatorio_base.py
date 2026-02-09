@@ -1,8 +1,36 @@
 import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from django.http import HttpResponse
 
 from relatorios.services.base.relatorio_base import RelatorioBase
+from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
+
+
+pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def configuracao_relatorio():
+    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    return ConfiguracaoRelatorio.objects.get_or_create(
+        tipo='LAUDA_VAGAS',  # Tipo genérico para testes
+        defaults={
+            'usar_logotipo': False,
+            'usar_cabecalho_padrao': False,
+            'cabecalho': '',
+            'texto_final': '',
+            'cabecalho_capa_ata': ''
+        }
+    )[0]
+
+
+@pytest.fixture
+def parametrizacao():
+    """Fixture que cria uma Parametrizacao para testes."""
+    return Parametrizacao.objects.create(
+        cabecalho='Cabeçalho Padrão Teste',
+        logo=None
+    )
 
 
 class DummyRelatorio(RelatorioBase):
@@ -10,8 +38,11 @@ class DummyRelatorio(RelatorioBase):
         return HttpResponse('ok'), {}
 
 
-def test_render_to_pdf_success(monkeypatch):
-    rel = DummyRelatorio()
+def test_render_to_pdf_success(monkeypatch, configuracao_relatorio, parametrizacao):
+    rel = DummyRelatorio(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
 
     # Mock render_to_string to return simple HTML
     with patch('relatorios.services.base.relatorio_base.render_to_string', return_value='<html><body>PDF</body></html>') as m_render, \
@@ -32,8 +63,11 @@ def test_render_to_pdf_success(monkeypatch):
     assert 'attachment; filename="file.pdf"' in response['Content-Disposition']
 
 
-def test_render_to_pdf_error_propagates(monkeypatch):
-    rel = DummyRelatorio()
+def test_render_to_pdf_error_propagates(monkeypatch, configuracao_relatorio, parametrizacao):
+    rel = DummyRelatorio(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     with patch('relatorios.services.base.relatorio_base.render_to_string', return_value='<html/>'), \
          patch('relatorios.services.base.relatorio_base.HTML') as m_html_cls:
         m_html = Mock()
