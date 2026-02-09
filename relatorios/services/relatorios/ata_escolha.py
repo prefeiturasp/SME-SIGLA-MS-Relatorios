@@ -13,7 +13,7 @@ from io import BytesIO
 import tempfile
 import os
 from relatorios.services.base.relatorio_base import RelatorioBase
-from relatorios.services.ata_escolha_service import AtaEscolhaService
+from relatorios.services.ata_escolha_service import AtaEscolhaService, CargoObrigatorioError
 from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 
 try:
@@ -64,33 +64,40 @@ class AtaEscolha(RelatorioBase):
 
         return pattern.sub(replace_func, cabecalho_capa)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', cargo_codigo: str = None, **kwargs):
         """
-        Gera o relatório de Ata de Escolha.
+        Gera o relatório de Ata de Escolha para um único cargo.
 
         Args:
             processo_uuid: UUID do processo de convocação
             request: Objeto request do Django
             formato: Formato do relatório ('html', 'pdf' ou 'xls')
             cabecalho: Texto do cabeçalho do relatório (opcional)
+            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais de um cargo)
 
         Returns:
             Tupla (HttpResponse, dados) onde:
             - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
             - dados: estrutura de dados do relatório para salvar no banco
+
+        Raises:
+            CargoObrigatorioError: Quando o processo tem mais de um cargo e cargo_codigo não foi informado
         """
-        # Processar ata de escolha usando o serviço
         try:
             dados_ata = self.ata_service.processar_ata_escolha(
-                processo_uuid=str(processo_uuid) if processo_uuid else ''
+                processo_uuid=str(processo_uuid) if processo_uuid else '',
+                cargo_codigo=cargo_codigo or None,
             )
-
+        except CargoObrigatorioError:
+            raise
         except Exception as exc:
             logger.error('Falha ao processar ata de escolha: %s', exc)
             raise
         mostrar_capa_ata = True
+        cargos_list = dados_ata.get('cargos', [])
+        primeiro_cargo = cargos_list[0] if cargos_list else {}
         datas_preencher_tempalte = {
-            "cargo": dados_ata.get('cargos', [])[0]["cargo_nome"],
+            "cargo": primeiro_cargo.get("cargo_nome", ""),
             "tipos_vagas": "PRECÁRIAS/DEFINITIVAS",
         }
         cabecalho_capa_ata = self._preencher_template(self.context['cabecalho_capa_ata'], datas_preencher_tempalte)
@@ -169,7 +176,6 @@ class AtaEscolha(RelatorioBase):
             return response, dados_ata
         elif formato == 'html':
             context_data['mostrar_capa_ata'] = True
-            print(dados_ata.get('escolhas_totais_por_tipo', {}))
             logger.info('Gerando HTML')
             response = render(request, self.TEMPLATE_NAME, context_data)
             return response, dados_ata

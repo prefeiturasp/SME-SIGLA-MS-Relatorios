@@ -1,5 +1,6 @@
 import logging
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,6 +8,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from relatorios.models import Relatorio
 from relatorios.serializers import RelatorioCreateSerializer, RelatorioSerializer
 from relatorios.services.factory.relatorio_factory import RelatorioFactory
+from relatorios.services.ata_escolha_service import CargoObrigatorioError
 from relatorios.utils import CustomPagination
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,10 @@ class RelatorioViewSet(viewsets.ModelViewSet):
         usuario = serializer.validated_data.get('usuario', '')
         candidatos_uuids = serializer.validated_data.get('candidatos_uuids', None)
         agenda_uuid = serializer.validated_data.get('agenda_uuid', None)
+        # Para Ata de Escolha: cargo_codigo não é campo do model, vem do body
+        cargo_codigo = request.data.get('cargo_codigo') or None
+        if isinstance(cargo_codigo, str):
+            cargo_codigo = cargo_codigo.strip() or None
 
         format_param = request.query_params.get('formato', '').lower()
         accept_header = request.META.get('HTTP_ACCEPT', '')
@@ -60,7 +66,8 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                 processo_uuid,
                 request,
                 formato,
-                agenda_uuid=agenda_uuid
+                agenda_uuid=agenda_uuid,
+                cargo_codigo=cargo_codigo,
             )
             try:
                 serializer.save(dados=dados)
@@ -70,16 +77,46 @@ class RelatorioViewSet(viewsets.ModelViewSet):
 
             return response
 
+        except CargoObrigatorioError as exc:
+            logger.info('Ata de Escolha: processo com mais de um cargo, exige seleção')
+            return Response(
+                {'error': exc.message, 'cargos': exc.cargos},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         except ValueError as exc:
             logger.error('Tipo de relatório inválido: %s - %s', tipo_relatorio, exc)
             return Response(
-                {'error': str(exc)}, 
+                {'error': str(exc)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         except Exception as exc:
             logger.error('Erro ao gerar relatório do tipo %s: %s', tipo_relatorio, exc, exc_info=True)
             return Response(
-                {'error': f'Erro ao gerar relatório: {str(exc)}'}, 
+                {'error': f'Erro ao gerar relatório: {str(exc)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['get'], url_path='ata-escolha-cargos')
+    def ata_escolha_cargos(self, request):
+        """
+        Lista os cargos do processo para exibição no modal de seleção da Ata de Escolha.
+        Query params: processo_uuid (obrigatório).
+        """
+        processo_uuid = request.query_params.get('processo_uuid')
+        if not processo_uuid:
+            return Response(
+                {'error': 'O parâmetro processo_uuid é obrigatório.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            relatorio_service = RelatorioFactory.obter_relatorio('ATA_ESCOLHA')
+            cargos = relatorio_service.ata_service.listar_cargos_processo(str(processo_uuid))
+            return Response({'cargos': cargos})
+        except Exception as exc:
+            logger.warning('Erro ao listar cargos para ata de escolha: %s', exc, exc_info=True)
+            return Response(
+                {'error': str(exc)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
