@@ -75,8 +75,14 @@ class LaudaConvocacao(RelatorioBase):
             raise
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        if cabecalho is not None and str(cabecalho).strip():
+            cabecalho_final = str(cabecalho).strip()
+        elif self.context.get('usar_cabecalho_padrao'):
+            cabecalho_final = self.context.get('cabecalho_padrao', '') or ''
+        else:
+            cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
+        self.context['cabecalho'] = cabecalho_final
         self.context['is_pdf'] = False
         self.context['logo_url'] = logo_url
         if formato == 'docx' or formato == 'doc':

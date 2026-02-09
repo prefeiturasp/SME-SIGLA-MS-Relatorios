@@ -64,16 +64,16 @@ class AtaEscolha(RelatorioBase):
 
         return pattern.sub(replace_func, cabecalho_capa)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', **kwargs):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
         """
         Gera o relatório de Ata de Escolha.
-        
+
         Args:
             processo_uuid: UUID do processo de convocação
             request: Objeto request do Django
             formato: Formato do relatório ('html', 'pdf' ou 'xls')
             cabecalho: Texto do cabeçalho do relatório (opcional)
-        
+
         Returns:
             Tupla (HttpResponse, dados) onde:
             - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
@@ -95,8 +95,16 @@ class AtaEscolha(RelatorioBase):
         }
         cabecalho_capa_ata = self._preencher_template(self.context['cabecalho_capa_ata'], datas_preencher_tempalte)
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
+        # Cabeçalho: prioriza o passado; se vazio, usa padrão da config/param ou settings
+        if cabecalho is not None and str(cabecalho).strip():
+            cabecalho_final = str(cabecalho).strip()
+        elif self.context.get('usar_cabecalho_padrao'):
+            cabecalho_final = self.context.get('cabecalho_padrao', '') or ''
+        else:
+            cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
         context_data = self.context.copy()
         context_data.update({
+            'cabecalho': cabecalho_final,
             'cargos': dados_ata.get('cargos', []),
             'candidatos_sep_cargo': dados_ata.get('candidatos_sep_cargo', {}),
             'cabecalho_capa_ata': cabecalho_capa_ata,
@@ -104,6 +112,8 @@ class AtaEscolha(RelatorioBase):
             'escolhas_totais_por_tipo': dados_ata.get('escolhas_totais_por_tipo', {}),
             'logo_url': logo_url,
             'is_pdf': False,
+            'intervalos_classificacoes': dados_ata.get('intervalos_classificacoes', {}),
+            'processo_nome': dados_ata.get('processo_nome', ''),
         })
 
         if formato == 'docx' or formato == 'doc':
@@ -158,6 +168,7 @@ class AtaEscolha(RelatorioBase):
             )
             return response, dados_ata
         elif formato == 'html':
+            context_data['mostrar_capa_ata'] = True
             print(dados_ata.get('escolhas_totais_por_tipo', {}))
             logger.info('Gerando HTML')
             response = render(request, self.TEMPLATE_NAME, context_data)

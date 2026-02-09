@@ -574,6 +574,7 @@ class AtaEscolhaService:
 
             response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
             processo_data = response_processo.json()
+            classificacoes_pcd, classificacoes_nna, classificacoes_geral = [], [], []
 
             for cargo_info in agendas_por_cargo.values():
                 cargo_nome = cargo_info['cargo_nome']
@@ -901,7 +902,7 @@ class AtaEscolhaService:
             # A estrutura principal será organizada por cargos e sessões
             resultado_estruturado = {
                 'processo_uuid': processo_data.get('uuid'),
-                'processo_nome': processo_data.get('nome'),
+                'processo_nome': processo_data.get('descricao'),
                 'concurso_uuid': resultado.get('concurso_uuid'),
                 'todos_processos_uuid': resultado.get('todos_processos_uuid'),
                 'outros_processos_uuid': resultado.get('outros_processos_uuid'),
@@ -914,7 +915,21 @@ class AtaEscolhaService:
                     candidatos_sep_cargo=candidatos_sep_cargo,
                     escolhas_map=escolhas_map
                 ),
-                'cargos': []
+                'cargos': [],
+                'intervalos_classificacoes': {
+                    'pcd': {
+                        'min': min(classificacoes_pcd) if classificacoes_pcd else 0,
+                        'max': max(classificacoes_pcd) if classificacoes_pcd else 0
+                    },
+                    'geral': {
+                        'min': min(classificacoes_geral) if classificacoes_geral else 0 ,
+                        'max': max(classificacoes_geral) if classificacoes_geral else 0
+                    },
+                    'nna': {
+                        'min': min(classificacoes_nna) if classificacoes_nna else 0,
+                        'max': max(classificacoes_nna) if classificacoes_nna else 0
+                    }
+                }
             }
 
             for cargo_info in cargos_com_sessoes:

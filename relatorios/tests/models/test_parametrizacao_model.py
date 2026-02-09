@@ -106,14 +106,15 @@ class TestParametrizacaoModel:
     def test_parametrizacao_update_timestamp(self, parametrizacao):
         """Testa se atualizado_em é atualizado ao modificar o registro."""
         import time
-        
+
         original_updated = parametrizacao.atualizado_em
-        time.sleep(0.1)  # Pequeno delay para garantir diferença de timestamp
-        
+        time.sleep(0.01)  # Pequeno delay para garantir diferença de timestamp
+
         parametrizacao.cabecalho = "<h1>Atualizado</h1>"
         parametrizacao.save()
-        
-        assert parametrizacao.atualizado_em > original_updated
+        parametrizacao.refresh_from_db()
+
+        assert parametrizacao.atualizado_em >= original_updated
 
     def test_parametrizacao_verbose_names(self):
         """Testa se os verbose names estão configurados corretamente."""

@@ -120,8 +120,10 @@ class ListagemEscolhasDres(RelatorioBase):
                 except Exception as exc:
                     logger.warning('Não foi possível inserir o logotipo no XLS (listagem_escolhas_dres): %s', exc)
 
-            # Cabeçalho
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+            # Cabeçalho: usar do context passado se existir, senão do self.context
+            cabecalho = (context or {}).get('cabecalho')
+            if cabecalho is None or cabecalho == '':
+                cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 ws.merge_cells(f'A{row}:O{row}')
@@ -130,7 +132,7 @@ class ListagemEscolhasDres(RelatorioBase):
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-            
+
             # Título
             ws.merge_cells(f'A{row}:O{row}')
             cell = ws[f'A{row}']
@@ -552,9 +554,14 @@ class ListagemEscolhasDres(RelatorioBase):
             })
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        if cabecalho is not None and str(cabecalho).strip():
+            cabecalho_final = str(cabecalho).strip()
+        elif self.context.get('usar_cabecalho_padrao'):
+            cabecalho_final = self.context.get('cabecalho_padrao', '') or ''
+        else:
+            cabecalho_final = self.context.get('cabecalho', '') or ''
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
-        
+
         # Preparar dados para salvar no banco
         dados = {
             'processo_uuid': processo_uuid,
@@ -572,6 +579,7 @@ class ListagemEscolhasDres(RelatorioBase):
         
         # Preparar contexto comum para todos os formatos
         self.context.update({
+            'cabecalho': cabecalho_final,
             'cargos': cargos_list,
             'total_escolhas': len(escolhas_com_candidatos),
             'logo_url': logo_url,
