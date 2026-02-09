@@ -75,24 +75,10 @@ class LaudaConvocacao(RelatorioBase):
             raise
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        if cabecalho and cabecalho.strip():
-            cabecalho_final = cabecalho.strip()
-        elif cabecalho is None or cabecalho == '':
-            # Usar cabeçalho padrão se configurado
-            if self.context.get('usar_cabecalho_padrao'):
-                cabecalho_final = self.context.get('cabecalho_padrao', '')
-            else:
-                cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
-        else:
-            # cabecalho vazio ou string vazia - usar padrão
-            if self.context.get('usar_cabecalho_padrao'):
-                cabecalho_final = self.context.get('cabecalho_padrao', '')
-            else:
-                cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
+        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context['is_pdf'] = False
         self.context['logo_url'] = logo_url
-        self.context['cabecalho'] = cabecalho_final
         if formato == 'docx' or formato == 'doc':
             filename = f'lauda_convocacao_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)

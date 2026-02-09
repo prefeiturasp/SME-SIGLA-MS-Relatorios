@@ -64,7 +64,7 @@ class AtaEscolha(RelatorioBase):
 
         return pattern.sub(replace_func, cabecalho_capa)
     
-    def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
+    def gerar(self, processo_uuid: str, request, formato: str = 'html', **kwargs):
         """
         Gera o relatório de Ata de Escolha.
         
@@ -95,24 +95,6 @@ class AtaEscolha(RelatorioBase):
         }
         cabecalho_capa_ata = self._preencher_template(self.context['cabecalho_capa_ata'], datas_preencher_tempalte)
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
-        
-        # Atualizar cabeçalho se fornecido
-        cabecalho_final = ''
-        if cabecalho and cabecalho.strip():
-            cabecalho_final = cabecalho.strip()
-        elif cabecalho is None:
-            # Usar cabeçalho padrão se configurado
-            if self.context.get('usar_cabecalho_padrao'):
-                cabecalho_final = self.context.get('cabecalho_padrao', '')
-            else:
-                cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
-        else:
-            # cabecalho vazio ou string vazia - usar padrão
-            if self.context.get('usar_cabecalho_padrao'):
-                cabecalho_final = self.context.get('cabecalho_padrao', '')
-            else:
-                cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
-        
         context_data = self.context.copy()
         context_data.update({
             'cargos': dados_ata.get('cargos', []),
@@ -122,7 +104,6 @@ class AtaEscolha(RelatorioBase):
             'escolhas_totais_por_tipo': dados_ata.get('escolhas_totais_por_tipo', {}),
             'logo_url': logo_url,
             'is_pdf': False,
-            'cabecalho': cabecalho_final,
         })
 
         if formato == 'docx' or formato == 'doc':
@@ -432,8 +413,7 @@ class AtaEscolha(RelatorioBase):
                 logger.warning('Não foi possível inserir o logotipo no XLS: %s', exc)
 
         # Cabeçalho institucional (opcional)
-        # Usar cabeçalho do context_data se disponível, senão usar do self.context
-        cabecalho = context_data.get('cabecalho') or (self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho'])
+        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
         if cabecalho:
             ws.merge_cells(f'A{row_idx}:M{row_idx}')
             cell = ws[f'A{row_idx}']

@@ -450,15 +450,10 @@ class ListaCandidatosSessao(RelatorioBase):
                     'agendas': sections,
                 }
             # Cabeçalho compatível com demais relatórios
-            # Se veio cabecalho no request, usar ele (sobrescreve o da configuracao)
-            if cabecalho and cabecalho.strip():
-                cabecalho_final = cabecalho.strip()
-            else:
-                cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+            cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
             self.context['is_pdf'] = False
             self.context['logo_url'] = logo_url
-            self.context['cabecalho'] = cabecalho_final
             self.context.update(context)
         except Exception as exc:
             logger.error('Erro ao processar agenda/candidatos: %s', exc, exc_info=True)

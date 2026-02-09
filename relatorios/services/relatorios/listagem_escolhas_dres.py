@@ -552,20 +552,7 @@ class ListagemEscolhasDres(RelatorioBase):
             })
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        if cabecalho and cabecalho.strip():
-            cabecalho_final = cabecalho.strip()
-        elif cabecalho is None or cabecalho == '':
-            # Usar cabeçalho padrão se configurado
-            if self.context.get('usar_cabecalho_padrao'):
-                cabecalho_final = self.context.get('cabecalho_padrao', '')
-            else:
-                cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
-        else:
-            # cabecalho vazio ou string vazia - usar padrão
-            if self.context.get('usar_cabecalho_padrao'):
-                cabecalho_final = self.context.get('cabecalho_padrao', '')
-            else:
-                cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
+        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         
         # Preparar dados para salvar no banco
@@ -590,7 +577,6 @@ class ListagemEscolhasDres(RelatorioBase):
             'logo_url': logo_url,
             'is_pdf': False,
             'escolhas': escolhas_ordenadas_export,
-            'cabecalho': cabecalho_final,
         })
         
         if formato == 'xls' or formato == 'xlsx' or formato == 'csv':
