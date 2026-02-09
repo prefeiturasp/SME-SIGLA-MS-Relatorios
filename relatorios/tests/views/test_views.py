@@ -84,7 +84,7 @@ def test_relatorio_create(client):
 
 
 def test_relatorio_get(client, relatorio):
-    url = reverse('relatorio-detail', args=[relatorio.uuid])
+    url = reverse('relatorio-detail', args=[relatorio.pk])
     response = client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
@@ -98,7 +98,7 @@ def test_relatorio_get(client, relatorio):
 
 
 def test_relatorio_delete(client, relatorio):
-    url = reverse('relatorio-detail', args=[relatorio.uuid])
+    url = reverse('relatorio-detail', args=[relatorio.pk])
     response = client.delete(url)
 
     assert response.status_code == status.HTTP_204_NO_CONTENT

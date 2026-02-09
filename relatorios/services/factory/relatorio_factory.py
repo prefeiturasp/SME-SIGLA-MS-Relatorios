@@ -31,9 +31,7 @@ class RelatorioFactory:
         'SUMULA_RECONVOCACAO': SumulaReconvocacao,
         'SUMULA_ESCOLHAS': SumulaEscolhas,
         'LAUDA_CONVOCACAO': LaudaConvocacao,
-        'RESULTADO_ESCOLHA_SIM': ResultadoEscolha,
-        'RESULTADO_ESCOLHA_NAO': ResultadoEscolha,
-        'RESULTADO_ESCOLHA_RECONVOCACAO': ResultadoEscolha,
+        'RESULTADO_ESCOLHA': ResultadoEscolha,      
         'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao,
         'ATA_ESCOLHA': AtaEscolha,
         # TODO: Adicionar outros tipos quando implementados

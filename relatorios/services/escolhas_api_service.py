@@ -49,7 +49,7 @@ class EscolhasService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info('Vagas de escolas buscadas com sucesso (processo_uuid=%s)', processo_uuid)
+            logger.info('Vagas de escolas buscadas com sucesso (processo_uuid=%s)', processo_uuid)         
             return response
         except RequestException as exc:
             logger.error('Erro ao buscar vagas de escolas: %s', exc)

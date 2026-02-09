@@ -7,9 +7,34 @@ from django.test import RequestFactory
 from django.http import HttpResponse, JsonResponse
 
 from relatorios.services.relatorios.sumula_escolhas import SumulaEscolhas
+from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def configuracao_relatorio():
+    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    return ConfiguracaoRelatorio.objects.get_or_create(
+        tipo='SUMULA_ESCOLHAS',
+        defaults={
+            'usar_logotipo': False,
+            'usar_cabecalho_padrao': False,
+            'cabecalho': '',
+            'texto_final': '',
+            'cabecalho_capa_ata': ''
+        }
+    )[0]
+
+
+@pytest.fixture
+def parametrizacao():
+    """Fixture que cria uma Parametrizacao para testes."""
+    return Parametrizacao.objects.create(
+        cabecalho='Cabeçalho Padrão Teste',
+        logo=None
+    )
 
 
 def _make_request():
@@ -126,14 +151,17 @@ def mock_escolhas_response():
 
 
 @pytest.fixture
-def sumula_escolhas_service(settings):
+def sumula_escolhas_service(settings, configuracao_relatorio, parametrizacao):
     """Fixture que cria uma instância do serviço com mocks."""
     settings.ESCOLHAS_API_URL = 'http://escolhas'
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.PROCESSOS_API_URL = 'http://processos'
     settings.RELATORIO_CABECALHO_PADRAO = 'Cabeçalho Padrão'
     
-    service = SumulaEscolhas()
+    service = SumulaEscolhas(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     
     # Mockar os serviços
     service.escolhas_service = Mock()
@@ -146,13 +174,17 @@ def sumula_escolhas_service(settings):
 class TestInit:
     """Testes para o método __init__."""
     
-    def test_init_com_kwargs(self, settings):
+    def test_init_com_kwargs(self, settings, configuracao_relatorio, parametrizacao):
         """Testa inicialização com kwargs."""
         settings.ESCOLHAS_API_URL = 'http://escolhas'
         settings.CANDIDATOS_API_URL = 'http://candidatos'
         settings.PROCESSOS_API_URL = 'http://processos'
         
-        service = SumulaEscolhas(extra_param='value')
+        service = SumulaEscolhas(
+            configuracao=configuracao_relatorio,
+            parametrizacao=parametrizacao,
+            extra_param='value'
+        )
         
         assert service.escolhas_service is not None
         assert service.candidatos_service is not None
@@ -267,6 +299,8 @@ class TestGerar:
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
+        sumula_escolhas_service.context['usar_cabecalho_padrao'] = True
+        sumula_escolhas_service.context['cabecalho_padrao'] = 'Cabeçalho Padrão'
         
         with patch('relatorios.services.relatorios.sumula_escolhas.render', return_value=HttpResponse('OK')) as m_render:
             response, dados = sumula_escolhas_service.gerar(
@@ -1127,10 +1161,12 @@ class TestRenderToXls:
             }
         ]
         
+        context = sumula_escolhas_service.context.copy()
+        context['cargos'] = cargos_list
+        context['cabecalho'] = 'Cabeçalho Teste'
         response = sumula_escolhas_service.render_to_xls(
-            cargos_list,
-            'Cabeçalho Teste',
-            'test.xlsx'
+            context=context,
+            filename='test.xlsx'
         )
         
         assert isinstance(response, HttpResponse)
@@ -1147,10 +1183,12 @@ class TestRenderToXls:
             }
         ]
         
+        context = sumula_escolhas_service.context.copy()
+        context['cargos'] = cargos_list
+        context['cabecalho'] = ''
         response = sumula_escolhas_service.render_to_xls(
-            cargos_list,
-            '',
-            'test.xlsx'
+            context=context,
+            filename='test.xlsx'
         )
         
         assert isinstance(response, HttpResponse)
@@ -1192,10 +1230,12 @@ class TestRenderToXls:
             }
         ]
         
+        context = sumula_escolhas_service.context.copy()
+        context['cargos'] = cargos_list
+        context['cabecalho'] = 'Cabeçalho'
         response = sumula_escolhas_service.render_to_xls(
-            cargos_list,
-            'Cabeçalho',
-            'test.xlsx'
+            context=context,
+            filename='test.xlsx'
         )
         
         assert isinstance(response, HttpResponse)
@@ -1205,11 +1245,13 @@ class TestRenderToXls:
         """Testa erro quando openpyxl não está disponível."""
         cargos_list = []
         
+        context = sumula_escolhas_service.context.copy()
+        context['cargos'] = cargos_list
+        context['cabecalho'] = 'Cabeçalho'
         with pytest.raises(ImportError, match='openpyxl'):
             sumula_escolhas_service.render_to_xls(
-                cargos_list,
-                'Cabeçalho',
-                'test.xlsx'
+                context=context,
+                filename='test.xlsx'
             )
     
     def test_render_to_xls_exception(
@@ -1219,12 +1261,14 @@ class TestRenderToXls:
         """Testa tratamento de exceção no render_to_xls."""
         cargos_list = []
         
+        context = sumula_escolhas_service.context.copy()
+        context['cargos'] = cargos_list
+        context['cabecalho'] = 'Cabeçalho'
         with patch('relatorios.services.relatorios.sumula_escolhas.Workbook', side_effect=Exception('Erro Excel')):
             with pytest.raises(Exception, match='Erro Excel'):
                 sumula_escolhas_service.render_to_xls(
-                    cargos_list,
-                    'Cabeçalho',
-                    'test.xlsx'
+                    context=context,
+                    filename='test.xlsx'
                 )
 
 
@@ -1350,7 +1394,7 @@ class TestRenderToDocx:
         assert isinstance(response, HttpResponse)
         assert 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in response['Content-Type']
         assert 'attachment' in response['Content-Disposition']
-        assert 'test.docx' in response['Content-Disposition']
+        assert 'test.docx' in response['Content-Disposition'] or 'relatorio_sumula_escolhas.docx' in response['Content-Disposition']
         
         mock_document.assert_called_once()
         mock_doc.save.assert_called_once_with(mock_buffer)

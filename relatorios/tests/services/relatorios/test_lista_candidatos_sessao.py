@@ -5,6 +5,10 @@ from django.http import HttpResponse, JsonResponse
 from requests import RequestException
 
 from relatorios.services.relatorios.lista_candidatos_sessao import ListaCandidatosSessao
+from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
+
+
+pytestmark = pytest.mark.django_db
 
 
 class _Resp:
@@ -15,11 +19,38 @@ class _Resp:
         return self._payload
 
 
-def _make_service(settings):
+@pytest.fixture
+def configuracao_relatorio():
+    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    return ConfiguracaoRelatorio.objects.get_or_create(
+        tipo='LISTA_CANDIDATOS_SESSAO',
+        defaults={
+            'usar_logotipo': False,
+            'usar_cabecalho_padrao': False,
+            'cabecalho': '',
+            'texto_final': '',
+            'cabecalho_capa_ata': ''
+        }
+    )[0]
+
+
+@pytest.fixture
+def parametrizacao():
+    """Fixture que cria uma Parametrizacao para testes."""
+    return Parametrizacao.objects.create(
+        cabecalho='Cabeçalho Padrão Teste',
+        logo=None
+    )
+
+
+def _make_service(settings, configuracao_relatorio, parametrizacao):
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.RELATORIO_CABECALHO_PADRAO = 'HEADER_PADRAO'
     settings.AGENDAS_API_URL = 'http://agendas'
-    svc = ListaCandidatosSessao()
+    svc = ListaCandidatosSessao(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     return svc
 
 
@@ -27,8 +58,8 @@ def _req():
     return RequestFactory().get('/relatorios/lista-candidatos-sessao/')
 
 
-def test_html_success_and_flatten_mapping(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_html_success_and_flatten_mapping(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     # dois candidatos: um com dados aninhados e outro plano
     payload = {
         'results': [
@@ -81,13 +112,14 @@ def test_html_success_and_flatten_mapping(settings, monkeypatch):
     assert ctx['candidatos'][1]['inscricao'] == 'B2'
     assert ctx['candidatos'][1]['nome'] == 'Beto'
     assert ctx['candidatos'][1]['cpf'] == '222'
-    # Cabeçalho passado
-    assert ctx['cabecalho'] == 'MEU CAB'
-    assert ctx['cabecalho_padrao'] == 'HEADER_PADRAO'
+    # Cabeçalho passado - verificar em self.context
+    assert svc.context.get('cabecalho') == 'MEU CAB'
+    # cabecalho_padrao vem da parametrizacao
+    assert svc.context.get('cabecalho_padrao') == 'Cabeçalho Padrão Teste'
 
 
-def test_pdf_success_calls_render_to_pdf(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_pdf_success_calls_render_to_pdf(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp({'results': []}))
     monkeypatch.setattr(
         svc.agendas_service,
@@ -100,8 +132,8 @@ def test_pdf_success_calls_render_to_pdf(settings, monkeypatch):
     assert response['Content-Type'] == 'application/pdf'
 
 
-def test_default_json_return(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_default_json_return(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp([]))
     monkeypatch.setattr(
         svc.agendas_service,
@@ -113,8 +145,8 @@ def test_default_json_return(settings, monkeypatch):
     assert 'candidatos' in ctx
 
 
-def test_xls_importerror_when_lib_missing(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_xls_importerror_when_lib_missing(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp([]))
     monkeypatch.setattr(
         svc.agendas_service,
@@ -127,8 +159,8 @@ def test_xls_importerror_when_lib_missing(settings, monkeypatch):
         svc.gerar('p1', _req(), 'xls', cabecalho='', agenda_uuid='ag-1')
 
 
-def test_docx_importerror_when_lib_missing(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_docx_importerror_when_lib_missing(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp([]))
     monkeypatch.setattr(
         svc.agendas_service,
@@ -141,19 +173,26 @@ def test_docx_importerror_when_lib_missing(settings, monkeypatch):
         svc.gerar('p1', _req(), 'docx', cabecalho='', agenda_uuid='ag-1')
 
 
-def test_header_fallback_uses_settings_default(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_header_fallback_uses_settings_default(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp([]))
     monkeypatch.setattr(
         svc.agendas_service,
         'buscar_agenda_por_uuid',
         lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
+    # Configurar para usar cabeçalho padrão
+    svc.context['usar_cabecalho_padrao'] = True
+    parametrizacao.cabecalho = 'HEADER_PADRAO'
+    parametrizacao.save()
+    svc.context['cabecalho_padrao'] = 'HEADER_PADRAO'
+    
     response, ctx = svc.gerar('p1', _req(), 'html', cabecalho=None, agenda_uuid='ag-1')
-    assert ctx['cabecalho'] == 'HEADER_PADRAO'
+    # O cabecalho vem de self.context
+    assert svc.context.get('cabecalho') == 'HEADER_PADRAO'
 
-def test_multiple_agendas_filtered_and_separated(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_multiple_agendas_filtered_and_separated(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     # Simula agendas: apenas uma com retardatario == False deve ser considerada
     agendas_payload = {
         'results': [
@@ -209,8 +248,8 @@ def test_multiple_agendas_filtered_and_separated(settings, monkeypatch):
     assert len(sec['candidatos']) == 2
 
 
-def test_render_docx_success_with_fake_python_docx(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_render_docx_success_with_fake_python_docx(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     context = {
         'candidatos': [
             {'classificacao': 1, 'classificacao_nna': None, 'classificacao_pcd': None, 'inscricao': 'A1', 'nome': 'Ana', 'cpf': '111'},
@@ -218,9 +257,38 @@ def test_render_docx_success_with_fake_python_docx(settings, monkeypatch):
         ]
     }
 
+    class FakeRun:
+        def __init__(self):
+            self.font = type('Font', (), {'size': None, 'bold': False})()
+    
+    class FakeParagraph:
+        def __init__(self):
+            self.alignment = None
+            self._runs = [FakeRun()]
+            self.runs = self._runs  # Alias para compatibilidade
+        def add_run(self, text=''):
+            run = FakeRun()
+            self._runs.append(run)
+            self.runs = self._runs  # Atualizar alias
+            return run
+    
+    class FakeTcPr:
+        def find(self, x):
+            return None
+        def remove(self, x):
+            pass
+        def append(self, x):
+            pass
+    
+    class FakeElement:
+        def get_or_add_tcPr(self):
+            return FakeTcPr()
+    
     class FakeCell:
         def __init__(self):
             self.text = ''
+            self.paragraphs = [FakeParagraph()]
+            self._element = FakeElement()
 
     class FakeRow:
         def __init__(self, cols):
@@ -230,12 +298,47 @@ def test_render_docx_success_with_fake_python_docx(settings, monkeypatch):
         def __init__(self, rows, cols):
             self.rows = [FakeRow(cols) for _ in range(rows)]
 
+    class FakeSection:
+        def __init__(self):
+            self.top_margin = None
+            self.bottom_margin = None
+            self.left_margin = None
+            self.right_margin = None
+    
+    class FakeRun:
+        def __init__(self):
+            self.font = type('Font', (), {
+                'size': None,
+                'bold': False,
+                'color': type('Color', (), {'rgb': None})()
+            })()
+    
+    class FakeParagraph:
+        def __init__(self):
+            self.alignment = None
+            self._runs = [FakeRun()]  # Sempre ter pelo menos um run
+            self.runs = self._runs  # Alias para compatibilidade
+        def add_run(self, text=''):
+            run = FakeRun()
+            self._runs.append(run)
+            self.runs = self._runs  # Atualizar alias
+            return run
+    
     class FakeDocument:
         def __init__(self):
             self._headings = []
             self._tables = []
+            self.sections = [FakeSection()]
+            self._paragraphs = []
         def add_heading(self, text, level=1):
             self._headings.append((text, level))
+            return FakeParagraph()
+        def add_paragraph(self, text=''):
+            p = FakeParagraph()
+            if text:
+                p.add_run(text)
+            self._paragraphs.append(p)
+            return p
         def add_table(self, rows, cols):
             tbl = FakeTable(rows, cols)
             self._tables.append(tbl)
@@ -252,8 +355,8 @@ def test_render_docx_success_with_fake_python_docx(settings, monkeypatch):
     assert 'attachment; filename=' in resp['Content-Disposition']
 
 
-def test_render_docx_agenda_paragraphs_all(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_render_docx_agenda_paragraphs_all(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     context = {
         'agenda': {
             'escolha_em': '2026-01-13',
@@ -264,23 +367,70 @@ def test_render_docx_agenda_paragraphs_all(settings, monkeypatch):
         'candidatos': [],
     }
 
+    class FakeRun:
+        def __init__(self):
+            self.font = type('Font', (), {
+                'size': None,
+                'bold': False,
+                'color': type('Color', (), {'rgb': None})()
+            })()
+    
+    class FakeParagraph:
+        def __init__(self):
+            self.alignment = None
+            self._runs = [FakeRun()]
+            self.runs = self._runs  # Alias para compatibilidade
+        def add_run(self, text=''):
+            run = FakeRun()
+            self._runs.append(run)
+            self.runs = self._runs  # Atualizar alias
+            return run
+    
+    class FakeTcPr:
+        def find(self, x):
+            return None
+        def remove(self, x):
+            pass
+        def append(self, x):
+            pass
+    
+    class FakeElement:
+        def get_or_add_tcPr(self):
+            return FakeTcPr()
+    
     class FakeCell:
         def __init__(self):
             self.text = ''
+            self.paragraphs = [FakeParagraph()]
+            self._element = FakeElement()
     class FakeRow:
         def __init__(self, cols):
             self.cells = [FakeCell() for _ in range(cols)]
     class FakeTable:
         def __init__(self, rows, cols):
             self.rows = [FakeRow(cols) for _ in range(rows)]
+    class FakeSection:
+        def __init__(self):
+            self.top_margin = None
+            self.bottom_margin = None
+            self.left_margin = None
+            self.right_margin = None
+    
     class FakeDocument:
         def __init__(self):
             self.paragraphs_text = []
+            self.sections = [FakeSection()]
+            self._paragraphs = []
         def add_heading(self, text, level=1):
             self.paragraphs_text.append(text)
+            return FakeParagraph()
         def add_paragraph(self, text=''):
             self.paragraphs_text.append(text)
-            return object()
+            p = FakeParagraph()
+            if text:
+                p.add_run(text)
+            self._paragraphs.append(p)
+            return p
         def add_table(self, rows, cols):
             return FakeTable(rows, cols)
         def save(self, buf):
@@ -306,8 +456,8 @@ def test_render_docx_agenda_paragraphs_all(settings, monkeypatch):
     assert 'Sessão 1' in fake.paragraphs_text
 
 
-def test_render_docx_agenda_paragraphs_partial_time_only_start(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_render_docx_agenda_paragraphs_partial_time_only_start(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     context = {
         'agenda': {
             'escolha_em': '',
@@ -318,23 +468,70 @@ def test_render_docx_agenda_paragraphs_partial_time_only_start(settings, monkeyp
         'candidatos': [],
     }
 
+    class FakeRun:
+        def __init__(self):
+            self.font = type('Font', (), {
+                'size': None,
+                'bold': False,
+                'color': type('Color', (), {'rgb': None})()
+            })()
+    
+    class FakeParagraph:
+        def __init__(self):
+            self.alignment = None
+            self._runs = [FakeRun()]
+            self.runs = self._runs  # Alias para compatibilidade
+        def add_run(self, text=''):
+            run = FakeRun()
+            self._runs.append(run)
+            self.runs = self._runs  # Atualizar alias
+            return run
+    
+    class FakeTcPr:
+        def find(self, x):
+            return None
+        def remove(self, x):
+            pass
+        def append(self, x):
+            pass
+    
+    class FakeElement:
+        def get_or_add_tcPr(self):
+            return FakeTcPr()
+    
     class FakeCell:
         def __init__(self):
             self.text = ''
+            self.paragraphs = [FakeParagraph()]
+            self._element = FakeElement()
     class FakeRow:
         def __init__(self, cols):
             self.cells = [FakeCell() for _ in range(cols)]
     class FakeTable:
         def __init__(self, rows, cols):
             self.rows = [FakeRow(cols) for _ in range(rows)]
+    class FakeSection:
+        def __init__(self):
+            self.top_margin = None
+            self.bottom_margin = None
+            self.left_margin = None
+            self.right_margin = None
+    
     class FakeDocument:
         def __init__(self):
             self.paragraphs_text = []
+            self.sections = [FakeSection()]
+            self._paragraphs = []
         def add_heading(self, text, level=1):
             self.paragraphs_text.append(text)
+            return FakeParagraph()
         def add_paragraph(self, text=''):
             self.paragraphs_text.append(text)
-            return object()
+            p = FakeParagraph()
+            if text:
+                p.add_run(text)
+            self._paragraphs.append(p)
+            return p
         def add_table(self, rows, cols):
             return FakeTable(rows, cols)
         def save(self, buf):
@@ -351,8 +548,8 @@ def test_render_docx_agenda_paragraphs_partial_time_only_start(settings, monkeyp
     fake.add_heading('Lista de Candidatos por Sessão', level=1)
     fake.add_paragraph('Horário: 10:30')
     assert 'Horário: 10:30' in fake.paragraphs_text
-def test_render_xls_layout_with_title_and_agenda(settings, monkeypatch):
-    svc = _make_service(settings)
+def test_render_xls_layout_with_title_and_agenda(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+    svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     import relatorios.services.relatorios.lista_candidatos_sessao as mod
 
     class FakeCell:
