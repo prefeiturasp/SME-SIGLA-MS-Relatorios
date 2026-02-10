@@ -98,25 +98,3 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=False, methods=['get'], url_path='ata-escolha-cargos')
-    def ata_escolha_cargos(self, request):
-        """
-        Lista os cargos do processo para exibição no modal de seleção da Ata de Escolha.
-        Query params: processo_uuid (obrigatório).
-        """
-        processo_uuid = request.query_params.get('processo_uuid')
-        if not processo_uuid:
-            return Response(
-                {'error': 'O parâmetro processo_uuid é obrigatório.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            relatorio_service = RelatorioFactory.obter_relatorio('ATA_ESCOLHA')
-            cargos = relatorio_service.ata_service.listar_cargos_processo(str(processo_uuid))
-            return Response({'cargos': cargos})
-        except Exception as exc:
-            logger.warning('Erro ao listar cargos para ata de escolha: %s', exc, exc_info=True)
-            return Response(
-                {'error': str(exc)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
