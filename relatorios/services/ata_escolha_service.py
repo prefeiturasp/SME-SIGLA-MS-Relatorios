@@ -445,39 +445,7 @@ class AtaEscolhaService:
             cont['nao-escolha'] = cont['nao_escolha']
             resultado[tipo] = cont
         return resultado
-
-    def listar_cargos_processo(self, processo_uuid: str) -> List[Dict]:
-        """
-        Retorna a lista de cargos do processo (a partir das agendas) para permitir
-        que o frontend exiba o modal de seleção quando houver mais de um cargo.
-
-        Args:
-            processo_uuid: UUID do processo de convocação
-
-        Returns:
-            Lista de dicts com 'cargo_codigo' e 'cargo_nome', sem duplicatas.
-        """
-        response_agendas = self.agendas_service.buscar_agendas(
-            processo_convocacao_uuid=processo_uuid,
-            page=1,
-            page_size=1000000,
-        )
-        data = response_agendas.json()
-        if isinstance(data, dict) and 'results' in data:
-            agendas = data['results']
-        elif isinstance(data, list):
-            agendas = data
-        else:
-            agendas = []
-        seen = {}
-        cargos = []
-        for agenda in agendas:
-            codigo = agenda.get('cargo_codigo')
-            nome = agenda.get('cargo_nome', 'Sem Cargo')
-            if codigo and codigo not in seen:
-                seen[codigo] = True
-                cargos.append({'cargo_codigo': codigo, 'cargo_nome': nome})
-        return cargos
+    
 
     def processar_ata_escolha(
         self,
