@@ -394,6 +394,8 @@ class LaudaConvocacaoService:
             logger.info('Agendas agrupadas por cargo: %s', {cargo: len(info['agendas']) for cargo, info in agendas_por_cargo.items()})
 
             # 2. Processar cada cargo e separar por sessões/agendas
+            response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
+            processo_data = response_processo.json()
             cargos_com_sessoes = []
 
             for cargo_info in agendas_por_cargo.values():
@@ -438,15 +440,13 @@ class LaudaConvocacaoService:
                 faltantes_todos = []
                 if lacunas_geral or lacunas_nna or lacunas_pcd:
                     if resultado.get('concurso_uuid') is None:
-                        logger.info('Buscando detalhes do processo para processo_uuid=%s', processo_uuid)
-                        response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
-                        processo_data = response_processo.json()
+                        logger.info('Buscando detalhes do processo para processo_uuid=%s', processo_uuid)                     
                         concurso_uuid = processo_data.get('concurso_uuid')
                         resultado['concurso_uuid'] = concurso_uuid
                         if concurso_uuid:
                             logger.info('Buscando todos os processos do concurso %s', concurso_uuid)
                             processo_uuid_principal, outros_processos_uuid = self.processo_service.separar_processos_por_principal(
-                                processo_uuid_principal=processo_uuid
+                                processo_data=processo_data
                             )
                             resultado['todos_processos_uuid'] = [processo_uuid_principal] + outros_processos_uuid
                             resultado['outros_processos_uuid'] = outros_processos_uuid
