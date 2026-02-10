@@ -45,13 +45,11 @@ h3 {
 </div>
 {% endif %}
 
-<h3>{{ processo_nome }}</h3>
+<h3> <center> {{ processo_nome }}  </center></h3>
+<p><strong>Classificação Geral</strong>: De {{ intervalos_classificacoes.geral.min }} à {{ intervalos_classificacoes.geral.max }}</p>
+<p><strong>Classificação NNA</strong>: De {{ intervalos_classificacoes.nna.min }} à {{ intervalos_classificacoes.nna.max }}</p>
+<p><strong>Classificação PCD</strong>: De  {{ intervalos_classificacoes.pcd.min }} à {{ intervalos_classificacoes.pcd.max }}</p>
 
-<div class="linhas-curtas">
-    <p>{{ linha1|default_if_none:"" }}</p>
-    <p>{{ linha2|default_if_none:"" }}</p>
-    <p>{{ linha3|default_if_none:"" }}</p>
-</div>
 
 <table>
     <thead>

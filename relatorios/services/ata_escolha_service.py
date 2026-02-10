@@ -7,6 +7,14 @@ from typing import Dict, List, Optional, Union
 from requests import RequestException
 
 from .candidatos_api_service import CandidatosService
+
+
+class CargoObrigatorioError(Exception):
+    """Exceção levantada quando o processo tem mais de um cargo e o cargo não foi informado."""
+    def __init__(self, cargos: List[Dict], message: str = "Selecione um cargo para emitir a Ata de Escolha."):
+        self.cargos = cargos
+        self.message = message
+        super().__init__(message)
 from .processo_convocacao_api_service import ProcessoConvocacaoService
 from .agendas_api_service import AgendasService
 from .escolhas_api_service import EscolhasService
@@ -437,10 +445,12 @@ class AtaEscolhaService:
             cont['nao-escolha'] = cont['nao_escolha']
             resultado[tipo] = cont
         return resultado
+    
 
     def processar_ata_escolha(
         self,
         processo_uuid: str,
+        cargo_codigo: Optional[str] = None,
         ordering: str = 'ranking_escolha'
     ) -> Dict:
         """
@@ -459,6 +469,7 @@ class AtaEscolhaService:
 
         Args:
             processo_uuid: UUID do processo de convocação
+            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais de um cargo)
             ordering: Campo para ordenação (padrão: 'ranking_escolha')
 
         Returns:
@@ -502,6 +513,7 @@ class AtaEscolhaService:
 
         Raises:
             RequestException: Em caso de erro nas requisições
+            CargoObrigatorioError: Quando o processo tem mais de um cargo e cargo_codigo não foi informado
         """
         try:
             # 1. Buscar agendas do processo
@@ -520,16 +532,13 @@ class AtaEscolhaService:
             else:
                 agendas_temp = []
 
-            # Extrair códigos únicos de cargo
+            # (codigos_cargo/codigo_cargo_param usados em outros pontos - manter compatibilidade)
             codigos_cargo = []
             for agenda in agendas_temp:
-                cargo_codigo = agenda.get('cargo_codigo')
-                if cargo_codigo and cargo_codigo not in codigos_cargo:
-                    codigos_cargo.append(cargo_codigo)
-
-            # Converter para string única se houver apenas um, ou lista se houver múltiplos
+                cod = agenda.get('cargo_codigo')
+                if cod and cod not in codigos_cargo:
+                    codigos_cargo.append(cod)
             codigo_cargo_param = codigos_cargo[0] if len(codigos_cargo) == 1 else (codigos_cargo if codigos_cargo else None)
-
             logger.info('Códigos de cargo extraídos das agendas: %s', codigo_cargo_param)
 
             # Inicializar resultado e metadados globais
@@ -555,25 +564,38 @@ class AtaEscolhaService:
             agendas_por_cargo = {}
             for agenda in agendas:
                 cargo_nome = agenda.get('cargo_nome', 'Sem Cargo')
-                cargo_codigo = agenda.get('cargo_codigo')
-                if cargo_codigo not in agendas_por_cargo:
-                    agendas_por_cargo[cargo_codigo] = {
+                cod = agenda.get('cargo_codigo')
+                if cod not in agendas_por_cargo:
+                    agendas_por_cargo[cod] = {
                         'cargo_nome': cargo_nome,
-                        'cargo_codigo': cargo_codigo,
+                        'cargo_codigo': cod,
                         'agendas': []
                     }
-                agendas_por_cargo[cargo_codigo]['agendas'].append(agenda)
-                # Garantir que cargo_codigo seja atualizado se não estava definido
-                if not agendas_por_cargo[cargo_codigo]['cargo_codigo'] and cargo_codigo:
-                    agendas_por_cargo[cargo_codigo]['cargo_codigo'] = cargo_codigo
+                agendas_por_cargo[cod]['agendas'].append(agenda)
+                if not agendas_por_cargo[cod]['cargo_codigo'] and cod:
+                    agendas_por_cargo[cod]['cargo_codigo'] = cod
 
-            logger.info('Agendas agrupadas por cargo: %s', {cargo: len(info['agendas']) for cargo, info in agendas_por_cargo.items()})
+            logger.info('Agendas agrupadas por cargo: %s', {c: len(info['agendas']) for c, info in agendas_por_cargo.items()})
+
+            # Ata de escolha é gerada para um único cargo: exigir seleção se houver mais de um
+            cargos_lista = [{'cargo_codigo': c, 'cargo_nome': info['cargo_nome']} for c, info in agendas_por_cargo.items()]
+            if len(agendas_por_cargo) > 1:
+                if not cargo_codigo:
+                    raise CargoObrigatorioError(cargos=cargos_lista)
+                if cargo_codigo not in agendas_por_cargo:
+                    raise ValueError(f"Cargo '{cargo_codigo}' não encontrado no processo.")
+                agendas_por_cargo = {cargo_codigo: agendas_por_cargo[cargo_codigo]}
+            elif len(agendas_por_cargo) == 1 and cargo_codigo is None:
+                # processo com um único cargo: usar esse cargo
+                unico = next(iter(agendas_por_cargo.keys()))
+                agendas_por_cargo = {unico: agendas_por_cargo[unico]}
 
             # 2. Processar cada cargo e separar por sessões/agendas
             cargos_com_sessoes = []
 
             response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
             processo_data = response_processo.json()
+            classificacoes_pcd, classificacoes_nna, classificacoes_geral = [], [], []
 
             for cargo_info in agendas_por_cargo.values():
                 cargo_nome = cargo_info['cargo_nome']
@@ -901,7 +923,7 @@ class AtaEscolhaService:
             # A estrutura principal será organizada por cargos e sessões
             resultado_estruturado = {
                 'processo_uuid': processo_data.get('uuid'),
-                'processo_nome': processo_data.get('nome'),
+                'processo_nome': processo_data.get('descricao'),
                 'concurso_uuid': resultado.get('concurso_uuid'),
                 'todos_processos_uuid': resultado.get('todos_processos_uuid'),
                 'outros_processos_uuid': resultado.get('outros_processos_uuid'),
@@ -914,7 +936,21 @@ class AtaEscolhaService:
                     candidatos_sep_cargo=candidatos_sep_cargo,
                     escolhas_map=escolhas_map
                 ),
-                'cargos': []
+                'cargos': [],
+                'intervalos_classificacoes': {
+                    'pcd': {
+                        'min': min(classificacoes_pcd) if classificacoes_pcd else 0,
+                        'max': max(classificacoes_pcd) if classificacoes_pcd else 0
+                    },
+                    'geral': {
+                        'min': min(classificacoes_geral) if classificacoes_geral else 0 ,
+                        'max': max(classificacoes_geral) if classificacoes_geral else 0
+                    },
+                    'nna': {
+                        'min': min(classificacoes_nna) if classificacoes_nna else 0,
+                        'max': max(classificacoes_nna) if classificacoes_nna else 0
+                    }
+                }
             }
 
             for cargo_info in cargos_com_sessoes:

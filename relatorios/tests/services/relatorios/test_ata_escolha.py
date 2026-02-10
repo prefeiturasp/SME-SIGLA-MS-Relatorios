@@ -297,7 +297,10 @@ def test_gerar_processo_uuid_none(settings_config, service_mocked, dados_ata, re
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch('relatorios.services.relatorios.ata_escolha.render', return_value=HttpResponse('OK')):
         service_mocked.gerar(processo_uuid=None, request=request_obj, formato='html')
-    service_mocked.ata_service.processar_ata_escolha.assert_called_once_with(processo_uuid='')
+    service_mocked.ata_service.processar_ata_escolha.assert_called_once_with(
+        processo_uuid='',
+        cargo_codigo=None,
+    )
 
 
 @pytest.mark.skipif(not DOCX_AVAILABLE, reason="python-docx não está instalado")

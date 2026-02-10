@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import Mock
 from requests import RequestException
 
-from relatorios.services.ata_escolha_service import AtaEscolhaService
+from relatorios.services.ata_escolha_service import AtaEscolhaService, CargoObrigatorioError
 
 
 class _Resp:
@@ -295,24 +295,37 @@ def test_processar_ata_escolha_com_lacunas_e_faltantes(service, agenda_basica):
     assert 'status_especial' in next(c for c in candidatos_todos if c['uuid'] == 'gx')
 
 
-def test_processar_ata_escolha_multiplos_cargos(service):
-    """Testa processamento com múltiplos cargos."""
+def test_processar_ata_escolha_multiplos_cargos_sem_cargo_levanta_erro(service):
+    """Com múltiplos cargos e sem cargo_codigo deve levantar CargoObrigatorioError."""
     agendas = [
         {'cargo_nome': 'Professor', 'cargo_codigo': '123', 'candidatos_uuids': ['a'], 'hora_convocacao_inicio': '09:00', 'hora_convocacao_fim': '10:00'},
         {'cargo_nome': 'Coordenador', 'cargo_codigo': '456', 'candidatos_uuids': ['x'], 'hora_convocacao_inicio': '11:00', 'hora_convocacao_fim': '12:00'},
     ]
-    service.agendas_service.buscar_agendas.return_value = _Resp(agendas)
-    service.candidatos_service.buscar_habilitados.side_effect = [
-        _Resp([{'uuid': 'a', 'categoria_efetiva': 'GERAL', 'classificacao': 1, 'ranking_escolha': 1, 'candidato': {'nome': 'Candidato A'}}]),
-        _Resp([{'uuid': 'x', 'categoria_efetiva': 'GERAL', 'classificacao': 1, 'ranking_escolha': 1, 'candidato': {'nome': 'Candidato X'}}]),
+    service.agendas_service.buscar_agendas.return_value = _Resp({'results': agendas})
+    with pytest.raises(CargoObrigatorioError) as exc_info:
+        service.processar_ata_escolha(processo_uuid='proc-multi')
+    assert len(exc_info.value.cargos) == 2
+    assert {c['cargo_codigo'] for c in exc_info.value.cargos} == {'123', '456'}
+
+
+def test_processar_ata_escolha_um_cargo_quando_informa_cargo_codigo(service):
+    """Com múltiplos cargos, ao informar cargo_codigo retorna apenas esse cargo."""
+    agendas = [
+        {'cargo_nome': 'Professor', 'cargo_codigo': '123', 'candidatos_uuids': ['a'], 'hora_convocacao_inicio': '09:00', 'hora_convocacao_fim': '10:00'},
+        {'cargo_nome': 'Coordenador', 'cargo_codigo': '456', 'candidatos_uuids': ['x'], 'hora_convocacao_inicio': '11:00', 'hora_convocacao_fim': '12:00'},
     ]
+    service.agendas_service.buscar_agendas.return_value = _Resp({'results': agendas})
+    service.processo_service.buscar_processo_convocacao.return_value = _Resp({'uuid': 'proc-multi', 'concurso_uuid': None})
+    service.candidatos_service.buscar_habilitados.return_value = _Resp([
+        {'uuid': 'a', 'categoria_efetiva': 'GERAL', 'classificacao': 1, 'ranking_escolha': 1, 'candidato': {'nome': 'Candidato A'}}
+    ])
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
 
-    resultado = service.processar_ata_escolha(processo_uuid='proc-multi')
+    resultado = service.processar_ata_escolha(processo_uuid='proc-multi', cargo_codigo='123')
 
-    assert resultado['total_cargos'] == 2
-    assert len([c for c in resultado['cargos'] if c['cargo_codigo'] == '123']) == 1
-    assert len([c for c in resultado['cargos'] if c['cargo_codigo'] == '456']) == 1
+    assert resultado['total_cargos'] == 1
+    assert resultado['cargos'][0]['cargo_codigo'] == '123'
+    assert resultado['cargos'][0]['cargo_nome'] == 'Professor'
 
 
 def test_processar_ata_escolha_ordenacao_pcd_primeiro(service, agenda_basica):

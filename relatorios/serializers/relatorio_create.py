@@ -21,7 +21,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Relatorio
-        fields = [     
+        fields = [
             'tipo',
             'usuario',
             'processo_uuid',

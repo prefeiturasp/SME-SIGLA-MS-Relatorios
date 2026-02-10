@@ -2,6 +2,7 @@
 Testes unitários para o serviço ListagemEscolhasDres.
 """
 import pytest
+import sys
 from unittest.mock import Mock, patch, MagicMock
 from django.test import RequestFactory
 from django.http import HttpResponse, JsonResponse
@@ -240,20 +241,31 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa geração de relatório DOCX com sucesso."""
+        """Testa geração de relatório DOCX com sucesso (via PDF->DOCX)."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
-        
-        with patch.object(listagem_escolhas_dres_service, 'render_to_docx', return_value=HttpResponse(b'docx', content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')) as m_docx:
-            response, dados = listagem_escolhas_dres_service.gerar(
-                processo_uuid='proc-123',
-                request=_make_request(),
-                formato='docx',
-                cabecalho='Cabeçalho Teste'
-            )
-        
+
+        mock_pdf2docx = MagicMock()
+        with patch.object(listagem_escolhas_dres_service, 'render_to_pdf', return_value=HttpResponse(b'%PDF-1.4', content_type='application/pdf')), \
+             patch.dict('sys.modules', {'pdf2docx': mock_pdf2docx}):
+            tmp_dir = MagicMock()
+            tmp_dir.__enter__ = MagicMock(return_value='/tmp/test')
+            tmp_dir.__exit__ = MagicMock(return_value=None)
+            m_file = MagicMock()
+            m_file.__enter__ = MagicMock(return_value=m_file)
+            m_file.__exit__ = MagicMock(return_value=None)
+            m_file.read = MagicMock(return_value=b'DOCX')
+            with patch('relatorios.services.relatorios.listagem_escolhas_dres.tempfile.TemporaryDirectory', return_value=tmp_dir), \
+                 patch('builtins.open', return_value=m_file):
+                response, dados = listagem_escolhas_dres_service.gerar(
+                    processo_uuid='proc-123',
+                    request=_make_request(),
+                    formato='docx',
+                    cabecalho='Cabeçalho Teste'
+                )
+
         assert isinstance(response, HttpResponse)
-        m_docx.assert_called_once()
+        assert 'docx' in response.get('Content-Disposition', '') or 'listagem' in response.get('Content-Disposition', '')
     
     def test_gerar_com_cabecalho_padrao(
         self,
@@ -432,19 +444,29 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa geração com formato DOC (tratado como DOCX)."""
+        """Testa geração com formato DOC (tratado como DOCX via PDF->DOCX)."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
-        
-        with patch.object(listagem_escolhas_dres_service, 'render_to_docx', return_value=HttpResponse(b'docx', content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')) as m_docx:
-            response, dados = listagem_escolhas_dres_service.gerar(
-                processo_uuid='proc-123',
-                request=_make_request(),
-                formato='doc'
-            )
-        
+
+        mock_pdf2docx = MagicMock()
+        with patch.object(listagem_escolhas_dres_service, 'render_to_pdf', return_value=HttpResponse(b'%PDF-1.4', content_type='application/pdf')), \
+             patch.dict('sys.modules', {'pdf2docx': mock_pdf2docx}):
+            tmp_dir = MagicMock()
+            tmp_dir.__enter__ = MagicMock(return_value='/tmp/test')
+            tmp_dir.__exit__ = MagicMock(return_value=None)
+            m_file = MagicMock()
+            m_file.__enter__ = MagicMock(return_value=m_file)
+            m_file.__exit__ = MagicMock(return_value=None)
+            m_file.read = MagicMock(return_value=b'DOCX')
+            with patch('relatorios.services.relatorios.listagem_escolhas_dres.tempfile.TemporaryDirectory', return_value=tmp_dir), \
+                 patch('builtins.open', return_value=m_file):
+                response, dados = listagem_escolhas_dres_service.gerar(
+                    processo_uuid='proc-123',
+                    request=_make_request(),
+                    formato='doc'
+                )
+
         assert isinstance(response, HttpResponse)
-        m_docx.assert_called_once()
     
     def test_gerar_formato_json(
         self,
@@ -592,17 +614,19 @@ class TestRenderToXls:
             }
         ]
         
+        context = listagem_escolhas_dres_service.context.copy()
+        context['escolhas'] = escolhas_list
+        context['cabecalho'] = 'Cabeçalho Teste'
         response = listagem_escolhas_dres_service.render_to_xls(
-            escolhas_list,
-            'Cabeçalho Teste',
-            'test.xlsx'
+            context=context,
+            filename='test.xlsx'
         )
-        
+
         assert isinstance(response, HttpResponse)
         assert 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in response['Content-Type']
         assert 'attachment' in response['Content-Disposition']
         assert 'test.xlsx' in response['Content-Disposition']
-    
+
     def test_render_to_xls_sem_cabecalho(self, listagem_escolhas_dres_service):
         """Testa geração de Excel sem cabeçalho."""
         escolhas_list = []
