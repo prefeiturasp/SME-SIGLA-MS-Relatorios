@@ -26,14 +26,22 @@ class RelatorioBase(ABC):
         self.parametrizacao = parametrizacao
         # Contexto padrão derivado de Configuração e Parametrização
         # Pode ser atualizado/estendido pelas subclasses conforme necessário
+        # Tratar logo quando não há arquivo associado
+        logo_url = ''
+        if parametrizacao and parametrizacao.logo:
+            try:
+                logo_url = ajustar_logo_caminho(parametrizacao.logo.url) or ''
+            except (ValueError, AttributeError):
+                logo_url = ''
+        
         self.context: Dict[str, Any] = {
             'cabecalho': configuracao.cabecalho,
             'cabecalho_capa_ata': configuracao.cabecalho_capa_ata or '',
             'texto_final': configuracao.texto_final,
             'usar_logotipo': bool(configuracao.usar_logotipo),
-            'logo_url': ajustar_logo_caminho(parametrizacao.logo.url) or '',
+            'logo_url': logo_url,
             'usar_cabecalho_padrao': bool(configuracao.usar_cabecalho_padrao),
-            'cabecalho_padrao': parametrizacao.cabecalho,
+            'cabecalho_padrao': parametrizacao.cabecalho if parametrizacao else '',
         }
 
     @abstractmethod

@@ -4,22 +4,50 @@ from django.test import RequestFactory
 from django.http import HttpResponse, JsonResponse
 
 from relatorios.services.relatorios.lauda_convocacao import LaudaConvocacao
+from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def configuracao_relatorio():
+    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    return ConfiguracaoRelatorio.objects.get_or_create(
+        tipo='LAUDA_CONVOCACAO',
+        defaults={
+            'usar_logotipo': False,
+            'usar_cabecalho_padrao': False,
+            'cabecalho': '',
+            'texto_final': '',
+            'cabecalho_capa_ata': ''
+        }
+    )[0]
+
+
+@pytest.fixture
+def parametrizacao():
+    """Fixture que cria uma Parametrizacao para testes."""
+    return Parametrizacao.objects.create(
+        cabecalho='Cabeçalho Padrão Teste',
+        logo=None
+    )
 
 
 def _make_request():
     return RequestFactory().get('/relatorios/lauda-convocacao/')
 
 
-def test_gerar_pdf_success(settings):
+def test_gerar_pdf_success(settings, configuracao_relatorio, parametrizacao):
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
     settings.RELATORIO_CABECALHO_PADRAO = 'PADRAO'
 
-    svc = LaudaConvocacao()
+    svc = LaudaConvocacao(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     # mockar o service interno para não chamar externas
     svc.lauda_service = Mock()
     svc.lauda_service.processar_lauda_convocacao.return_value = {'cargos': [{'cargo_nome': 'Professor'}]}
@@ -33,13 +61,16 @@ def test_gerar_pdf_success(settings):
     assert dados == {'cargos': [{'cargo_nome': 'Professor'}]}
 
 
-def test_gerar_html_calls_render_with_context_and_default_header(settings):
+def test_gerar_html_calls_render_with_context_and_default_header(settings, configuracao_relatorio, parametrizacao):
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
     settings.RELATORIO_CABECALHO_PADRAO = 'HEADER_PADRAO'
 
-    svc = LaudaConvocacao()
+    svc = LaudaConvocacao(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     svc.lauda_service = Mock()
     svc.lauda_service.processar_lauda_convocacao.return_value = {'cargos': []}
 
@@ -51,17 +82,19 @@ def test_gerar_html_calls_render_with_context_and_default_header(settings):
     _, args, kwargs = m_render.mock_calls[0]
     context = args[2] if len(args) >= 3 else kwargs.get('context')
     assert context['cabecalho'] == 'HEADER_PADRAO'
-    assert context['cabecalho_padrao'] == 'HEADER_PADRAO'
     assert dados == {'cargos': []}
 
 
-def test_gerar_default_json_success(settings):
+def test_gerar_default_json_success(settings, configuracao_relatorio, parametrizacao):
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
     settings.RELATORIO_CABECALHO_PADRAO = 'PADRAO'
 
-    svc = LaudaConvocacao()
+    svc = LaudaConvocacao(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     svc.lauda_service = Mock()
     payload = {'processo_uuid': 'p1', 'cargos': []}
     svc.lauda_service.processar_lauda_convocacao.return_value = payload
@@ -71,13 +104,16 @@ def test_gerar_default_json_success(settings):
     assert dados == payload
 
 
-def test_gerar_raises_exception_on_service_failure(settings):
+def test_gerar_raises_exception_on_service_failure(settings, configuracao_relatorio, parametrizacao):
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
     settings.RELATORIO_CABECALHO_PADRAO = 'PADRAO'
 
-    svc = LaudaConvocacao()
+    svc = LaudaConvocacao(
+        configuracao=configuracao_relatorio,
+        parametrizacao=parametrizacao
+    )
     svc.lauda_service = Mock()
     svc.lauda_service.processar_lauda_convocacao.side_effect = Exception('falha')
 

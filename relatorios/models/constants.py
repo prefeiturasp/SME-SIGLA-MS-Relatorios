@@ -10,9 +10,7 @@ TIPOS_RELATORIOS = [
     ('SUMULA_RECONVOCACAO', 'Súmula de Reconvocados'),
     ('SUMULA_ESCOLHAS', 'Súmula de Escolhas'),
     ('LAUDA_CONVOCACAO', 'Lauda de Convocação'),
-    ('RESULTADO_ESCOLHA_SIM', 'Resultado de Escolha de vagas - Sim'),
-    ('RESULTADO_ESCOLHA_NAO', 'Resultado de Escolha de vagas - Não'),
-    ('RESULTADO_ESCOLHA_RECONVOCACAO', 'Resultado de Escolha de vagas - Reconvocação'),
+    ('RESULTADO_ESCOLHA', 'Resultado de Escolha de Vagas'),   
     ('LISTA_CANDIDATOS_SESSAO', 'Lista de Candidatos por Sessão'),
     ('ATA_ESCOLHA', 'Ata de Escolha'),
     # Adicione outros tipos de relatórios aqui conforme necessário
