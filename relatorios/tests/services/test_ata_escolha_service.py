@@ -229,15 +229,11 @@ def test_extrair_dados_escola_escolhida(service, escolha, esperado):
 def _setup_processamento_basico(service, agendas, candidatos, escolhas=None, processo_data=None):
     """Helper para configurar mocks básicos de processamento."""
     service.agendas_service.buscar_agendas.return_value = _Resp(agendas)
-    service.candidatos_service.buscar_por_uuids.return_value = _Resp({'results': candidatos})
-    service.candidatos_service.buscar_reclassificados_por_concurso.return_value = _Resp({})
-    service.candidatos_service.buscar_eliminados_por_concurso.return_value = _Resp({})
+    service.candidatos_service.buscar_habilitados.return_value = _Resp(candidatos)
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas or []
     if processo_data:
         service.processo_service.buscar_processo_convocacao.return_value = _Resp(processo_data)
         service.processo_service.separar_processos_por_principal.return_value = ('p_main', ['p2'])
-    else:
-        service.processo_service.buscar_processo_convocacao.return_value = _Resp({'concurso_uuid': None})
 
 
 def test_processar_ata_escolha_fluxo_basico(service, agenda_basica, candidato_basico):
@@ -320,11 +316,9 @@ def test_processar_ata_escolha_um_cargo_quando_informa_cargo_codigo(service):
     ]
     service.agendas_service.buscar_agendas.return_value = _Resp({'results': agendas})
     service.processo_service.buscar_processo_convocacao.return_value = _Resp({'uuid': 'proc-multi', 'concurso_uuid': None})
-    service.candidatos_service.buscar_por_uuids.return_value = _Resp({'results': [
+    service.candidatos_service.buscar_habilitados.return_value = _Resp([
         {'uuid': 'a', 'categoria_efetiva': 'GERAL', 'classificacao': 1, 'ranking_escolha': 1, 'candidato': {'nome': 'Candidato A'}}
-    ]})
-    service.candidatos_service.buscar_reclassificados_por_concurso.return_value = _Resp({})
-    service.candidatos_service.buscar_eliminados_por_concurso.return_value = _Resp({})
+    ])
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
 
     resultado = service.processar_ata_escolha(processo_uuid='proc-multi', cargo_codigo='123')
@@ -402,12 +396,8 @@ def test_processar_ata_escolha_request_exception(service):
 ])
 def test_processar_ata_escolha_formatos_resposta(service, agendas_payload, candidatos_payload):
     """Testa processamento com diferentes formatos de resposta (dict/list)."""
-    candidatos_list = candidatos_payload.get('results', []) if isinstance(candidatos_payload, dict) else candidatos_payload
     service.agendas_service.buscar_agendas.return_value = _Resp(agendas_payload)
-    service.candidatos_service.buscar_por_uuids.return_value = _Resp({'results': candidatos_list})
-    service.candidatos_service.buscar_reclassificados_por_concurso.return_value = _Resp({})
-    service.candidatos_service.buscar_eliminados_por_concurso.return_value = _Resp({})
-    service.processo_service.buscar_processo_convocacao.return_value = _Resp({'concurso_uuid': None})
+    service.candidatos_service.buscar_habilitados.return_value = _Resp(candidatos_payload)
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
 
     resultado = service.processar_ata_escolha(processo_uuid='proc-dict')
