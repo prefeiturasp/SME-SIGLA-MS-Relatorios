@@ -74,8 +74,16 @@ class LaudaConvocacao(RelatorioBase):
             logger.error('Falha ao processar lauda de convocação: %s', exc)
             raise
         
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão
+        if cabecalho:
+            self.context['cabecalho'] = cabecalho
+        if self.context['usar_cabecalho_padrao']:
+            cabecalho_final = self.context['cabecalho_padrao']
+        elif self.context['cabecalho']:
+            cabecalho_final = self.context['cabecalho']
+        else:
+            cabecalho_final = getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
+        self.context['cabecalho'] = cabecalho_final
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context['is_pdf'] = False
         self.context['logo_url'] = logo_url

@@ -537,7 +537,8 @@ class LaudaConvocacaoService:
                     )
                     dados_candidatos = response_candidatos.json()
                     candidatos_result = dados_candidatos.get('results', [])
-                    classificacao_max_default = max([candidato.get('classificacao') for candidato in candidatos_result])
+                    _classificacoes = [c.get('classificacao') for c in candidatos_result if c.get('classificacao') is not None]
+                    classificacao_max_default = max(_classificacoes) if _classificacoes else 0
                     if any(c.get('classificacao_pcd') is not None for c in candidatos_result):
                         classificacao_max = classificacao_max_default
                         classificacao_max_sem_pcd = candidatos_result[-1].get('classificacao')
@@ -692,7 +693,7 @@ class LaudaConvocacaoService:
                         'numero_sessao': numero_sessao,
                         'hora_convocacao_inicio': agenda_sessao.get('hora_convocacao_inicio', ''),
                         'hora_convocacao_fim': agenda_sessao.get('hora_convocacao_fim', ''),
-                        'candidatos': candidatos_result
+                        'candidatos': candidatos_base_ordenados
                     })
 
                 # Adicionar estrutura do cargo com suas sessões
