@@ -450,7 +450,10 @@ class ListaCandidatosSessao(RelatorioBase):
                     'agendas': sections,
                 }
             # Cabeçalho compatível com demais relatórios
+            if cabecalho is not None:
+                self.context['cabecalho'] = cabecalho
             cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+            self.context['cabecalho'] = cabecalho_final
             logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
             self.context['is_pdf'] = False
             self.context['logo_url'] = logo_url
