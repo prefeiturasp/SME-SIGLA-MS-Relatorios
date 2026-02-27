@@ -1,7 +1,6 @@
 """
 Serviço para geração de lauda de convocação.
 """
-import copy
 import logging
 from typing import Dict, List, Optional, Set, Union
 from requests import RequestException
@@ -269,119 +268,6 @@ class LaudaConvocacaoService:
             # Não levanta exceção, apenas retorna o que conseguiu buscar
 
         return candidatos_faltantes
-    
-    def _inserir_reclassificados_em_segmento(
-        self,
-        lista_segmento: List[Dict],
-        reclassificados: List[Dict],
-        cargo_codigo,
-        classificacao_attr: str,
-    ) -> None:
-        """
-        Insere, dentro de lista_segmento, candidatos reclassificados (GERAL) antes dos candidatos
-        do mesmo tipo (NNA/PCD) quando a classificação do reclassificado for menor.
-        - Evita duplicar pelo uuid
-        - Mantém ordenação por classificação do respectivo atributo (classificacao_nna/pcd)
-        - Anota 'status_especial' = 'Utilizar classificação GERAL'
-        """
-        try:
-            if not isinstance(reclassificados, list) or not reclassificados or not lista_segmento:
-                return
-            # Considerar apenas reclassificados do cargo atual e com classificação inteira válida
-            reclass_filtrados = [
-                r for r in reclassificados
-                if str(r.get('codigo_cargo')) == str(cargo_codigo)
-                and isinstance(r.get(classificacao_attr), int)
-            ]
-            if not reclass_filtrados:
-                return
-            # Mapa para não duplicar por uuid
-            existentes: Set[str] = set([str(item.get('uuid')) for item in lista_segmento if item.get('uuid')])
-            j = 0
-            while j < len(lista_segmento):
-                cand = lista_segmento[j]
-                cand_class = cand.get(classificacao_attr)
-                if isinstance(cand_class, int):
-                    # Reclassificados com classificação menor que o candidato atual
-                    candidatos_para_inserir = [
-                        r for r in reclass_filtrados
-                        if r.get(classificacao_attr) < cand_class
-                        and str(r.get('uuid')) not in existentes
-                    ]
-                    # Inserir ordenado por classificação do atributo
-                    candidatos_para_inserir.sort(key=lambda x: x.get(classificacao_attr))
-                    for r in candidatos_para_inserir:
-                        copia = dict(r)
-                        copia['status_especial'] = 'Utilizar classificação GERAL'
-                        copia["foi_reclassificado"] = True
-                        lista_segmento.insert(j, copia)
-                        existentes.add(str(r.get('uuid')))
-                        j += 1  # posiciona após o inserido
-                j += 1
-        except Exception:
-            # Em caso de qualquer problema, segue sem a inserção de reclassificados
-            return
-    
-    def _inserir_eliminados_em_segmento(
-        self,
-        lista_segmento: List[Dict],
-        eliminados: List[Dict],
-        cargo_codigo,
-        classificacao_attr: str,
-    ) -> None:
-        """
-        Insere, dentro de lista_segmento, candidatos ELIMINADOS antes dos candidatos do segmento,
-        considerando a classificação indicada por classificacao_attr (classificacao, classificacao_nna, classificacao_pcd).
-        Para cada item da lista, insere eliminados cuja classificação (no atributo indicado) seja menor que a do item atual.
-        - Evita duplicar pelo uuid
-        - Ordena inserções por valor crescente do atributo indicado
-        - Anota 'status_especial' = 'eliminado do certame'
-        """
-        try:
-            if not isinstance(eliminados, list) or not eliminados or not lista_segmento:
-                return
-            # Considerar apenas eliminados do cargo atual e com classificação inteira válida
-            elim_filtrados = []
-            for r in eliminados:
-                if str(r.get('codigo_cargo')) != str(cargo_codigo):
-                    continue
-                # Para 'classificacao' (GERAL), considerar somente quem NÃO tem classificacao_nna/pcd
-                if classificacao_attr == 'classificacao':
-                    if r.get('classificacao_nna') is not None or r.get('classificacao_pcd') is not None:
-                        continue
-                if isinstance(r.get(classificacao_attr), int):
-                    elim_filtrados.append(r)
-            if not elim_filtrados:
-                return
-            # Mapa para não duplicar por uuid
-            existentes: Set[str] = set([str(item.get('uuid')) for item in lista_segmento if item.get('uuid')])
-            j = 0
-            while j < len(lista_segmento):
-                cand = lista_segmento[j]
-                cand_class = cand.get(classificacao_attr)
-                if not isinstance(cand_class, int):
-                    j += 1
-                    continue
-                candidatos_para_inserir = []
-                for r in elim_filtrados:
-                    if r.get("categoria_efetiva") == cand.get("categoria_efetiva") \
-                    and not cand.get("foi_reclassificado", False) \
-                    and not r.get("foi_eliminado", False) \
-                    and r.get(classificacao_attr) < cand_class \
-                    and str(r.get('uuid')) not in existentes:
-                        r["foi_eliminado"] = True
-                        candidatos_para_inserir.append(r)
-                candidatos_para_inserir.sort(key=lambda x: x.get(classificacao_attr))
-                for r in candidatos_para_inserir:
-                    copia = dict(r)
-                    copia['status_especial'] = 'Eliminado do certame'
-                    lista_segmento.insert(j, copia)
-                    existentes.add(str(r.get('uuid')))
-                    j += 1  # posiciona após o inserido
-                j += 1
-        except Exception:
-            # Em caso de qualquer problema, segue sem a inserção de eliminados
-            return
 
     def processar_lauda_convocacao(
         self,
@@ -507,194 +393,247 @@ class LaudaConvocacaoService:
 
             logger.info('Agendas agrupadas por cargo: %s', {cargo: len(info['agendas']) for cargo, info in agendas_por_cargo.items()})
 
-            # Buscar reclassificados por concurso
             # 2. Processar cada cargo e separar por sessões/agendas
             response_processo = self.processo_service.buscar_processo_convocacao(processo_uuid)
             processo_data = response_processo.json()
-
-            # Buscar reclassificados por concurso
-            response_reclassificados = self.candidatos_service.buscar_reclassificados_por_concurso(
-                concurso_uuid=processo_data.get('concurso_uuid'),
-                processo_uuid=processo_uuid
-            )
-            reclassificados_data = response_reclassificados.json()
-            # Buscar eliminados por concurso
             cargos_com_sessoes = []
-            classificacao_max = 0
-            classificacao_min = 0
-            classificacao_max_sem_pcd = 0
+
             for cargo_info in agendas_por_cargo.values():
                 cargo_nome = cargo_info['cargo_nome']
                 cargo_codigo = cargo_info['cargo_codigo']
                 agendas_cargo = cargo_info['agendas']
                 numero_sessoes = len(agendas_cargo)
                 logger.info('Processando cargo: %s (%d sessões/agendas)', cargo_nome, numero_sessoes)
-                sessoes_cargo = []
-                for agenda in agendas_cargo:
-                    response_candidatos = self.candidatos_service.buscar_por_uuids(
-                        uuids=agenda.get('candidatos_uuids'),
-                        order_by=ordering
-                    )
-                    dados_candidatos = response_candidatos.json()
-                    candidatos_result = dados_candidatos.get('results', [])
-                    _classificacoes = [c.get('classificacao') for c in candidatos_result if c.get('classificacao') is not None]
-                    classificacao_max_default = max(_classificacoes) if _classificacoes else 0
-                    if any(c.get('classificacao_pcd') is not None for c in candidatos_result):
-                        classificacao_max = classificacao_max_default
-                        classificacao_max_sem_pcd = candidatos_result[-1].get('classificacao')
-                    else:
-                        classificacao_min = classificacao_max_sem_pcd or classificacao_max
-                        classificacao_max = classificacao_max_default
-                        classificacao_max_sem_pcd = 0 
 
-                    response_eliminados = self.candidatos_service.buscar_eliminados_por_concurso(
-                        concurso_uuid=processo_data.get('concurso_uuid'),
-                        classificacao_max=classificacao_max,
-                        classificacao_min=classificacao_min
-                    )
-                    classificacao_min = classificacao_max
-                    eliminados_data = response_eliminados.json()
+                # Buscar candidatos habilitados deste cargo
+                logger.info('Buscando candidatos habilitados (processo_uuid=%s, cargo=%s)', processo_uuid, cargo_codigo)
+                response_candidatos = self.candidatos_service.buscar_habilitados(
+                    processo_uuid=processo_uuid,
+                    codigo_cargo=cargo_codigo,
+                    ordering=ordering
+                )
+                dados_cargo = response_candidatos.json()
+                if isinstance(dados_cargo, dict) and 'results' in dados_cargo:
+                    candidatos_cargo = dados_cargo['results']
+                elif isinstance(dados_cargo, list):
+                    candidatos_cargo = dados_cargo
+                else:
+                    logger.warning('Resposta inesperada ao buscar habilitados para cargo %s', cargo_codigo)
+                    candidatos_cargo = []
 
-                    # Separar por tipo e identificar lacunas por cargo
-                    candidatos_sep_cargo = self._separar_por_tipo(candidatos_result)
-                    lacunas_geral = []
-                    lacunas_nna = []
-                    lacunas_pcd = []
-                    if candidatos_sep_cargo['geral']:
-                        classificacoes_geral = self._extrair_classificacoes(candidatos_sep_cargo['geral'], 'classificacao')
-                        lacunas_geral = self._identificar_lacunas(classificacoes_geral)
-                    if candidatos_sep_cargo['nna']:
-                        classificacoes_nna = self._extrair_classificacoes(candidatos_sep_cargo['nna'], 'classificacao_nna')
-                        lacunas_nna = self._identificar_lacunas(classificacoes_nna)
-                    if candidatos_sep_cargo['pcd']:
-                        classificacoes_pcd = self._extrair_classificacoes(candidatos_sep_cargo['pcd'], 'classificacao_pcd')
-                        lacunas_pcd = self._identificar_lacunas(classificacoes_pcd)
+                # Separar por tipo e identificar lacunas por cargo
+                candidatos_sep_cargo = self._separar_por_tipo(candidatos_cargo)
+                lacunas_geral = []
+                lacunas_nna = []
+                lacunas_pcd = []
+                if candidatos_sep_cargo['geral']:
+                    classificacoes_geral = self._extrair_classificacoes(candidatos_sep_cargo['geral'], 'classificacao')
+                    lacunas_geral = self._identificar_lacunas(classificacoes_geral)
+                if candidatos_sep_cargo['nna']:
+                    classificacoes_nna = self._extrair_classificacoes(candidatos_sep_cargo['nna'], 'classificacao_nna')
+                    lacunas_nna = self._identificar_lacunas(classificacoes_nna)
+                if candidatos_sep_cargo['pcd']:
+                    classificacoes_pcd = self._extrair_classificacoes(candidatos_sep_cargo['pcd'], 'classificacao_pcd')
+                    lacunas_pcd = self._identificar_lacunas(classificacoes_pcd)
 
-                    # Buscar e inserir faltantes deste cargo (se houver lacunas)
-                    faltantes_todos = []
-                    if lacunas_geral or lacunas_nna or lacunas_pcd:
-                        if resultado.get('concurso_uuid') is None:
-                            logger.info('Buscando detalhes do processo para processo_uuid=%s', processo_uuid)
-                            concurso_uuid = processo_data.get('concurso_uuid')
-                            resultado['concurso_uuid'] = concurso_uuid
-                            if concurso_uuid:
-                                logger.info('Buscando todos os processos do concurso %s', concurso_uuid)
-                                processo_uuid_principal, outros_processos_uuid = self.processo_service.separar_processos_por_principal(
-                                    processo_data=processo_data
-                                )
-                                resultado['todos_processos_uuid'] = [processo_uuid_principal] + outros_processos_uuid
-                                resultado['outros_processos_uuid'] = outros_processos_uuid
-                        if outros_processos_uuid:
-                            candidatos_faltantes = self._buscar_candidatos_faltantes(
-                                outros_processos_uuid=outros_processos_uuid,
-                                lacunas_geral=lacunas_geral,
-                                lacunas_nna=lacunas_nna,
-                                lacunas_pcd=lacunas_pcd,
-                                codigo_cargo=cargo_codigo,
-                                ordering=ordering
+                # Buscar e inserir faltantes deste cargo (se houver lacunas)
+                faltantes_todos = []
+                if lacunas_geral or lacunas_nna or lacunas_pcd:
+                    if resultado.get('concurso_uuid') is None:
+                        logger.info('Buscando detalhes do processo para processo_uuid=%s', processo_uuid)                     
+                        concurso_uuid = processo_data.get('concurso_uuid')
+                        resultado['concurso_uuid'] = concurso_uuid
+                        if concurso_uuid:
+                            logger.info('Buscando todos os processos do concurso %s', concurso_uuid)
+                            processo_uuid_principal, outros_processos_uuid = self.processo_service.separar_processos_por_principal(
+                                processo_data=processo_data
                             )
-                            if candidatos_faltantes['geral']:
-                                candidatos_faltantes['geral'].sort(key=lambda x: x.get('classificacao') or float('inf'))
-                                faltantes_todos.extend(candidatos_faltantes['geral'])
-                            if candidatos_faltantes['nna']:
-                                candidatos_faltantes['nna'].sort(key=lambda x: x.get('classificacao_nna') or float('inf'))
-                                faltantes_todos.extend(candidatos_faltantes['nna'])
-                            if candidatos_faltantes['pcd']:
-                                candidatos_faltantes['pcd'].sort(key=lambda x: x.get('classificacao_pcd') or float('inf'))
-                                faltantes_todos.extend(candidatos_faltantes['pcd'])
+                            resultado['todos_processos_uuid'] = [processo_uuid_principal] + outros_processos_uuid
+                            resultado['outros_processos_uuid'] = outros_processos_uuid
+                    if outros_processos_uuid:
+                        candidatos_faltantes = self._buscar_candidatos_faltantes(
+                            outros_processos_uuid=outros_processos_uuid,
+                            lacunas_geral=lacunas_geral,
+                            lacunas_nna=lacunas_nna,
+                            lacunas_pcd=lacunas_pcd,
+                            codigo_cargo=cargo_codigo,
+                            ordering=ordering
+                        )
+                        if candidatos_faltantes['geral']:
+                            candidatos_faltantes['geral'].sort(key=lambda x: x.get('classificacao') or float('inf'))
+                            faltantes_todos.extend(candidatos_faltantes['geral'])
+                        if candidatos_faltantes['nna']:
+                            candidatos_faltantes['nna'].sort(key=lambda x: x.get('classificacao_nna') or float('inf'))
+                            faltantes_todos.extend(candidatos_faltantes['nna'])
+                        if candidatos_faltantes['pcd']:
+                            candidatos_faltantes['pcd'].sort(key=lambda x: x.get('classificacao_pcd') or float('inf'))
+                            faltantes_todos.extend(candidatos_faltantes['pcd'])
 
-                    # Ordenar base por ranking_escolha e inserir faltantes por classificacao
-                    def key_ranking_escolha(item):
-                        val = item.get('ranking_escolha')
-                        return val if val is not None else float('inf')
-                    def key_classificacao(item):
-                        val = item.get('classificacao')
-                        return val if val is not None else float('inf')
-                    candidatos_base_ordenados = sorted(candidatos_result, key=key_ranking_escolha)
-                    if faltantes_todos:
-                        # Helpers para encontrar lacunas e índices de inserção
-                        def indices_lacunas_classificacao(classificacoes_ordenadas):
-                            """Retorna mapa {valor_faltante: indice_insercao} sem repetir índice para lacunas múltiplas."""
-                            gaps = {}
-                            cont = 0
-                            if not classificacoes_ordenadas:
-                                return gaps
-                            for i in range(len(classificacoes_ordenadas) - 1):
-                                a = classificacoes_ordenadas[i]
-                                b = classificacoes_ordenadas[i + 1]
-                                if a is None or b is None:
-                                    continue
-                                if isinstance(a, int) and isinstance(b, int) and b - a > 1:
-                                    # números faltantes entre a e b
-                                    # cada número faltante avança o índice de inserção
-                                    for offset, missing in enumerate(range(a + 1, b), start=1):
-                                        gaps[missing] = i + offset + cont
-                                    cont += 1
+                # Ordenar base por ranking_escolha e inserir faltantes por classificacao
+                def key_ranking_escolha(item):
+                    val = item.get('ranking_escolha')
+                    return val if val is not None else float('inf')
+                def key_classificacao(item):
+                    val = item.get('classificacao')
+                    return val if val is not None else float('inf')
+                candidatos_base_ordenados = sorted(candidatos_cargo, key=key_ranking_escolha)
+                if faltantes_todos:
+                    # Helpers para encontrar lacunas e índices de inserção
+                    def indices_lacunas_classificacao(classificacoes_ordenadas):
+                        """Retorna mapa {valor_faltante: indice_insercao} sem repetir índice para lacunas múltiplas."""
+                        gaps = {}
+                        cont = 0
+                        if not classificacoes_ordenadas:
                             return gaps
+                        for i in range(len(classificacoes_ordenadas) - 1):
+                            a = classificacoes_ordenadas[i]
+                            b = classificacoes_ordenadas[i + 1]
+                            if a is None or b is None:
+                                continue
+                            if isinstance(a, int) and isinstance(b, int) and b - a > 1:
+                                # números faltantes entre a e b
+                                # cada número faltante avança o índice de inserção
+                                for offset, missing in enumerate(range(a + 1, b), start=1):
+                                    gaps[missing] = i + offset + cont
+                                cont += 1
+                        return gaps
 
-                        # Construir lista de classificações ordenadas a partir da base
-                        def _classificacao_para_gap(item):
-                            return 9999999 if item.get('categoria_efetiva') != 'GERAL' else item.get('classificacao')
-                        classifs_base = [_classificacao_para_gap(c) for c in candidatos_base_ordenados if _classificacao_para_gap(c) is not None]
-                        mapa_lacunas = indices_lacunas_classificacao(classifs_base)
+                    # Construir lista de classificações ordenadas a partir da base
+                    def _classificacao_para_gap(item):
+                        return 9999999 if item.get('categoria_efetiva') != 'GERAL' else item.get('classificacao')
+                    classifs_base = [_classificacao_para_gap(c) for c in candidatos_base_ordenados if _classificacao_para_gap(c) is not None]
+                    mapa_lacunas = indices_lacunas_classificacao(classifs_base)
 
 
-                        for faltante in faltantes_todos:
-                            cls_f = faltante.get('classificacao')
-                            if cls_f in mapa_lacunas:
-                                pos = mapa_lacunas[cls_f]
-                                candidatos_base_ordenados.insert(pos, faltante)
-                            else:
-                                # Caso não exista lacuna correspondente, insere por ordem de classificação
-                                # na posição ordenada padrão (bisect-like)
-                                pos = 0
-                                while pos < len(candidatos_base_ordenados) and key_classificacao(candidatos_base_ordenados[pos]) <= cls_f:
-                                    pos += 1
-                                candidatos_base_ordenados.insert(pos, faltante)
+                    for faltante in faltantes_todos:
+                        cls_f = faltante.get('classificacao')
+                        if cls_f in mapa_lacunas:
+                            pos = mapa_lacunas[cls_f]
+                            candidatos_base_ordenados.insert(pos, faltante)
+                        else:
+                            # Caso não exista lacuna correspondente, insere por ordem de classificação
+                            # na posição ordenada padrão (bisect-like)
+                            pos = 0
+                            while pos < len(candidatos_base_ordenados) and key_classificacao(candidatos_base_ordenados[pos]) <= cls_f:
+                                pos += 1
+                            candidatos_base_ordenados.insert(pos, faltante)
 
-                    # Inserir reclassificados PCD e NNA (GERAL) antes dos respectivos tipos
-                    reclass_pcd = (reclassificados_data or {}).get('pcd', []) if reclassificados_data else []
-                    self._inserir_reclassificados_em_segmento(
-                        lista_segmento=candidatos_result,
-                        reclassificados=reclass_pcd,
-                        cargo_codigo=cargo_codigo,
-                        classificacao_attr='classificacao_pcd',
-                    )
-                    reclass_nna = (reclassificados_data or {}).get('nna', []) if reclassificados_data else []
-                    self._inserir_reclassificados_em_segmento(
-                        lista_segmento=candidatos_result,
-                        reclassificados=reclass_nna,
-                        cargo_codigo=cargo_codigo,
-                        classificacao_attr='classificacao_nna',
-                    )
-                    self._inserir_eliminados_em_segmento(
-                        lista_segmento=candidatos_result,
-                        eliminados=(eliminados_data or {}).get('pcd', []) if eliminados_data else [],
-                        cargo_codigo=cargo_codigo,
-                        classificacao_attr='classificacao_pcd',
-                    )
-                    self._inserir_eliminados_em_segmento(
-                        lista_segmento=candidatos_result,
-                        eliminados=(eliminados_data or {}).get('nna', []) if eliminados_data else [],
-                        cargo_codigo=cargo_codigo,
-                        classificacao_attr='classificacao_nna',
-                    )
-                    self._inserir_eliminados_em_segmento(
-                        lista_segmento=candidatos_result,
-                        eliminados=(eliminados_data or {}).get('geral', []) if eliminados_data else [],
-                        cargo_codigo=cargo_codigo,
-                        classificacao_attr='classificacao',
-                    )
-                    # Obter horários da agenda correspondente (índice da sessão)
-                    numero_sessao = len(sessoes_cargo) + 1
-                    agenda_sessao = agendas_cargo[numero_sessao - 1] if numero_sessao - 1 < len(agendas_cargo) else {}
+                # Processar agendas do cargo para encontrar separadores
+                uuids_separadores_cargo = []
+                acumulado = 0
 
+                # Iterar nas agendas do cargo até o penúltimo item
+                for i in range(len(agendas_cargo) - 1):  # Até o penúltimo
+                    agenda = agendas_cargo[i]
+                    candidatos_uuids = agenda.get('candidatos_uuids', [])
+                    quantidade_candidatos = len(candidatos_uuids)
+
+                    # Calcular posição: acumulado + quantidade
+                    posicao = acumulado + quantidade_candidatos
+
+                    # Verificar se a posição existe em candidatos_data_cargo
+                    if posicao < len(candidatos_cargo):
+                        candidato_separador = candidatos_cargo[posicao]
+                        uuid_separador = candidatos_cargo[posicao].get('uuid')
+                        if uuid_separador:
+                            uuids_separadores_cargo.append(uuid_separador)
+                            logger.info(
+                                'Cargo %s - Agenda %d: quantidade=%d, posição=%d, UUID separador=%s',
+                                cargo_nome,
+                                i + 1,
+                                quantidade_candidatos,
+                                posicao,
+                                uuid_separador
+                            )
+
+                    # Atualizar acumulado para próxima iteração
+                    acumulado += quantidade_candidatos
+
+                # 3. Separar candidatos do cargo baseado nos UUIDs separadores
+                # Mapear cada sessão com sua agenda correspondente para obter horários
+                sessoes_cargo = []
+                indices_usados = set()
+
+                if not uuids_separadores_cargo:
+                    # Se não há separadores, todos os candidatos vão para uma única sessão
+                    # Usar a primeira agenda para obter horários
+                    agenda_primeira = agendas_cargo[0] if agendas_cargo else {}
                     sessoes_cargo.append({
-                        'numero_sessao': numero_sessao,
-                        'hora_convocacao_inicio': agenda_sessao.get('hora_convocacao_inicio', ''),
-                        'hora_convocacao_fim': agenda_sessao.get('hora_convocacao_fim', ''),
-                        'candidatos': candidatos_base_ordenados
+                        'numero_sessao': 1,
+                        'hora_convocacao_inicio': agenda_primeira.get('hora_convocacao_inicio', ''),
+                        'hora_convocacao_fim': agenda_primeira.get('hora_convocacao_fim', ''),
+                        'candidatos': candidatos_cargo
                     })
+                else:
+                    # Iterar na lista de UUIDs separadores do cargo
+                    for idx_uuid, uuid_separador in enumerate(uuids_separadores_cargo):
+                        # Encontrar a posição do candidato com esse UUID em candidatos_cargo
+                        posicao_encontrada = None
+                        for idx_candidato, candidato in enumerate(candidatos_base_ordenados):
+                            if candidato.get('uuid') == uuid_separador and idx_candidato not in indices_usados:
+                                posicao_encontrada = idx_candidato
+                                break
+
+                        if posicao_encontrada is not None:
+                            # Determinar o índice inicial
+                            if idx_uuid == 0:
+                                indice_inicial = 0
+                            else:
+                                indice_inicial = max(indices_usados) + 1 if indices_usados else 0
+
+                            # Criar lista desde indice_inicial até posicao_encontrada (apenas deste cargo)
+                            lista_segmento = candidatos_base_ordenados[indice_inicial:posicao_encontrada]
+                            if lista_segmento:
+                                # Obter horários da agenda correspondente (índice da sessão)
+                                numero_sessao = len(sessoes_cargo) + 1
+                                agenda_sessao = agendas_cargo[numero_sessao - 1] if numero_sessao - 1 < len(agendas_cargo) else {}
+
+                                sessoes_cargo.append({
+                                    'numero_sessao': numero_sessao,
+                                    'hora_convocacao_inicio': agenda_sessao.get('hora_convocacao_inicio', ''),
+                                    'hora_convocacao_fim': agenda_sessao.get('hora_convocacao_fim', ''),
+                                    'candidatos': lista_segmento
+                                })
+
+                            # Marcar índices como utilizados
+                            for i in range(indice_inicial, posicao_encontrada):
+                                indices_usados.add(i)
+
+                            logger.info(
+                                'Cargo %s - Sessão %d: %d candidatos (índice %d até %d) - Horário: %s às %s',
+                                cargo_nome,
+                                len(sessoes_cargo),
+                                len(lista_segmento),
+                                indice_inicial,
+                                posicao_encontrada,
+                                agenda_sessao.get('hora_convocacao_inicio', 'N/A'),
+                                agenda_sessao.get('hora_convocacao_fim', 'N/A')
+                            )
+
+                            # Se for o último UUID, criar sessão adicional da posição em diante
+                            if idx_uuid == len(uuids_separadores_cargo) - 1:
+                                indice_proximo = posicao_encontrada
+                                if indice_proximo < len(candidatos_cargo):
+                                    lista_final = candidatos_base_ordenados[indice_proximo:]
+                                    if lista_final:
+                                        # Obter horários da última agenda
+                                        numero_sessao_final = len(sessoes_cargo) + 1
+                                        agenda_final = agendas_cargo[numero_sessao_final - 1] if numero_sessao_final - 1 < len(agendas_cargo) else {}
+
+                                        sessoes_cargo.append({
+                                            'numero_sessao': numero_sessao_final,
+                                            'hora_convocacao_inicio': agenda_final.get('hora_convocacao_inicio', ''),
+                                            'hora_convocacao_fim': agenda_final.get('hora_convocacao_fim', ''),
+                                            'candidatos': lista_final
+                                        })
+                                        logger.info(
+                                            'Cargo %s - Sessão %d (final): %d candidatos - Horário: %s às %s',
+                                            cargo_nome,
+                                            len(sessoes_cargo),
+                                            len(lista_final),
+                                            agenda_final.get('hora_convocacao_inicio', 'N/A'),
+                                            agenda_final.get('hora_convocacao_fim', 'N/A')
+                                        )
 
                 # Adicionar estrutura do cargo com suas sessões
                 cargos_com_sessoes.append({
