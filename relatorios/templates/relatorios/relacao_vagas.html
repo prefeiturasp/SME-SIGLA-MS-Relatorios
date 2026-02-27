@@ -81,17 +81,17 @@
             overflow-x: auto;
         }
 
-        table {
+        .rel-relacao-vagas table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
         }
 
-        thead {
+        .rel-relacao-vagas thead {
             background-color: #ecf0f1;
         }
 
-        th {
+        .rel-relacao-vagas th {
             padding: 12px 15px;
             text-align: left;
             font-weight: 600;
@@ -100,13 +100,13 @@
             font-size: 14px;
         }
 
-        td {
+        .rel-relacao-vagas td {
             padding: 12px 15px;
             border-bottom: 1px solid #ecf0f1;
             font-size: 14px;
         }
 
-        tbody tr:last-child td {
+        .rel-relacao-vagas tbody tr:last-child td {
             border-bottom: none;
         }
 
@@ -160,6 +160,7 @@
 
 {% block content %}
         
+        <div class="rel-relacao-vagas">
         <h1>Relação de Vagas</h1>
 
         {% for cargo in cargos %}
@@ -214,4 +215,5 @@
                 {% endfor %}
             </div>
         {% endfor %}
+        </div>
 {% endblock %}
