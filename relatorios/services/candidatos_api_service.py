@@ -462,6 +462,7 @@ class CandidatosService:
     def buscar_eliminados_por_concurso(
         self,
         concurso_uuid: str,
+        processo_uuid: str,
         classificacao_max: int,
         classificacao_min: int
     ) -> requests.Response:
@@ -479,6 +480,7 @@ class CandidatosService:
         url = f"{self.base_url}/api/v1/eliminados/"
         params = {
             'concurso_uuid': concurso_uuid,
+            'processo_uuid': processo_uuid,
             'classificacao_max': classificacao_max,
             'classificacao_min': classificacao_min,
         }
@@ -490,8 +492,8 @@ class CandidatosService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info('Eliminados buscados com sucesso (concurso_uuid=%s, classificacao_max=%s, classificacao_min=%s)', concurso_uuid, classificacao_max, classificacao_min)
+            logger.info('Eliminados buscados com sucesso (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s)', concurso_uuid, processo_uuid, classificacao_max, classificacao_min)
             return response
         except RequestException as exc:
-            logger.error('Erro ao buscar eliminados (concurso_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s', concurso_uuid, classificacao_max, classificacao_min, exc)
+            logger.error('Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s', concurso_uuid, processo_uuid, classificacao_max, classificacao_min, exc)
             raise

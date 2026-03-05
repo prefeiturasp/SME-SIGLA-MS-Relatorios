@@ -546,9 +546,9 @@ class LaudaConvocacaoService:
                         classificacao_min = classificacao_max_sem_pcd or classificacao_max
                         classificacao_max = classificacao_max_default
                         classificacao_max_sem_pcd = 0 
-
                     response_eliminados = self.candidatos_service.buscar_eliminados_por_concurso(
                         concurso_uuid=processo_data.get('concurso_uuid'),
+                        processo_uuid=processo_uuid,
                         classificacao_max=classificacao_max,
                         classificacao_min=classificacao_min
                     )
@@ -655,32 +655,32 @@ class LaudaConvocacaoService:
                     # Inserir reclassificados PCD e NNA (GERAL) antes dos respectivos tipos
                     reclass_pcd = (reclassificados_data or {}).get('pcd', []) if reclassificados_data else []
                     self._inserir_reclassificados_em_segmento(
-                        lista_segmento=candidatos_result,
+                        lista_segmento=candidatos_base_ordenados,
                         reclassificados=reclass_pcd,
                         cargo_codigo=cargo_codigo,
                         classificacao_attr='classificacao_pcd',
                     )
                     reclass_nna = (reclassificados_data or {}).get('nna', []) if reclassificados_data else []
                     self._inserir_reclassificados_em_segmento(
-                        lista_segmento=candidatos_result,
+                        lista_segmento=candidatos_base_ordenados,
                         reclassificados=reclass_nna,
                         cargo_codigo=cargo_codigo,
                         classificacao_attr='classificacao_nna',
                     )
                     self._inserir_eliminados_em_segmento(
-                        lista_segmento=candidatos_result,
+                        lista_segmento=candidatos_base_ordenados,
                         eliminados=(eliminados_data or {}).get('pcd', []) if eliminados_data else [],
                         cargo_codigo=cargo_codigo,
                         classificacao_attr='classificacao_pcd',
                     )
                     self._inserir_eliminados_em_segmento(
-                        lista_segmento=candidatos_result,
+                        lista_segmento=candidatos_base_ordenados,
                         eliminados=(eliminados_data or {}).get('nna', []) if eliminados_data else [],
                         cargo_codigo=cargo_codigo,
                         classificacao_attr='classificacao_nna',
                     )
                     self._inserir_eliminados_em_segmento(
-                        lista_segmento=candidatos_result,
+                        lista_segmento=candidatos_base_ordenados,
                         eliminados=(eliminados_data or {}).get('geral', []) if eliminados_data else [],
                         cargo_codigo=cargo_codigo,
                         classificacao_attr='classificacao',
