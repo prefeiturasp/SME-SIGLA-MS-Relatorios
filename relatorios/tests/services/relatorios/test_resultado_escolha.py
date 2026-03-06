@@ -138,15 +138,18 @@ def mock_escolhas_response():
 
 @pytest.fixture
 def configuracao_relatorio():
-    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
-    return ConfiguracaoRelatorio.objects.create(
+    """Fixture que cria ou atualiza uma ConfiguracaoRelatorio para testes."""
+    configuracao, _ = ConfiguracaoRelatorio.objects.update_or_create(
         tipo='RESULTADO_ESCOLHA',
-        usar_logotipo=False,
-        usar_cabecalho_padrao=False,
-        cabecalho='Cabeçalho Teste',
-        texto_final='Texto Final Teste',
-        cabecalho_capa_ata=''
+        defaults={
+            'usar_logotipo': False,
+            'usar_cabecalho_padrao': False,
+            'cabecalho': 'Cabeçalho Teste',
+            'texto_final': 'Texto Final Teste',
+            'cabecalho_capa_ata': '',
+        }
     )
+    return configuracao
 
 
 @pytest.fixture
