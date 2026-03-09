@@ -875,7 +875,7 @@ class ResultadoEscolha(RelatorioBase):
                     cell.fill = PatternFill(start_color="95a5a6", end_color="95a5a6", fill_type="solid")
                     cell.alignment = left_align
                     row += 1
-                    headers_resumo = ['Escola', 'Tipo UE', 'Código EOL', 'Vagas Def.', 'Vagas Prec.', 'Escolhas Def.', 'Escolhas Prec.']
+                    headers_resumo = ['Escola', 'Tipo UE', 'Código EOL', 'Vagas Definitivas', 'Escolhas Definitivas', 'Vagas Precárias', 'Escolhas Precárias']
                     for dre in cargo.get('resumo_dre_escola', []):
                         ws.merge_cells(f'A{row}:G{row}')
                         cell = ws[f'A{row}']
@@ -897,8 +897,8 @@ class ResultadoEscolha(RelatorioBase):
                             ws.cell(row=row, column=2).value = escola.get('tipo_ue', '-')
                             ws.cell(row=row, column=3).value = escola.get('codigo_eol', '-')
                             ws.cell(row=row, column=4).value = escola.get('qtd_vagas_definitivas', 0)
-                            ws.cell(row=row, column=5).value = escola.get('qtd_vagas_precarias', 0)
-                            ws.cell(row=row, column=6).value = escola.get('qtd_escolhas_definitivas', 0)
+                            ws.cell(row=row, column=5).value = escola.get('qtd_escolhas_definitivas', 0)
+                            ws.cell(row=row, column=6).value = escola.get('qtd_vagas_precarias', 0)
                             ws.cell(row=row, column=7).value = escola.get('qtd_escolhas_precarias', 0)
                             for col in range(1, 8):
                                 cell = ws.cell(row=row, column=col)
@@ -1227,7 +1227,7 @@ class ResultadoEscolha(RelatorioBase):
                         shading_elm.set(qn('w:fill'), 'BDC3C7')
                         shading_elm.set(qn('w:val'), 'clear')
                         p_pr.append(shading_elm)
-                        headers_resumo = ['Escola', 'Tipo UE', 'Código EOL', 'Vagas Def.', 'Vagas Prec.', 'Escolhas Def.', 'Escolhas Prec.']
+                        headers_resumo = ['Escola', 'Tipo UE', 'Código EOL', 'Vagas Definitivas', 'Escolhas Definitivas', 'Vagas Precárias', 'Escolhas Precárias']
                         table = doc.add_table(rows=1, cols=7)
                         table.style = 'Light Grid Accent 1'
                         header_cells = table.rows[0].cells
@@ -1251,8 +1251,8 @@ class ResultadoEscolha(RelatorioBase):
                             row_cells[1].text = str(escola.get('tipo_ue', '-'))
                             row_cells[2].text = str(escola.get('codigo_eol', '-'))
                             row_cells[3].text = str(escola.get('qtd_vagas_definitivas', 0))
-                            row_cells[4].text = str(escola.get('qtd_vagas_precarias', 0))
-                            row_cells[5].text = str(escola.get('qtd_escolhas_definitivas', 0))
+                            row_cells[4].text = str(escola.get('qtd_escolhas_definitivas', 0))
+                            row_cells[5].text = str(escola.get('qtd_vagas_precarias', 0))
                             row_cells[6].text = str(escola.get('qtd_escolhas_precarias', 0))
                             for i, cell in enumerate(row_cells):
                                 cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER if i in [1, 2, 3, 4, 5, 6] else WD_ALIGN_PARAGRAPH.LEFT
