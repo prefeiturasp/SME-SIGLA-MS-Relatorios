@@ -120,6 +120,8 @@
                                         <thead>
                                             <tr>
                                                 <th style="text-align: center;">Classificação</th>
+                                                <th style="text-align: center;">Classificação NNA</th>
+                                                <th style="text-align: center;">Classificação PcD</th>
                                                 <th>Candidatos</th>
                                                 <th style="text-align: center;">Tipo da Vaga</th>
                                             </tr>
@@ -128,6 +130,8 @@
                                             {% for escolha in escola.escolhas %}
                                                 <tr>
                                                     <td class="text-center">{{ escolha.classificacao|default:"-" }}</td>
+                                                    <td class="text-center">{{ escolha.classificacao_nna|default:"-" }}</td>
+                                                    <td class="text-center">{{ escolha.classificacao_pcd|default:"-" }}</td>
                                                     <td>{{ escolha.nome_candidato|default:"-" }}</td>
                                                     <td class="text-center">{{ escolha.tipo_vaga|default:"-" }}</td>
                                                 </tr>
