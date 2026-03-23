@@ -5,6 +5,8 @@ import logging
 from typing import Optional, Dict, Any
 import requests
 from requests import RequestException
+from relatorios.middleware import get_correlation_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,17 @@ class EscolhasService:
         params = {
             'processo_uuid': processo_uuid,
         }
-        
+        logger.info(
+            'Buscando vagas de escolas',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "processo_uuid": processo_uuid,
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -49,11 +61,24 @@ class EscolhasService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info('Vagas de escolas buscadas com sucesso (processo_uuid=%s)', processo_uuid)         
-            return response
         except RequestException as exc:
             logger.error('Erro ao buscar vagas de escolas: %s', exc)
             raise
+
+        logger.info(
+            'Vagas de escolas encontradas',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "processo_uuid": processo_uuid,
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response
 
     def buscar_escolhas_por_candidatos(
         self,
@@ -78,7 +103,17 @@ class EscolhasService:
         data = {
             'candidato_uuid': candidato_uuids,
         }
-        
+        logger.info(
+            'Buscando escolhas por candidatos',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "candidato_uuids": candidato_uuids,
+                "situacao": situacao,
+                "url": url,
+                "headers": self._default_headers,
+            }
+        )
         try:
             response = requests.post(
                 url,
@@ -87,26 +122,25 @@ class EscolhasService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            
-            # A resposta pode ser uma lista ou um dict com 'results'
-            escolhas_data = response.json()
-            if isinstance(escolhas_data, list):
-                escolhas = escolhas_data
-            elif isinstance(escolhas_data, dict) and 'results' in escolhas_data:
-                escolhas = escolhas_data.get('results', [])
-            else:
-                escolhas = []
-            
-            # Filtrar por situação apenas se situacao não for None
-            if situacao is None:
-                escolhas_filtradas = escolhas
-            else:
-                escolhas_filtradas = [e for e in escolhas if e.get('situacao') == situacao]
-            
-            logger.info('Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)', 
-                       len(candidato_uuids), situacao, len(escolhas_filtradas))
-            return escolhas_filtradas
-        
         except RequestException as exc:
             logger.error('Erro ao buscar escolhas: %s', exc)
             raise
+        
+        # A resposta pode ser uma lista ou um dict com 'results'
+        escolhas_data = response.json()
+        if isinstance(escolhas_data, list):
+            escolhas = escolhas_data
+        elif isinstance(escolhas_data, dict) and 'results' in escolhas_data:
+            escolhas = escolhas_data.get('results', [])
+        else:
+            escolhas = []
+        
+        # Filtrar por situação apenas se situacao não for None
+        if situacao is None:
+            escolhas_filtradas = escolhas
+        else:
+            escolhas_filtradas = [e for e in escolhas if e.get('situacao') == situacao]
+        
+        logger.info('Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)', 
+                    len(candidato_uuids), situacao, len(escolhas_filtradas))
+        return escolhas_filtradas
