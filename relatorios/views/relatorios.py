@@ -10,6 +10,8 @@ from relatorios.serializers import RelatorioCreateSerializer, RelatorioSerialize
 from relatorios.services.factory.relatorio_factory import RelatorioFactory
 from relatorios.services.ata_escolha_service import CargoObrigatorioError
 from relatorios.utils import CustomPagination
+from relatorios.middleware import get_correlation_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,21 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def create(self, request, *args, **kwargs):
+        logger.info(
+            'Criando relatório',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": request.method,
+                "path": request.path,
+                "tipo_relatorio": request.data.get('tipo'),
+                "processo_uuid": request.data.get('processo_uuid'),
+                "agenda_uuid": request.data.get('agenda_uuid'),
+                "cargo_codigo": request.data.get('cargo_codigo'),
+                "parametros": request.query_params,
+                "headers": request.headers,
+                "user": request.user,
+            }
+        )
         serializer = RelatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

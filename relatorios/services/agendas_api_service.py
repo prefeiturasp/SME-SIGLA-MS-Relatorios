@@ -5,6 +5,8 @@ import logging
 from typing import Optional
 import requests
 from requests import RequestException
+from relatorios.middleware import get_correlation_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +58,16 @@ class AgendasService:
             'page_size': page_size,
             'processo_convocacao_uuid': processo_convocacao_uuid,
         }
-
+        logger.info(
+            'Buscando agendas',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "params": params,
+                "headers": self._default_headers
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -65,13 +76,6 @@ class AgendasService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info(
-                'Agendas buscadas com sucesso (processo_convocacao_uuid=%s, page=%d, page_size=%d)',
-                processo_convocacao_uuid,
-                page,
-                page_size
-            )
-            return response
         except RequestException as exc:
             logger.error(
                 'Erro ao buscar agendas (processo_convocacao_uuid=%s): %s',
@@ -79,6 +83,18 @@ class AgendasService:
                 exc
             )
             raise
+
+        logger.info(
+            'Agendas buscadas com sucesso',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "params": params,
+                "headers": self._default_headers
+            }
+        )
+        return response
 
     def buscar_agenda_por_uuid(
         self,
@@ -97,6 +113,15 @@ class AgendasService:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}/"
+        logger.info(
+            'Buscando agenda por UUID',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -104,15 +129,25 @@ class AgendasService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info(
-                'Agenda buscada com sucesso (uuid=%s)',
-                agenda_uuid,
-            )
-            return response
         except RequestException as exc:
             logger.error(
-                'Erro ao buscar agenda (uuid=%s): %s',
-                agenda_uuid,
-                exc
+                'Erro ao buscar agenda por UUID',
+                extra={
+                    "correlation_id": get_correlation_id(),
+                    "method": "GET",
+                    "url": url,
+                    "headers": self._default_headers,
+                    "error": str(exc)
+                }
             )
             raise
+        logger.info(
+            'Agenda buscada com sucesso',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers
+            }
+        )
+        return response
