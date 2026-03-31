@@ -5,6 +5,8 @@ import logging
 from typing import Optional, Dict, Any
 import requests
 from requests import RequestException
+from relatorios.middleware import get_correlation_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,18 +26,24 @@ class ProcessosService:
     ) -> requests.Response:
         """
         Busca cargos do processo de convocação por processo_uuid.
-        
         Args:
             processo_uuid: UUID do processo de convocação
-            
         Returns:
             Response da API com os cargos do processo
-            
         Raises:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/cargos/"
-        
+        logger.info(
+            'Buscando cargos do processo',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "processo_uuid": processo_uuid,
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -43,9 +51,18 @@ class ProcessosService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info('Cargos do processo buscados com sucesso (processo_uuid=%s)', processo_uuid)
-            return response
         except RequestException as exc:
             logger.error('Erro ao buscar cargos do processo: %s', exc)
             raise
+
+        logger.info('Cargos do processo encontrados', extra={
+            "correlation_id": get_correlation_id(),
+            "method": "GET",
+            "url": url,
+            "headers": self._default_headers,
+            "processo_uuid": processo_uuid,
+            "status_code": response.status_code,
+            "response": str(response.json())[:100],
+        })
+        return response
 

@@ -604,12 +604,17 @@ class AtaEscolhaService:
                 numero_sessoes = len(agendas_cargo)
                 logger.info('Processando cargo: %s (%d sessões/agendas)', cargo_nome, numero_sessoes)
 
-                # Buscar candidatos habilitados deste cargo
-                logger.info('Buscando candidatos habilitados (processo_uuid=%s, cargo=%s)', processo_uuid, cargo_codigo)
-                response_candidatos = self.candidatos_service.buscar_habilitados(
-                    processo_uuid=processo_uuid,
-                    codigo_cargo=cargo_codigo,
-                    ordering=ordering
+                # Coletar todos os UUIDs de candidatos das agendas deste cargo
+                todos_candidatos_uuids = []
+                for _agenda in agendas_cargo:
+                    for _uuid in _agenda.get('candidatos_uuids', []):
+                        if _uuid not in todos_candidatos_uuids:
+                            todos_candidatos_uuids.append(_uuid)
+
+                logger.info('Buscando candidatos por UUIDs (cargo=%s, total=%d)', cargo_codigo, len(todos_candidatos_uuids))
+                response_candidatos = self.candidatos_service.buscar_por_uuids(
+                    uuids=todos_candidatos_uuids,
+                    order_by=ordering
                 )
                 dados_cargo = response_candidatos.json()
                 if isinstance(dados_cargo, dict) and 'results' in dados_cargo:
@@ -617,7 +622,7 @@ class AtaEscolhaService:
                 elif isinstance(dados_cargo, list):
                     candidatos_cargo = dados_cargo
                 else:
-                    logger.warning('Resposta inesperada ao buscar habilitados para cargo %s', cargo_codigo)
+                    logger.warning('Resposta inesperada ao buscar candidatos por UUIDs para cargo %s', cargo_codigo)
                     candidatos_cargo = []
 
                 # Separar por tipo e identificar lacunas por cargo (PCD primeiro)

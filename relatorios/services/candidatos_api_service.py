@@ -5,6 +5,8 @@ import logging
 from typing import Optional, List, Union, Dict, Any
 import requests
 from requests import RequestException
+from relatorios.middleware import get_correlation_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +69,15 @@ class CandidatosService:
                     params['codigo_cargo__in'] = codigo_cargo_param
                 else:
                     params['codigo_cargo'] = codigo_cargo_param
-
+        logger.info(
+            'Buscando candidatos habilitados',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -76,13 +86,7 @@ class CandidatosService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info(
-                'Candidatos habilitados buscados com sucesso (processo_uuid=%s, codigo_cargo=%s, ordering=%s)',
-                processo_uuid,
-                params.get('codigo_cargo') or params.get('codigo_cargo__in'),
-                ordering
-            )
-            return response
+
         except RequestException as exc:
             logger.error(
                 'Erro ao buscar candidatos habilitados (processo_uuid=%s, codigo_cargo=%s): %s',
@@ -91,6 +95,19 @@ class CandidatosService:
                 exc
             )
             raise
+
+        logger.info(
+            'Candidatos habilitados buscados com sucesso',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response
 
     def buscar_habilitados_por_processos_e_classificacoes(
         self,
@@ -190,7 +207,16 @@ class CandidatosService:
                     params['codigo_cargo__in'] = codigo_cargo_param
                 else:
                     params['codigo_cargo'] = codigo_cargo_param
-
+        logger.info(
+            'Buscando candidatos habilitados por processos e classificações',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -199,15 +225,6 @@ class CandidatosService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info(
-                'Candidatos habilitados buscados com sucesso (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s, ordering=%s)',
-                processo_uuid_param,
-                params.get('classificacao'),
-                params.get('classificacao_nna'),
-                params.get('codigo_cargo'),
-                ordering
-            )
-            return response
         except RequestException as exc:
             logger.error(
                 'Erro ao buscar candidatos habilitados (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s): %s',
@@ -218,6 +235,19 @@ class CandidatosService:
                 exc
             )
             raise
+        logger.info(
+            'Candidatos habilitados buscados com sucesso',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response
 
     def buscar_por_uuids(
         self,
@@ -246,6 +276,17 @@ class CandidatosService:
         payload = {
             'uuids': uuids
         }
+        logger.info(
+            'Buscando candidatos por UUIDs',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "params": params,
+                "payload": payload,
+                "url": url,
+                "headers": self._default_headers,
+            }
+        )
 
         try:
             response = requests.post(
@@ -256,12 +297,6 @@ class CandidatosService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info(
-                'Candidatos buscados por UUIDs com sucesso (total_uuids=%d, order_by=%s)',
-                len(uuids),
-                order_by
-            )
-            return response
         except RequestException as exc:
             logger.error(
                 'Erro ao buscar candidatos por UUIDs (total_uuids=%d, order_by=%s): %s',
@@ -270,6 +305,20 @@ class CandidatosService:
                 exc
             )
             raise
+        logger.info(
+            'Candidatos buscados por UUIDs com sucesso',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "payload": payload,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response
 
     def buscar_candidatos_por_agendas(
         self,
@@ -413,7 +462,16 @@ class CandidatosService:
             'processo_uuid': processo_uuid,
             'page_size': 10000,
         }
-
+        logger.info(
+            'Buscando ConcursoCandidato',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            }
+        )
         try:
             response = requests.get(
                 url,
@@ -422,9 +480,132 @@ class CandidatosService:
                 timeout=self.timeout_seconds
             )
             response.raise_for_status()
-            logger.info('Dados buscados via /api/v1/habilitados/ (processo_uuid=%s)', processo_uuid)
-            return response
         except RequestException as exc:
             logger.error('Erro ao buscar ConcursoCandidato: %s', exc)
             raise
 
+        logger.info(
+            'ConcursoCandidato encontrado', 
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response 
+
+
+    def buscar_reclassificados_por_concurso(
+        self,
+        concurso_uuid: str,
+        processo_uuid: str
+    ) -> requests.Response:
+        """
+        Busca candidatos reclassificados (de NNA/PCD -> GERAL) por concurso_uuid.
+        Endpoint esperado do ms-candidatos:
+            GET /api/v1/reclassificados/?concurso_uuid=<uuid>
+        Retorna um dicionário com duas chaves: 'nna' e 'pcd'.
+        """
+        url = f"{self.base_url}/api/v1/reclassificados/"
+        params = {
+            'concurso_uuid': concurso_uuid,
+            'processo_uuid': processo_uuid,
+        }
+        logger.info(
+            'Buscando reclassificados',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            }
+        )
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds
+            )
+            response.raise_for_status()
+        except RequestException as exc:
+            logger.error('Erro ao buscar reclassificados (concurso_uuid=%s): %s', concurso_uuid, exc)
+            raise
+        logger.info(
+            'Reclassificados encontrados',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response
+
+    def buscar_eliminados_por_concurso(
+        self,
+        concurso_uuid: str,
+        processo_uuid: str,
+        classificacao_max: int,
+        classificacao_min: int
+    ) -> requests.Response:
+        """
+        Busca candidatos eliminados por concurso_uuid e classificacao_max e classificacao_min.
+        Endpoint esperado do ms-candidatos:
+            GET /api/v1/eliminados/?concurso_uuid=<uuid>&classificacao_max=<int>&classificacao_min=<int>
+        Retorna um dicionário separado por tipo de classificação:
+        {
+          "geral": [...],
+          "nna": [...],
+          "pcd": [...]
+        }
+        """
+        url = f"{self.base_url}/api/v1/eliminados/"
+        params = {
+            'concurso_uuid': concurso_uuid,
+            'processo_uuid': processo_uuid,
+            'classificacao_max': classificacao_max,
+            'classificacao_min': classificacao_min,
+        }
+        logger.info(
+            'Buscando eliminados',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            }
+        )
+        try:
+            response = requests.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds
+            )
+            response.raise_for_status()
+        except RequestException as exc:
+            logger.error('Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s', concurso_uuid, processo_uuid, classificacao_max, classificacao_min, exc)
+            raise
+        logger.info(
+            'Eliminados encontrados',
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            }
+        )
+        return response

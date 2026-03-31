@@ -123,7 +123,10 @@ def test_processar_lauda_convocacao_fluxo_basico():
         {'uuid': 'b', 'categoria_efetiva': 'GERAL', 'classificacao': 2, 'ranking_escolha': 2},
         {'uuid': 'c', 'categoria_efetiva': 'GERAL', 'classificacao': 3, 'ranking_escolha': 3},
     ]
-    svc.candidatos_service.buscar_habilitados.return_value = _Resp(candidatos_payload)
+    svc.candidatos_service.buscar_por_uuids.return_value = _Resp({'results': candidatos_payload})
+    svc.processo_service.buscar_processo_convocacao.return_value = _Resp({'concurso_uuid': None})
+    svc.candidatos_service.buscar_reclassificados_por_concurso.return_value = _Resp({})
+    svc.candidatos_service.buscar_eliminados_por_concurso.return_value = _Resp({})
 
     # Não haverá lacunas -> não busca outros processos
     resultado = svc.processar_lauda_convocacao(processo_uuid=processo_uuid, ordering='ranking_escolha')
@@ -165,7 +168,9 @@ def test_processar_lauda_convocacao_dict_results_merges_geral_faltantes():
             {'uuid': 'c', 'categoria_efetiva': 'GERAL', 'classificacao': 4, 'ranking_escolha': 3},
         ]
     }
-    svc.candidatos_service.buscar_habilitados.return_value = _Resp(candidatos_payload)
+    svc.candidatos_service.buscar_por_uuids.return_value = _Resp(candidatos_payload)
+    svc.candidatos_service.buscar_reclassificados_por_concurso.return_value = _Resp({})
+    svc.candidatos_service.buscar_eliminados_por_concurso.return_value = _Resp({})
 
     # Processo -> concurso e outros processos
     svc.processo_service.buscar_processo_convocacao.return_value = _Resp({'concurso_uuid': 'cu1'})
@@ -215,7 +220,9 @@ def test_processar_lauda_convocacao_sorts_and_merges_all_categories():
             {'uuid': 'p2', 'categoria_efetiva': 'PCD', 'classificacao_pcd': 7},
         ]
     }
-    svc.candidatos_service.buscar_habilitados.return_value = _Resp(candidatos_payload)
+    svc.candidatos_service.buscar_por_uuids.return_value = _Resp(candidatos_payload)
+    svc.candidatos_service.buscar_reclassificados_por_concurso.return_value = _Resp({})
+    svc.candidatos_service.buscar_eliminados_por_concurso.return_value = _Resp({})
     svc.processo_service.buscar_processo_convocacao.return_value = _Resp({'concurso_uuid': 'cu2'})
     svc.processo_service.separar_processos_por_principal.return_value = ('p_main', ['pX'])
 

@@ -3,8 +3,10 @@ Testes unitários para as views do app relatorios usando pytest.
 """
 import pytest
 from django.urls import reverse
+from django.http import HttpResponse
 from rest_framework.test import APIClient
 from rest_framework import status
+from unittest.mock import patch, Mock
 import uuid
 
 from relatorios.models import Relatorio
@@ -63,7 +65,13 @@ def test_relatorio_list(client, relatorio):
     assert 'cabecalho' in response.data['results'][0]
 
 
-def test_relatorio_create(client):
+@patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
+def test_relatorio_create(mock_obter_relatorio, client):
+    """Cria relatório com chamadas externas mockadas."""
+    mock_service = Mock()
+    mock_service.gerar.return_value = (HttpResponse('<html></html>', content_type='text/html'), {'k': 'v'})
+    mock_obter_relatorio.return_value = mock_service
+
     url = reverse('relatorio-list')
     data = {
         'tipo': 'LAUDA_VAGAS',
@@ -74,6 +82,7 @@ def test_relatorio_create(client):
     }
 
     response = client.post(url, data, format='json')
+    assert response.status_code == status.HTTP_200_OK
     assert Relatorio.objects.count() == 1
 
     item = Relatorio.objects.first()
@@ -81,6 +90,9 @@ def test_relatorio_create(client):
     assert item.usuario == 'criador'
     assert str(item.processo_uuid) == data['processo_uuid']
     assert item.cabecalho == '<p>header</p>'
+    assert item.dados == {'k': 'v'}
+    mock_obter_relatorio.assert_called_once_with('LAUDA_VAGAS')
+    mock_service.gerar.assert_called_once()
 
 
 def test_relatorio_get(client, relatorio):

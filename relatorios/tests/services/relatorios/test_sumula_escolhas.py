@@ -387,6 +387,115 @@ class TestGerar:
             )
         
         assert isinstance(response, HttpResponse)
+
+    def test_gerar_distribui_classificacao_por_categoria_efetiva(
+        self,
+        sumula_escolhas_service,
+        mock_cargos_response
+    ):
+        """Testa distribuição das colunas de classificação por categoria efetiva."""
+        candidatos_response = _MockResponse({
+            'results': [
+                {
+                    'uuid': 'candidato-geral',
+                    'codigo_cargo': '123',
+                    'descricao_cargo': 'Professor de Educação Infantil',
+                    'categoria_efetiva': 'GERAL',
+                    'classificacao': 11,
+                    'classificacao_nna': 101,
+                    'classificacao_pcd': 201,
+                    'candidato': {'nome': 'Candidato Geral'}
+                },
+                {
+                    'uuid': 'candidato-nna',
+                    'codigo_cargo': '123',
+                    'descricao_cargo': 'Professor de Educação Infantil',
+                    'categoria_efetiva': 'NNA',
+                    'classificacao': 12,
+                    'classificacao_nna': 102,
+                    'classificacao_pcd': 202,
+                    'candidato': {'nome': 'Candidato NNA'}
+                },
+                {
+                    'uuid': 'candidato-pcd',
+                    'codigo_cargo': '123',
+                    'descricao_cargo': 'Professor de Educação Infantil',
+                    'categoria_efetiva': 'PCD',
+                    'classificacao': 13,
+                    'classificacao_nna': 103,
+                    'classificacao_pcd': 203,
+                    'candidato': {'nome': 'Candidato PcD'}
+                },
+            ]
+        })
+        escolhas = [
+            {
+                'candidato_uuid': 'candidato-geral',
+                'situacao': 'escolha',
+                'tipo_vaga': 'definitiva',
+                'vaga_escola': {
+                    'escola': {
+                        'nome_oficial': 'EMEF Teste',
+                        'codigo_eol': '12345',
+                        'dre': {'codigo': 'DRE001', 'nome': 'DRE Butantã'}
+                    }
+                }
+            },
+            {
+                'candidato_uuid': 'candidato-nna',
+                'situacao': 'escolha',
+                'tipo_vaga': 'definitiva',
+                'vaga_escola': {
+                    'escola': {
+                        'nome_oficial': 'EMEF Teste',
+                        'codigo_eol': '12345',
+                        'dre': {'codigo': 'DRE001', 'nome': 'DRE Butantã'}
+                    }
+                }
+            },
+            {
+                'candidato_uuid': 'candidato-pcd',
+                'situacao': 'escolha',
+                'tipo_vaga': 'definitiva',
+                'vaga_escola': {
+                    'escola': {
+                        'nome_oficial': 'EMEF Teste',
+                        'codigo_eol': '12345',
+                        'dre': {'codigo': 'DRE001', 'nome': 'DRE Butantã'}
+                    }
+                }
+            },
+        ]
+
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas
+
+        with patch('relatorios.services.relatorios.sumula_escolhas.render', return_value=HttpResponse('OK')):
+            response, dados = sumula_escolhas_service.gerar(
+                processo_uuid='proc-123',
+                request=_make_request(),
+                formato='html'
+            )
+
+        assert isinstance(response, HttpResponse)
+        escolhas_resultado = dados[0]['dres'][0]['escolas'][0]['escolhas']
+        por_nome = {e['nome_candidato']: e for e in escolhas_resultado}
+
+        geral = por_nome['Candidato Geral']
+        assert geral['classificacao'] == 11
+        assert geral['classificacao_nna'] == '-'
+        assert geral['classificacao_pcd'] == '-'
+
+        nna = por_nome['Candidato NNA']
+        assert nna['classificacao'] == 12
+        assert nna['classificacao_nna'] == 102
+        assert nna['classificacao_pcd'] == '-'
+
+        pcd = por_nome['Candidato PcD']
+        assert pcd['classificacao'] == 13
+        assert pcd['classificacao_nna'] == '-'
+        assert pcd['classificacao_pcd'] == 203
     
     def test_gerar_filtra_situacao_none(
         self,
@@ -1328,7 +1437,7 @@ class TestRenderToDocx:
         mock_table = MagicMock()
         mock_header_row = MagicMock()
         mock_header_cells = []
-        for i in range(3):
+        for i in range(5):
             mock_cell = MagicMock()
             mock_cell.paragraphs = [MagicMock()]
             mock_cell.paragraphs[0].runs = [MagicMock()]
@@ -1341,7 +1450,7 @@ class TestRenderToDocx:
         
         mock_data_row = MagicMock()
         mock_data_cells = []
-        for i in range(3):
+        for i in range(5):
             mock_cell = MagicMock()
             mock_cell.paragraphs = [MagicMock()]
             mock_cell.paragraphs[0].runs = [MagicMock()]
@@ -1437,7 +1546,7 @@ class TestRenderToDocx:
         
         mock_table = MagicMock()
         mock_table.rows = [MagicMock()]
-        mock_table.rows[0].cells = [MagicMock() for _ in range(3)]
+        mock_table.rows[0].cells = [MagicMock() for _ in range(5)]
         for cell in mock_table.rows[0].cells:
             cell.paragraphs = [MagicMock()]
             cell.paragraphs[0].runs = [MagicMock()]
@@ -1445,7 +1554,7 @@ class TestRenderToDocx:
             cell._element.get_or_add_tcPr.return_value = MagicMock()
             cell._element.get_or_add_tcPr.return_value.find.return_value = None
         mock_table.add_row.return_value = MagicMock()
-        mock_table.add_row.return_value.cells = [MagicMock() for _ in range(3)]
+        mock_table.add_row.return_value.cells = [MagicMock() for _ in range(5)]
         for cell in mock_table.add_row.return_value.cells:
             cell.paragraphs = [MagicMock()]
             cell.paragraphs[0].runs = [MagicMock()]
@@ -1518,7 +1627,7 @@ class TestRenderToDocx:
         
         mock_table = MagicMock()
         mock_table.rows = [MagicMock()]
-        mock_table.rows[0].cells = [MagicMock() for _ in range(3)]
+        mock_table.rows[0].cells = [MagicMock() for _ in range(5)]
         for cell in mock_table.rows[0].cells:
             cell.paragraphs = [MagicMock()]
             cell.paragraphs[0].runs = [MagicMock()]
@@ -1528,7 +1637,7 @@ class TestRenderToDocx:
             mock_tc_pr.find.return_value = mock_existing_shd_cell
             cell._element.get_or_add_tcPr.return_value = mock_tc_pr
         mock_table.add_row.return_value = MagicMock()
-        mock_table.add_row.return_value.cells = [MagicMock() for _ in range(3)]
+        mock_table.add_row.return_value.cells = [MagicMock() for _ in range(5)]
         for cell in mock_table.add_row.return_value.cells:
             cell.paragraphs = [MagicMock()]
             cell.paragraphs[0].runs = [MagicMock()]

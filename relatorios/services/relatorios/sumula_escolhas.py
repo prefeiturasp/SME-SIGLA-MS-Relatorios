@@ -131,7 +131,23 @@ class SumulaEscolhas(RelatorioBase):
             candidato_obj = candidato.get('candidato', {}) if isinstance(candidato.get('candidato'), dict) else {}
             
             # Obter classificações (do ConcursoCandidato)
-            classificacao_geral = candidato.get('classificacao')          
+            classificacao_geral = candidato.get('classificacao')
+            classificacao_nna = candidato.get('classificacao_nna')
+            classificacao_pcd = candidato.get('classificacao_pcd')
+            categoria_efetiva = (candidato.get('categoria_efetiva') or '').upper()
+
+            classificacao_coluna_geral = classificacao_geral if classificacao_geral is not None else '-'
+            classificacao_coluna_nna = '-'
+            classificacao_coluna_pcd = '-'
+
+            if categoria_efetiva == 'NNA':
+                classificacao_coluna_nna = classificacao_nna if classificacao_nna is not None else '-'
+                classificacao_ordem = classificacao_nna
+            elif categoria_efetiva == 'PCD':
+                classificacao_coluna_pcd = classificacao_pcd if classificacao_pcd is not None else '-'
+                classificacao_ordem = classificacao_pcd
+            else:
+                classificacao_ordem = classificacao_geral
            
             # Obter nome do candidato
             nome = candidato_obj.get('nome') or '-'
@@ -188,7 +204,10 @@ class SumulaEscolhas(RelatorioBase):
                 'dre_nome': dre_nome,
                 'escola_nome': nome_oficial,
                 'escola_codigo_eol': codigo_eol,
-                'classificacao': classificacao_geral,
+                'classificacao': classificacao_coluna_geral,
+                'classificacao_nna': classificacao_coluna_nna,
+                'classificacao_pcd': classificacao_coluna_pcd,
+                'classificacao_ordem': classificacao_ordem,
                 'nome_candidato': nome_formatado,
                 'tipo_vaga': tipo_vaga,
             })
@@ -197,7 +216,10 @@ class SumulaEscolhas(RelatorioBase):
         cargos_list = self._agrupar_por_cargo_dre_e_escola(escolhas_com_candidatos)
         
         # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
+        if cabecalho is not None:
+            self.context['cabecalho'] = cabecalho
         cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        self.context['cabecalho'] = cabecalho_final
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context.update({
             'cargos': cargos_list,
@@ -325,7 +347,11 @@ class SumulaEscolhas(RelatorioBase):
                 for escola_chave, escola_data in dre_data['escolas'].items():
                     # Ordenar escolhas por classificação
                     escola_data['escolhas'].sort(key=lambda e: (
-                        e['classificacao'] if isinstance(e['classificacao'], (int, float)) else float('inf')
+                        e.get('classificacao_ordem')
+                        if isinstance(e.get('classificacao_ordem'), (int, float))
+                        else e.get('classificacao')
+                        if isinstance(e.get('classificacao'), (int, float))
+                        else float('inf')
                     ))
                     escolas_list.append(escola_data)
                 
@@ -427,7 +453,7 @@ class SumulaEscolhas(RelatorioBase):
 
             cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             if cabecalho:
-                ws.merge_cells(f'A{row}:C{row}')
+                ws.merge_cells(f'A{row}:E{row}')
                 cell = ws[f'A{row}']
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 cell.value = cabecalho_texto
@@ -449,7 +475,7 @@ class SumulaEscolhas(RelatorioBase):
                 for dre in cargo.get('dres', []):
                     dre_nome = dre.get('nome', '')
                     
-                    ws.merge_cells(f'A{row}:C{row}')
+                    ws.merge_cells(f'A{row}:E{row}')
                     cell = ws[f'A{row}']
                     cell.value = f"DRE - {dre_nome}"
                     cell.font = dre_font
@@ -460,7 +486,7 @@ class SumulaEscolhas(RelatorioBase):
                     for escola in dre.get('escolas', []):
                         escola_nome = escola.get('nome', '')
                         
-                        ws.merge_cells(f'A{row}:C{row}')
+                        ws.merge_cells(f'A{row}:E{row}')
                         cell = ws[f'A{row}']
                         cell.value = escola_nome
                         cell.font = escola_font
@@ -468,7 +494,7 @@ class SumulaEscolhas(RelatorioBase):
                         cell.alignment = left_align
                         row += 1
                         
-                        headers = ['Classificação', 'Candidatos', 'Tipo da Vaga']
+                        headers = ['Classificação', 'Classificação NNA', 'Classificação PcD', 'Candidatos', 'Tipo da Vaga']
                         for col, header in enumerate(headers, start=1):
                             cell = ws.cell(row=row, column=col)
                             cell.value = header
@@ -480,14 +506,16 @@ class SumulaEscolhas(RelatorioBase):
                         
                         for escolha in escola.get('escolhas', []):
                             ws.cell(row=row, column=1).value = escolha.get('classificacao', '-')
-                            ws.cell(row=row, column=2).value = escolha.get('nome_candidato', '-')
-                            ws.cell(row=row, column=3).value = escolha.get('tipo_vaga', '-')
+                            ws.cell(row=row, column=2).value = escolha.get('classificacao_nna', '-')
+                            ws.cell(row=row, column=3).value = escolha.get('classificacao_pcd', '-')
+                            ws.cell(row=row, column=4).value = escolha.get('nome_candidato', '-')
+                            ws.cell(row=row, column=5).value = escolha.get('tipo_vaga', '-')
                             
-                            for col in range(1, 4):
+                            for col in range(1, 6):
                                 cell = ws.cell(row=row, column=col)
                                 cell.border = border
                                 cell.font = normal_font
-                                if col == 1 or col == 3:  # Classificação e Tipo da Vaga centralizados
+                                if col in [1, 2, 3, 5]:  # Colunas de classificação e tipo centralizadas
                                     cell.alignment = center_align
                                 else:  # Candidatos alinhado à esquerda
                                     cell.alignment = left_align
@@ -502,8 +530,10 @@ class SumulaEscolhas(RelatorioBase):
             
             column_widths = {
                 'A': 15,  # Classificação
-                'B': 50,  # Candidatos
-                'C': 15,  # Tipo da Vaga
+                'B': 18,  # Classificação NNA
+                'C': 18,  # Classificação PcD
+                'D': 50,  # Candidatos
+                'E': 15,  # Tipo da Vaga
             }
             
             for col_letter, width in column_widths.items():
@@ -512,7 +542,7 @@ class SumulaEscolhas(RelatorioBase):
             texto_final = self.context.get('texto_final')
             if texto_final:
                 row += 1
-                ws.merge_cells(f'A{row}:C{row}')
+                ws.merge_cells(f'A{row}:E{row}')
                 cell = ws[f'A{row}']
                 cell.value = self.processar_cabecalho_html(texto_final)
                 cell.font = normal_font
@@ -650,7 +680,7 @@ class SumulaEscolhas(RelatorioBase):
                         p_pr.append(shading_elm)
                         
                         # Criar tabela
-                        headers = ['Classificação', 'Candidatos', 'Tipo da Vaga']
+                        headers = ['Classificação', 'Classificação NNA', 'Classificação PcD', 'Candidatos', 'Tipo da Vaga']
                         table = doc.add_table(rows=1, cols=len(headers))
                         table.style = 'Light Grid Accent 1'
                         
@@ -676,13 +706,17 @@ class SumulaEscolhas(RelatorioBase):
                             row_cells = table.add_row().cells
                             
                             row_cells[0].text = str(escolha.get('classificacao', '-'))
-                            row_cells[1].text = str(escolha.get('nome_candidato', '-'))
-                            row_cells[2].text = str(escolha.get('tipo_vaga', '-'))
+                            row_cells[1].text = str(escolha.get('classificacao_nna', '-'))
+                            row_cells[2].text = str(escolha.get('classificacao_pcd', '-'))
+                            row_cells[3].text = str(escolha.get('nome_candidato', '-'))
+                            row_cells[4].text = str(escolha.get('tipo_vaga', '-'))
                             
                             # Alinhamento
                             row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-                            row_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            row_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                             row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            row_cells[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            row_cells[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                             for cell in row_cells:
                                 cell.paragraphs[0].runs[0].font.size = Pt(10)
                         
