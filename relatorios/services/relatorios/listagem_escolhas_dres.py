@@ -28,6 +28,8 @@ try:
     from docx import Document
     from docx.shared import Pt, RGBColor, Inches
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.section import WD_ORIENT
+    from docx.shared import Cm
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
     DOCX_AVAILABLE = True
@@ -282,12 +284,14 @@ class ListagemEscolhasDres(RelatorioBase):
             doc = Document()
             
             # Configurar margens da página
-            sections = doc.sections
-            for section in sections:
-                section.top_margin = Inches(1)
-                section.bottom_margin = Inches(1)
-                section.left_margin = Inches(1)
-                section.right_margin = Inches(1)
+            section = doc.sections[0]
+            section.orientation = WD_ORIENT.LANDSCAPE
+            section.page_width = Cm(42)
+            section.page_height = Cm(29.7)
+            section.top_margin = Inches(1)
+            section.bottom_margin = Inches(1)
+            section.left_margin = Inches(1)
+            section.right_margin = Inches(1)
             
             # Cores (em RGB)
             table_header_color = RGBColor(74, 85, 104)  # #4a5568
@@ -327,7 +331,7 @@ class ListagemEscolhasDres(RelatorioBase):
                 cell.text = header
                 cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER if i in [1, 2, 3, 11, 14] else WD_ALIGN_PARAGRAPH.LEFT
                 cell.paragraphs[0].runs[0].font.bold = True
-                cell.paragraphs[0].runs[0].font.size = Pt(9)
+                cell.paragraphs[0].runs[0].font.size = Pt(7)
                 cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
                 tc_pr = cell._element.get_or_add_tcPr()
                 existing_shd = tc_pr.find(qn('w:shd'))
@@ -373,7 +377,7 @@ class ListagemEscolhasDres(RelatorioBase):
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                     else:
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    cell.paragraphs[0].runs[0].font.size = Pt(9)
+                    cell.paragraphs[0].runs[0].font.size = Pt(7)
             
             # Rodapé com total
             doc.add_paragraph()
@@ -587,40 +591,10 @@ class ListagemEscolhasDres(RelatorioBase):
             logger.info('Gerando Excel: %s', filename)
             response = self.render_to_xls(context=self.context, filename=filename)
             return response, dados
-        elif formato == 'docx' or formato == 'doc':
-            self.context["is_pdf"] = True
+        elif formato == 'docx' or formato == 'doc':            
             filename = f'listagem_escolhas_dres_{processo_uuid}.docx'
-            logger.info('Gerando Word (via PDF -> DOCX): %s', filename)
-            try:
-                from pdf2docx import parse as pdf_to_docx_parse
-            except Exception as exc:
-                logger.error('pdf2docx não está instalado ou falhou ao importar: %s', exc)
-                raise ImportError("pdf2docx não está instalado. Instale com: pip install pdf2docx")
-
-            pdf_response = self.render_to_pdf(self.TEMPLATE_NAME, self.context, filename=f'listagem_escolhas_dres_{processo_uuid}.pdf')
-            pdf_bytes = pdf_response.content
-
-            # 2) Grava PDF em arquivo temporário e converte para DOCX
-            try:
-                with tempfile.TemporaryDirectory() as tmpdir:
-                    pdf_path = os.path.join(tmpdir, 'input.pdf')
-                    docx_path = os.path.join(tmpdir, 'output.docx')
-                    with open(pdf_path, 'wb') as f:
-                        f.write(pdf_bytes)
-                    # Converter PDF -> DOCX
-                    pdf_to_docx_parse(pdf_path, docx_path)
-                    with open(docx_path, 'rb') as f:
-                        docx_content = f.read()
-            except Exception as exc:
-                logger.error('Falha ao converter PDF em DOCX: %s', exc, exc_info=True)
-                raise
-
-            # 3) Retorna o DOCX como resposta
-            response = HttpResponse(
-                docx_content,
-                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            )
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            logger.info('Gerando Word: %s', filename)
+            response = self.render_to_docx(escolhas_ordenadas_export, cabecalho_final, self.context.get('texto_final', ''), filename=filename)
             return response, dados
         elif formato == 'pdf':
             filename = f'listagem_escolhas_dres_{processo_uuid}.pdf'
