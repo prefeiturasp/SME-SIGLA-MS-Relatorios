@@ -20,6 +20,8 @@ try:
     from docx import Document
     from docx.shared import Pt, RGBColor, Inches
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.section import WD_ORIENT
+    from docx.shared import Cm
     from docx.oxml.ns import qn
     from docx.oxml import OxmlElement
     DOCX_AVAILABLE = True
@@ -125,39 +127,9 @@ class AtaEscolha(RelatorioBase):
 
         if formato == 'docx' or formato == 'doc':
             filename = f'ata_escolha_{processo_uuid}.docx'
-            logger.info('Gerando Word (via PDF -> DOCX): %s', filename)
-            try:
-                from pdf2docx import parse as pdf_to_docx_parse
-            except Exception as exc:
-                logger.error('pdf2docx não está instalado ou falhou ao importar: %s', exc)
-                raise ImportError("pdf2docx não está instalado. Instale com: pip install pdf2docx")
-
-            context_data['is_pdf'] = True
-            context_data['mostrar_capa_ata'] = True
-            pdf_response = self.render_to_pdf(self.TEMPLATE_NAME, context_data, filename=f'ata_escolha_{processo_uuid}.pdf')
-            pdf_bytes = pdf_response.content
-
-            # 2) Grava PDF em arquivo temporário e converte para DOCX
-            try:
-                with tempfile.TemporaryDirectory() as tmpdir:
-                    pdf_path = os.path.join(tmpdir, 'input.pdf')
-                    docx_path = os.path.join(tmpdir, 'output.docx')
-                    with open(pdf_path, 'wb') as f:
-                        f.write(pdf_bytes)
-                    # Converter PDF -> DOCX
-                    pdf_to_docx_parse(pdf_path, docx_path)
-                    with open(docx_path, 'rb') as f:
-                        docx_content = f.read()
-            except Exception as exc:
-                logger.error('Falha ao converter PDF em DOCX: %s', exc, exc_info=True)
-                raise
-
-            # 3) Retorna o DOCX como resposta
-            response = HttpResponse(
-                docx_content,
-                content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            )
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            logger.info('Gerando Word: %s', filename)
+            response = self.render_to_docx(dados_ata.get('cargos', []),cabecalho_final,filename=filename)
+           
             return response, dados_ata
         elif formato == 'pdf':
             context_data['mostrar_capa_ata'] = True
@@ -206,13 +178,10 @@ class AtaEscolha(RelatorioBase):
             doc = Document()
             
             # Configurar margens da página
-            sections = doc.sections
-            for section in sections:
-                section.top_margin = Inches(0.5)
-                section.bottom_margin = Inches(0.5)
-                section.left_margin = Inches(0.5)
-                section.right_margin = Inches(0.5)
-                section.orientation = 1  # Landscape
+            section = doc.sections[0]
+            section.orientation = WD_ORIENT.LANDSCAPE
+            section.page_width = Cm(50)
+            section.page_height = Cm(35)
             
             # Cores (em RGB)
             sessao_color = RGBColor(52, 73, 94)  # #34495e
@@ -301,7 +270,7 @@ class AtaEscolha(RelatorioBase):
                         cell.text = header
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER if i < 6 or i >= 7 else WD_ALIGN_PARAGRAPH.LEFT
                         cell.paragraphs[0].runs[0].font.bold = True
-                        cell.paragraphs[0].runs[0].font.size = Pt(8)
+                        cell.paragraphs[0].runs[0].font.size = Pt(7)
                         tc_pr = cell._element.get_or_add_tcPr()
                         existing_shd = tc_pr.find(qn('w:shd'))
                         if existing_shd is not None:
@@ -354,7 +323,7 @@ class AtaEscolha(RelatorioBase):
                                 cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                             else:  # Nome e Unidade Escolhida
                                 cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                            cell.paragraphs[0].runs[0].font.size = Pt(8)
+                            cell.paragraphs[0].runs[0].font.size = Pt(7)
                     
                     doc.add_paragraph()
             
