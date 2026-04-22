@@ -5,7 +5,8 @@ import logging
 from typing import Optional
 import requests
 from requests import RequestException
-from relatorios.middleware import get_correlation_id
+from sigla_sdk.context import get_correlation_id
+from sigla_sdk.http.api_client import http_client
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class AgendasService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 params=params,
                 headers=self._default_headers,
@@ -123,7 +124,7 @@ class AgendasService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 headers=self._default_headers,
                 timeout=self.timeout_seconds
