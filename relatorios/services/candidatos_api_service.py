@@ -5,7 +5,8 @@ import logging
 from typing import Optional, List, Union, Dict, Any
 import requests
 from requests import RequestException
-from relatorios.middleware import get_correlation_id
+from sigla_sdk.context import get_correlation_id
+from sigla_sdk.http.api_client import http_client
 
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ class CandidatosService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 params=params,
                 headers=self._default_headers,
@@ -218,7 +219,7 @@ class CandidatosService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 params=params,
                 headers=self._default_headers,
@@ -289,7 +290,7 @@ class CandidatosService:
         )
 
         try:
-            response = requests.post(
+            response = http_client.post(
                 url,
                 params=params,
                 json=payload,
@@ -473,7 +474,7 @@ class CandidatosService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 params=params,
                 headers=self._default_headers,
@@ -526,7 +527,7 @@ class CandidatosService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 params=params,
                 headers=self._default_headers,
@@ -586,7 +587,7 @@ class CandidatosService:
             }
         )
         try:
-            response = requests.get(
+            response = http_client.get(
                 url,
                 params=params,
                 headers=self._default_headers,
