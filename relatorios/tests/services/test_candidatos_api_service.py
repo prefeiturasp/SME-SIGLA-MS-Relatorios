@@ -22,7 +22,7 @@ def _svc():
     return CandidatosService(base_url='http://api.local', timeout_seconds=5)
 
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_buscar_habilitados_single_codigo(mock_get):
     mock_resp = _Resp([{'uuid': 'a'}])
     mock_get.return_value = mock_resp
@@ -39,7 +39,7 @@ def test_buscar_habilitados_single_codigo(mock_get):
     )
 
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_buscar_habilitados_multi_codigos_usa_in(mock_get):
     mock_resp = _Resp([])
     mock_get.return_value = mock_resp
@@ -52,7 +52,7 @@ def test_buscar_habilitados_multi_codigos_usa_in(mock_get):
     assert 'codigo_cargo' not in called_kwargs['params']
 
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_buscar_habilitados_http_error(mock_get):
     mock_resp = _Resp(None, status_code=500)
     mock_get.return_value = mock_resp
@@ -62,7 +62,7 @@ def test_buscar_habilitados_http_error(mock_get):
         svc.buscar_habilitados(processo_uuid='proc1')
 
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_buscar_habilitados_por_processos_e_classificacoes_success(mock_get):
     mock_resp = _Resp([{'uuid': 'x'}])
     mock_get.return_value = mock_resp
@@ -89,7 +89,7 @@ def test_buscar_habilitados_por_processos_e_classificacoes_success(mock_get):
     assert called['ordering'] == 'ranking_escolha'
 
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_buscar_habilitados_por_processos_e_classificacoes_http_error(mock_get):
     mock_resp = _Resp(None, status_code=404)
     mock_get.return_value = mock_resp
@@ -98,7 +98,7 @@ def test_buscar_habilitados_por_processos_e_classificacoes_http_error(mock_get):
     with pytest.raises(requests.HTTPError):
         svc.buscar_habilitados_por_processos_e_classificacoes(processo_uuids='p1')
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_processo_uuid_single_list_uses_param(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -107,7 +107,7 @@ def test_bhpec_processo_uuid_single_list_uses_param(mock_get):
     assert called['processo_uuid'] == 'only-one'
     assert 'processo_uuid__in' not in called
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_processo_uuid_csv_string_uses_in(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -116,7 +116,7 @@ def test_bhpec_processo_uuid_csv_string_uses_in(mock_get):
     assert called['processo_uuid__in'] == 'p1,p2'
     assert 'processo_uuid' not in called
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_classificacao_single_list_sets_plain(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -128,7 +128,7 @@ def test_bhpec_classificacao_single_list_sets_plain(mock_get):
     assert called['classificacao'] == '7'
     assert 'classificacao__in' not in called
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_classificacao_csv_string_sets_in(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -140,7 +140,7 @@ def test_bhpec_classificacao_csv_string_sets_in(mock_get):
     assert called['classificacao__in'] == '1,2'
     assert 'classificacao' not in called
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_classificacao_nna_single_list_sets_plain(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -152,7 +152,7 @@ def test_bhpec_classificacao_nna_single_list_sets_plain(mock_get):
     assert called['classificacao_nna'] == '3'
     assert 'classificacao_nna__in' not in called
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_classificacao_nna_csv_string_sets_in(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -164,7 +164,7 @@ def test_bhpec_classificacao_nna_csv_string_sets_in(mock_get):
     assert called['classificacao_nna__in'] == '3,4'
     assert 'classificacao_nna' not in called
 
-@patch('requests.get')
+@patch('relatorios.services.candidatos_api_service.http_client.get')
 def test_bhpec_codigo_cargo_string_paths(mock_get):
     mock_get.return_value = _Resp([])
     svc = _svc()
@@ -186,7 +186,7 @@ def test_bhpec_codigo_cargo_string_paths(mock_get):
     assert 'codigo_cargo__in' not in called2
 
 
-@patch('requests.post')
+@patch('relatorios.services.candidatos_api_service.http_client.post')
 def test_buscar_por_uuids_success(mock_post):
     mock_resp = _Resp({'results': [{'uuid': 'a'}]})
     mock_post.return_value = mock_resp
@@ -202,7 +202,7 @@ def test_buscar_por_uuids_success(mock_post):
     )
 
 
-@patch('requests.post')
+@patch('relatorios.services.candidatos_api_service.http_client.post')
 def test_buscar_por_uuids_http_error(mock_post):
     mock_resp = _Resp(None, status_code=400)
     mock_post.return_value = mock_resp

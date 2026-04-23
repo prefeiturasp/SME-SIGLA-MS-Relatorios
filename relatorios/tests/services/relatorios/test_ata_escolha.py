@@ -207,31 +207,23 @@ def test_gerar_formatos(settings_config, service_mocked, dados_ata, request_obj,
         assert m_pdf.call_args[0][1]['cargos'] == dados_ata['cargos']
         assert m_pdf.call_args[1]['filename'] == expected_filename
     elif formato in ('docx', 'doc'):
-        # DOCX é gerado via PDF -> DOCX, então precisamos mockar render_to_pdf e pdf2docx
-        import tempfile
-        import os
-        # Mock do módulo pdf2docx antes de chamar gerar (para evitar ImportError)
-        mock_pdf2docx_module = MagicMock()
-        mock_pdf2docx_parse = MagicMock()
-        mock_pdf2docx_module.parse = mock_pdf2docx_parse
-        
-        with patch.object(service_mocked, 'render_to_pdf', return_value=HttpResponse(b'%PDF-1.4', content_type='application/pdf')) as m_pdf, \
-             patch.dict('sys.modules', {'pdf2docx': mock_pdf2docx_module}):
-            # Mock do diretório temporário
-            tmp_dir = MagicMock()
-            tmp_dir.__enter__ = MagicMock(return_value='/tmp/test_dir')
-            tmp_dir.__exit__ = MagicMock(return_value=None)
-            with patch('tempfile.TemporaryDirectory', return_value=tmp_dir):
-                # Mock dos arquivos
-                m_file_write = MagicMock()
-                m_file_read = MagicMock(return_value=b'DOCX')
-                m_file = MagicMock()
-                m_file.__enter__ = MagicMock(return_value=m_file)
-                m_file.__exit__ = MagicMock(return_value=None)
-                m_file.write = m_file_write
-                m_file.read = m_file_read
-                with patch('builtins.open', return_value=m_file):
-                    response, dados = service_mocked.gerar(processo_uuid='proc-123', request=request_obj, formato=formato, cabecalho=cabecalho)
+        mock_response = HttpResponse(
+            b'DOCX',
+            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        mock_response['Content-Disposition'] = 'attachment; filename="ata_escolha_proc-123.docx"'
+        with patch.object(
+            service_mocked,
+            'render_to_docx',
+            return_value=mock_response
+        ) as m_docx:
+            response, dados = service_mocked.gerar(
+                processo_uuid='proc-123',
+                request=request_obj,
+                formato=formato,
+                cabecalho=cabecalho
+            )
+        m_docx.assert_called_once()
         assert isinstance(response, HttpResponse)
         if expected_filename:
             assert expected_filename in response['Content-Disposition'] or 'ata_escolha' in response['Content-Disposition']

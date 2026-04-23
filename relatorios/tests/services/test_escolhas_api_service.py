@@ -24,7 +24,7 @@ def _svc(base='http://api.local', timeout=15):
 
 # ---------- buscar_vagas_escolas ----------
 
-@patch('requests.get')
+@patch('relatorios.services.escolhas_api_service.http_client.get')
 def test_buscar_vagas_escolas_success(mock_get):
     mock_get.return_value = _Resp(payload={'results': []})
     svc = _svc(timeout=5)
@@ -38,7 +38,7 @@ def test_buscar_vagas_escolas_success(mock_get):
     )
 
 
-@patch('requests.get')
+@patch('relatorios.services.escolhas_api_service.http_client.get')
 def test_buscar_vagas_escolas_trailing_slash_base_url(mock_get):
     mock_get.return_value = _Resp(payload=[])
     svc = _svc(base='http://api.local/')
@@ -46,7 +46,7 @@ def test_buscar_vagas_escolas_trailing_slash_base_url(mock_get):
     assert mock_get.call_args.args[0] == 'http://api.local/api/v1/vagas-escolas/'
 
 
-@patch('requests.get')
+@patch('relatorios.services.escolhas_api_service.http_client.get')
 def test_buscar_vagas_escolas_http_error(mock_get):
     mock_get.return_value = _Resp(None, status_code=500)
     svc = _svc()
@@ -54,7 +54,7 @@ def test_buscar_vagas_escolas_http_error(mock_get):
         svc.buscar_vagas_escolas(processo_uuid='PERR')
 
 
-@patch('requests.get', side_effect=requests.RequestException('boom'))
+@patch('relatorios.services.escolhas_api_service.http_client.get', side_effect=requests.RequestException('boom'))
 def test_buscar_vagas_escolas_request_exception(mock_get):
     svc = _svc()
     with pytest.raises(requests.RequestException):
@@ -63,7 +63,7 @@ def test_buscar_vagas_escolas_request_exception(mock_get):
 
 # ---------- buscar_escolhas_por_candidatos ----------
 
-@patch('requests.post')
+@patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_success_list_default_filter(mock_post):
     payload = [
         {'uuid': 'u1', 'situacao': 'nao-escolha'},
@@ -82,7 +82,7 @@ def test_buscar_escolhas_por_candidatos_success_list_default_filter(mock_post):
     )
 
 
-@patch('requests.post')
+@patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(mock_post):
     payload = {
         'results': [
@@ -99,7 +99,7 @@ def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(moc
     assert out == [{'uuid': 'u1', 'situacao': 'reconvocacao'}]
 
 
-@patch('requests.post')
+@patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(mock_post):
     mock_post.return_value = _Resp(payload={'unexpected': True})
     svc = _svc()
@@ -107,7 +107,7 @@ def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(mock_po
     assert out == []
 
 
-@patch('requests.post')
+@patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_http_error(mock_post):
     mock_post.return_value = _Resp(None, status_code=400)
     svc = _svc()
@@ -115,7 +115,7 @@ def test_buscar_escolhas_por_candidatos_http_error(mock_post):
         svc.buscar_escolhas_por_candidatos(candidato_uuids=['a'])
 
 
-@patch('requests.post', side_effect=requests.RequestException('boom'))
+@patch('relatorios.services.escolhas_api_service.http_client.post', side_effect=requests.RequestException('boom'))
 def test_buscar_escolhas_por_candidatos_request_exception(mock_post):
     svc = _svc()
     with pytest.raises(requests.RequestException):

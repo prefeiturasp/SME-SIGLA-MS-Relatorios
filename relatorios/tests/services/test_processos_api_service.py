@@ -22,7 +22,7 @@ def _svc(base='http://api.local', timeout=9):
     return ProcessosService(base_url=base, timeout_seconds=timeout)
 
 
-@patch('requests.get')
+@patch('relatorios.services.processos_api_service.http_client.get')
 def test_buscar_cargos_por_processo_success(mock_get):
     mock_get.return_value = _Resp(payload={'cargos': []})
     svc = _svc(timeout=4)
@@ -35,7 +35,7 @@ def test_buscar_cargos_por_processo_success(mock_get):
     )
 
 
-@patch('requests.get')
+@patch('relatorios.services.processos_api_service.http_client.get')
 def test_buscar_cargos_por_processo_http_error(mock_get):
     mock_get.return_value = _Resp(None, status_code=502)
     svc = _svc()
