@@ -16,7 +16,6 @@ def configuracao_relatorio():
         tipo='LAUDA_VAGAS',  # Tipo genérico para testes
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': '',
             'texto_final': '',
             'cabecalho_capa_ata': ''
@@ -36,6 +35,36 @@ def parametrizacao():
 class DummyRelatorio(RelatorioBase):
     def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = ''):
         return HttpResponse('ok'), {}
+
+
+def test_context_cabecalho_usa_gabarito_quando_cabecalho_vazio(configuracao_relatorio, parametrizacao):
+    configuracao_relatorio.cabecalho = ''
+    configuracao_relatorio.cabecalho_gabarito = 'Gabarito Teste'
+    configuracao_relatorio.save()
+
+    rel = DummyRelatorio(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
+
+    assert rel.context['cabecalho'] == 'Gabarito Teste'
+
+
+def test_context_cabecalho_prefere_cabecalho_sobre_gabarito(configuracao_relatorio, parametrizacao):
+    configuracao_relatorio.cabecalho = 'Cabeçalho Customizado'
+    configuracao_relatorio.cabecalho_gabarito = 'Gabarito Teste'
+    configuracao_relatorio.save()
+
+    rel = DummyRelatorio(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
+
+    assert rel.context['cabecalho'] == 'Cabeçalho Customizado'
+
+
+def test_context_cabecalho_vazio_quando_ambos_vazios(configuracao_relatorio, parametrizacao):
+    configuracao_relatorio.cabecalho = ''
+    configuracao_relatorio.cabecalho_gabarito = ''
+    configuracao_relatorio.save()
+
+    rel = DummyRelatorio(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
+
+    assert rel.context['cabecalho'] == '' or rel.context['cabecalho'] is None
 
 
 def test_render_to_pdf_success(monkeypatch, configuracao_relatorio, parametrizacao):
