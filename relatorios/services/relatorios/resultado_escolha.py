@@ -308,14 +308,9 @@ class ResultadoEscolha(RelatorioBase):
             cargos_list = self._adicionar_resumo_dre_escola(cargos_list, escolhas_com_candidatos, processo_uuid)
         else:
             cargos_list = self._agrupar_por_cargo_e_agenda(escolhas_com_candidatos)
-        
-        # Obter cabeçalho: usar lógica padrão (prioriza cabecalho_padrao se usar_cabecalho_padrao, senão usa cabecalho)
-        # Se veio cabecalho no request, usar ele (sobrescreve o da configuracao)
-        if cabecalho and cabecalho.strip():
-            cabecalho_final = cabecalho.strip()
-        else:
-            cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        
+
+
+
         # Construir logo_url absoluto para o template
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         
@@ -324,8 +319,7 @@ class ResultadoEscolha(RelatorioBase):
         
         # Atualizar context com dados específicos do relatório
         self.context.update({
-            'cargos': cargos_list,
-            'cabecalho': cabecalho_final,
+            'cargos': cargos_list,            
             'logo_url': logo_url,
             'data_atual': data_atual,
             'is_pdf': False,
@@ -334,12 +328,21 @@ class ResultadoEscolha(RelatorioBase):
         if formato == 'xls' or formato == 'csv':
             filename = f'resultado_escolha_{processo_uuid}.xlsx'
             logger.info('Gerando Excel: %s', filename)
-            response = self.render_to_xls(cargos_list, cabecalho_final, filename=filename)
+            response = self.render_to_xls(
+                cargos_list, 
+                self.context.get('cabecalho_padrao'), 
+                self.context.get('cabecalho'), 
+                filename=filename)
             return response, cargos_list
         elif formato == 'docx' or formato == 'doc':
             filename = f'resultado_escolha_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(cargos_list, cabecalho_final, self.context.get('texto_final'), filename=filename)
+            response = self.render_to_docx(
+                cargos_list,
+                self.context.get('cabecalho_padrao'), 
+                self.context.get('cabecalho'),
+                self.context.get('texto_final'), 
+                filename=filename)
             return response, cargos_list
         elif formato == 'pdf':
             filename = f'resultado_escolha_{processo_uuid}.pdf'
@@ -662,7 +665,7 @@ class ResultadoEscolha(RelatorioBase):
         # breakpoint()
         return cargos_list
     
-    def render_to_xls(self, cargos_list, cabecalho, filename='resultado_escolha.xlsx'):
+    def render_to_xls(self, cargos_list, cabecalho_padrao, cabecalho, filename='resultado_escolha.xlsx'):
         """
         Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
         
@@ -728,6 +731,15 @@ class ResultadoEscolha(RelatorioBase):
                         row = max(row, 8)
                 except Exception as exc:
                     logger.warning('Não foi possível inserir o logotipo no XLS (resultado_escolha): %s', exc)
+
+            if cabecalho_padrao:
+                ws.merge_cells(f'A{row}:H{row}')
+                cell = ws[f'A{row}']
+                cabecalho_padrao_texto = self.processar_cabecalho_html(cabecalho_padrao)
+                cell.value = cabecalho_padrao_texto
+                cell.font = title_font
+                cell.alignment = center_wrap_align
+                row += 2
             
             if cabecalho:
                 ws.merge_cells(f'A{row}:H{row}')
@@ -737,7 +749,7 @@ class ResultadoEscolha(RelatorioBase):
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-            
+
             # Título do relatório
             ws.merge_cells(f'A{row}:H{row}')
             cell = ws[f'A{row}']

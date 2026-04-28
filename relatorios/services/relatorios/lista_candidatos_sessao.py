@@ -126,15 +126,21 @@ class ListaCandidatosSessao(RelatorioBase):
             except Exception as exc:
                 logger.warning('Não foi possível inserir o logotipo no XLS (lista_candidatos_sessao): %s', exc)
 
-        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        if cabecalho:
-            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+        cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+        if cabecalho_padrao:
             ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
             title_cell = ws.cell(row=row_idx, column=1)
-            title_cell.value = cabecalho_texto
+            title_cell.value = self.processar_cabecalho_html(cabecalho_padrao)
             title_cell.font = Font(bold=True, size=14)
             title_cell.alignment = center
-            row_idx += 2  # linha em branco após o título
+            row_idx += 2
+        if self.context.get('cabecalho'):
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            title_cell = ws.cell(row=row_idx, column=1)
+            title_cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
+            title_cell.font = Font(bold=True, size=14)
+            title_cell.alignment = center
+            row_idx += 2
 
         ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
         title_cell = ws.cell(row=row_idx, column=1)
@@ -270,15 +276,14 @@ class ListaCandidatosSessao(RelatorioBase):
             section.left_margin = Inches(1)
             section.right_margin = Inches(1)
         
-        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        if cabecalho:
-            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = p.add_run(cabecalho_texto)
-            run.font.size = Pt(14)
-            run.font.bold = True
-            doc.add_paragraph()
+        for cab in [self.context.get('cabecalho_padrao', ''), self.context.get('cabecalho', '')]:
+            if cab:
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(self.processar_cabecalho_html(cab))
+                run.font.size = Pt(14)
+                run.font.bold = True
+                doc.add_paragraph()
         
         # Informações da(s) agenda(s) no topo, com tabelas separadas por sessão
         def _fmt_data(date_str: str) -> str:
@@ -449,11 +454,8 @@ class ListaCandidatosSessao(RelatorioBase):
                 context = {
                     'agendas': sections,
                 }
-            # Cabeçalho compatível com demais relatórios
             if cabecalho is not None:
                 self.context['cabecalho'] = cabecalho
-            cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            self.context['cabecalho'] = cabecalho_final
             logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
             self.context['is_pdf'] = False
             self.context['logo_url'] = logo_url

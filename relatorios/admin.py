@@ -63,16 +63,16 @@ class ConfiguracaoRelatorioAdmin(admin.ModelAdmin):
     """Admin for ConfiguracaoRelatorio model."""
 
     list_display = (
-        'tipo', 'usar_logotipo', 'usar_cabecalho_padrao', 'criado_em'
+        'tipo', 'usar_logotipo', 'criado_em'
     )
-    list_filter = ('tipo', 'usar_logotipo', 'usar_cabecalho_padrao')
+    list_filter = ('tipo', 'usar_logotipo')
     search_fields = ('tipo', 'cabecalho', 'texto_final')
     readonly_fields = ('uuid', 'criado_em', 'atualizado_em')
     ordering = ('tipo',)
 
     fieldsets = (
         ('Configuração', {
-            'fields': ('tipo', 'usar_logotipo', 'usar_cabecalho_padrao')
+            'fields': ('tipo', 'usar_logotipo')
         }),
         ('Conteúdo', {
             'fields': ('cabecalho', 'texto_final')

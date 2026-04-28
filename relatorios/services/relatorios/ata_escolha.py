@@ -104,16 +104,11 @@ class AtaEscolha(RelatorioBase):
         }
         cabecalho_capa_ata = self._preencher_template(self.context['cabecalho_capa_ata'], datas_preencher_tempalte)
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
-        # Cabeçalho: prioriza o passado; se vazio, usa padrão da config/param ou settings
-        if cabecalho is not None and str(cabecalho).strip():
-            cabecalho_final = str(cabecalho).strip()
-        elif self.context.get('usar_cabecalho_padrao'):
-            cabecalho_final = self.context.get('cabecalho_padrao', '') or ''
-        else:
-            cabecalho_final = self.context.get('cabecalho', '') or getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
+
+        cabecalho_processado = cabecalho.strip() if cabecalho and cabecalho.strip() else None
+
         context_data = self.context.copy()
         context_data.update({
-            'cabecalho': cabecalho_final,
             'cargos': dados_ata.get('cargos', []),
             'candidatos_sep_cargo': dados_ata.get('candidatos_sep_cargo', {}),
             'cabecalho_capa_ata': cabecalho_capa_ata,
@@ -124,11 +119,13 @@ class AtaEscolha(RelatorioBase):
             'intervalos_classificacoes': dados_ata.get('intervalos_classificacoes', {}),
             'processo_nome': dados_ata.get('processo_nome', ''),
         })
+        if cabecalho_processado:
+            context_data['cabecalho'] = cabecalho_processado
 
         if formato == 'docx' or formato == 'doc':
             filename = f'ata_escolha_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(dados_ata.get('cargos', []),cabecalho_final,filename=filename)
+            response = self.render_to_docx(dados_ata.get('cargos', []), cabecalho_processado or context_data.get('cabecalho', ''), filename=filename)
            
             return response, dados_ata
         elif formato == 'pdf':
@@ -160,12 +157,12 @@ class AtaEscolha(RelatorioBase):
     def render_to_docx(self, cargos_list, cabecalho, filename='ata_escolha.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
-        
+
         Args:
             cargos_list: Lista de cargos com suas sessões e candidatos
             cabecalho: Texto do cabeçalho do relatório
             filename: Nome do arquivo Word gerado
-        
+
         Returns:
             HttpResponse com o arquivo Word gerado
         """
@@ -173,21 +170,21 @@ class AtaEscolha(RelatorioBase):
             raise ImportError(
                 "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"
             )
-        
+
         try:
             doc = Document()
-            
+
             # Configurar margens da página
             section = doc.sections[0]
             section.orientation = WD_ORIENT.LANDSCAPE
             section.page_width = Cm(50)
             section.page_height = Cm(35)
-            
+
             # Cores (em RGB)
             sessao_color = RGBColor(52, 73, 94)  # #34495e
             cargo_color = RGBColor(102, 126, 234)  # #667eea
             table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
-            
+
             # Cabeçalho
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
@@ -398,13 +395,19 @@ class AtaEscolha(RelatorioBase):
             except Exception as exc:
                 logger.warning('Não foi possível inserir o logotipo no XLS: %s', exc)
 
-        # Cabeçalho institucional (opcional)
-        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        if cabecalho:
+        # Cabeçalho institucional
+        cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+        if cabecalho_padrao:
             ws.merge_cells(f'A{row_idx}:M{row_idx}')
             cell = ws[f'A{row_idx}']
-            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-            cell.value = cabecalho_texto
+            cell.value = self.processar_cabecalho_html(cabecalho_padrao)
+            cell.font = title_font
+            cell.alignment = center
+            row_idx += 2
+        if self.context.get('cabecalho'):
+            ws.merge_cells(f'A{row_idx}:M{row_idx}')
+            cell = ws[f'A{row_idx}']
+            cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
             cell.font = title_font
             cell.alignment = center
             row_idx += 2
