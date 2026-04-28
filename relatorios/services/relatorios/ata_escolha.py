@@ -125,7 +125,7 @@ class AtaEscolha(RelatorioBase):
         if formato == 'docx' or formato == 'doc':
             filename = f'ata_escolha_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(dados_ata.get('cargos', []), cabecalho_processado or context_data.get('cabecalho', ''), filename=filename)
+            response = self.render_to_docx(dados_ata.get('cargos', []), self.context, filename=filename)
            
             return response, dados_ata
         elif formato == 'pdf':
@@ -154,7 +154,7 @@ class AtaEscolha(RelatorioBase):
         
         return response, dados_ata
     
-    def render_to_docx(self, cargos_list, cabecalho, filename='ata_escolha.docx'):
+    def render_to_docx(self, cargos_list, context, filename='ata_escolha.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
 
@@ -186,8 +186,18 @@ class AtaEscolha(RelatorioBase):
             table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
 
             # Cabeçalho
-            if cabecalho:
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            if context.get('cabecalho_padrao'):
+                cabecalho_texto = self.processar_cabecalho_html(context.get('cabecalho_padrao'))
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(cabecalho_texto)
+                run.font.size = Pt(12)
+                run.font.bold = True
+                doc.add_paragraph()
+
+            # Cabeçalho
+            if context.get('cabecalho'):
+                cabecalho_texto = self.processar_cabecalho_html(context.get('cabecalho'))
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 run = p.add_run(cabecalho_texto)
