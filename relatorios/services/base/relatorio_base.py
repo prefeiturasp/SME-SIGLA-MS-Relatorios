@@ -35,12 +35,11 @@ class RelatorioBase(ABC):
                 logo_url = ''
         
         self.context: Dict[str, Any] = {
-            'cabecalho': configuracao.cabecalho,
+            'cabecalho': configuracao.cabecalho or configuracao.cabecalho_gabarito,
             'cabecalho_capa_ata': configuracao.cabecalho_capa_ata or '',
             'texto_final': configuracao.texto_final,
             'usar_logotipo': bool(configuracao.usar_logotipo),
             'logo_url': logo_url,
-            'usar_cabecalho_padrao': bool(configuracao.usar_cabecalho_padrao),
             'cabecalho_padrao': parametrizacao.cabecalho if parametrizacao else '',
         }
 

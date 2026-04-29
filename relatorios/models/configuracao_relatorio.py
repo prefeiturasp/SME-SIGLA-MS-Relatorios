@@ -19,12 +19,13 @@ class ConfiguracaoRelatorio(BaseModel):
         verbose_name="Usar Logotipo",
         default=False
     )
-    usar_cabecalho_padrao = models.BooleanField(
-        verbose_name="Usar Cabeçalho Padrão",
-        default=False
-    )
-    cabecalho = models.TextField(        
+    cabecalho = models.TextField(
         verbose_name="Cabeçalho",
+        default="",
+        blank=True
+    )
+    cabecalho_gabarito = models.TextField(
+        verbose_name="Cabeçalho Gabarito",
         default="",
         blank=True
     )

@@ -213,13 +213,8 @@ class SumulaEscolhas(RelatorioBase):
             })
         
         # Agrupar por cargo, depois por DRE e depois por Unidade Escolar
-        cargos_list = self._agrupar_por_cargo_dre_e_escola(escolhas_com_candidatos)
+        cargos_list = self._agrupar_por_cargo_dre_e_escola(escolhas_com_candidatos)        
         
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        if cabecalho is not None:
-            self.context['cabecalho'] = cabecalho
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        self.context['cabecalho'] = cabecalho_final
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context.update({
             'cargos': cargos_list,
@@ -238,10 +233,10 @@ class SumulaEscolhas(RelatorioBase):
         elif formato == 'docx' or formato == 'doc':
             filename = f'relatorio_sumula_escolhas_{processo_uuid}.docx'
             logger.info('Gerando Word: %s', filename)
+            cabecalho_docx = cabecalho.strip() if cabecalho and cabecalho.strip() else self.context.get('cabecalho_padrao', '')
             response = self.render_to_docx(
                 cargos_list,
-                cabecalho_final,
-                self.context['texto_final'],
+                cabecalho_docx,
                 filename=filename
             )
             return response, cargos_list
@@ -451,16 +446,22 @@ class SumulaEscolhas(RelatorioBase):
                 except Exception as exc:
                     logger.warning('Não foi possível inserir o logotipo no XLS: %s', exc)
 
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            if cabecalho:
+            cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+            if cabecalho_padrao:
                 ws.merge_cells(f'A{row}:E{row}')
                 cell = ws[f'A{row}']
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-                cell.value = cabecalho_texto
+                cell.value = self.processar_cabecalho_html(cabecalho_padrao)
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-            
+            if self.context.get('cabecalho'):
+                ws.merge_cells(f'A{row}:E{row}')
+                cell = ws[f'A{row}']
+                cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
+                cell.font = title_font
+                cell.alignment = center_wrap_align
+                row += 2
+
             for cargo in context.get('cargos', []):
                 cargo_descricao = cargo.get('descricao', '')
                 
@@ -573,16 +574,15 @@ class SumulaEscolhas(RelatorioBase):
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
             raise
     
-    def render_to_docx(self, cargos_list, cabecalho, texto_final, filename='relatorio_sumula_escolhas.docx'):
+    def render_to_docx(self, cargos_list, cabecalho, filename='relatorio_sumula_escolhas.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
-        
+
         Args:
             cargos_list: Lista de cargos com suas DREs e escolhas (estrutura hierárquica)
             cabecalho: Texto do cabeçalho do relatório
-            texto_final: Texto final do relatório
             filename: Nome do arquivo Word gerado
-        
+
         Returns:
             HttpResponse com o arquivo Word gerado
         """
@@ -590,10 +590,12 @@ class SumulaEscolhas(RelatorioBase):
             raise ImportError(
                 "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"
             )
-        
+
+        texto_final = self.context.get('texto_final', '')
+
         try:
             doc = Document()
-            
+
             # Configurar margens da página
             sections = doc.sections
             for section in sections:
@@ -601,15 +603,14 @@ class SumulaEscolhas(RelatorioBase):
                 section.bottom_margin = Inches(1)
                 section.left_margin = Inches(1)
                 section.right_margin = Inches(1)
-            
+
             # Cores (em RGB)
             cargo_color = RGBColor(102, 126, 234)  # #667eea
             dre_color = RGBColor(52, 73, 94)  # #34495e
             escola_color = RGBColor(90, 108, 125)  # #5a6c7d
             table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
-            
+
             # Cabeçalho
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 p = doc.add_paragraph()
@@ -618,7 +619,7 @@ class SumulaEscolhas(RelatorioBase):
                 run.font.size = Pt(14)
                 run.font.bold = True
                 doc.add_paragraph()
-            
+
             # Processar cargos
             for cargo in cargos_list:
                 cargo_descricao = cargo.get('descricao', '')
