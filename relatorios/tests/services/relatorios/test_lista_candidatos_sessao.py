@@ -26,7 +26,6 @@ def configuracao_relatorio():
         tipo='LISTA_CANDIDATOS_SESSAO',
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': '',
             'texto_final': '',
             'cabecalho_capa_ata': ''
@@ -173,7 +172,7 @@ def test_docx_importerror_when_lib_missing(settings, monkeypatch, configuracao_r
         svc.gerar('p1', _req(), 'docx', cabecalho='', agenda_uuid='ag-1')
 
 
-def test_header_fallback_uses_settings_default(settings, monkeypatch, configuracao_relatorio, parametrizacao):
+def test_header_padrao_aparece_automaticamente(settings, monkeypatch, configuracao_relatorio, parametrizacao):
     svc = _make_service(settings, configuracao_relatorio, parametrizacao)
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp([]))
     monkeypatch.setattr(
@@ -181,15 +180,13 @@ def test_header_fallback_uses_settings_default(settings, monkeypatch, configurac
         'buscar_agenda_por_uuid',
         lambda agenda_uuid: _Resp({'candidatos_uuids': [], 'retardatario': False})
     )
-    # Configurar para usar cabeçalho padrão
-    svc.context['usar_cabecalho_padrao'] = True
+    # Cabeçalho padrão sempre aparece se preenchido (sem necessidade de flag)
     parametrizacao.cabecalho = 'HEADER_PADRAO'
     parametrizacao.save()
     svc.context['cabecalho_padrao'] = 'HEADER_PADRAO'
-    
+
     response, ctx = svc.gerar('p1', _req(), 'html', cabecalho=None, agenda_uuid='ag-1')
-    # O cabecalho vem de self.context
-    assert svc.context.get('cabecalho') == 'HEADER_PADRAO'
+    assert svc.context.get('cabecalho_padrao') == 'HEADER_PADRAO'
 
 def test_multiple_agendas_filtered_and_separated(settings, monkeypatch, configuracao_relatorio, parametrizacao):
     svc = _make_service(settings, configuracao_relatorio, parametrizacao)
@@ -612,23 +609,25 @@ def test_render_xls_layout_with_title_and_agenda(settings, monkeypatch, configur
     assert resp['Content-Type'] == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ws = mod._last_ws
     cells = ws._cells
-    # Título na 1a linha
-    assert cells[(1, 1)].value == 'Lista de Candidatos por Sessão'
+    # cabecalho_padrao na linha 1 (sempre exibido se preenchido)
+    assert cells[(1, 1)].value == 'Cabeçalho Padrão Teste'
+    # Título na linha 3 (deslocado 2 linhas pelo cabecalho_padrao)
+    assert cells[(3, 1)].value == 'Lista de Candidatos por Sessão'
     # Data, horário e sessão nas linhas seguintes
-    assert str(cells[(3, 1)].value).startswith('Data: ')
-    assert '13/01/2026' in str(cells[(3, 1)].value)
-    assert str(cells[(4, 1)].value).startswith('Horário:')
-    assert '08:00' in str(cells[(4, 1)].value) and '09:00' in str(cells[(4, 1)].value)
-    assert cells[(5, 1)].value == '1'
-    # Cabeçalho na linha 7
-    assert cells[(7, 1)].value == 'Classificação'
-    assert cells[(7, 2)].value == 'Classificação NNA'
-    assert cells[(7, 3)].value == 'Classificação PCD'
-    assert cells[(7, 4)].value == 'Inscrição'
-    assert cells[(7, 5)].value == 'Nome'
-    assert cells[(7, 6)].value == 'CPF'
-    # Primeira linha de dados na 8a linha
-    assert cells[(8, 1)].value == 10
-    assert cells[(8, 4)].value == 'I1'
-    assert cells[(8, 5)].value == 'Nome 1'
-    assert cells[(8, 6)].value == '111'
+    assert str(cells[(5, 1)].value).startswith('Data: ')
+    assert '13/01/2026' in str(cells[(5, 1)].value)
+    assert str(cells[(6, 1)].value).startswith('Horário:')
+    assert '08:00' in str(cells[(6, 1)].value) and '09:00' in str(cells[(6, 1)].value)
+    assert cells[(7, 1)].value == '1'
+    # Cabeçalho de colunas na linha 9
+    assert cells[(9, 1)].value == 'Classificação'
+    assert cells[(9, 2)].value == 'Classificação NNA'
+    assert cells[(9, 3)].value == 'Classificação PCD'
+    assert cells[(9, 4)].value == 'Inscrição'
+    assert cells[(9, 5)].value == 'Nome'
+    assert cells[(9, 6)].value == 'CPF'
+    # Primeira linha de dados na linha 10
+    assert cells[(10, 1)].value == 10
+    assert cells[(10, 4)].value == 'I1'
+    assert cells[(10, 5)].value == 'Nome 1'
+    assert cells[(10, 6)].value == '111'

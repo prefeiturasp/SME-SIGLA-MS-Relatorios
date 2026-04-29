@@ -18,7 +18,6 @@ def configuracao_relatorio():
         tipo='ATA_ESCOLHA',
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': '',
             'texto_final': '',
             'cabecalho_capa_ata': ''
@@ -248,33 +247,30 @@ def test_gerar_formatos(settings_config, service_mocked, dados_ata, request_obj,
     assert dados == dados_ata
 
 
-def test_gerar_html_uses_default_header_when_empty(settings_config, service_mocked, dados_ata, request_obj):
-    """Testa que usa cabeçalho padrão quando não fornecido."""
-    settings_config.RELATORIO_CABECALHO_PADRAO = 'CABECALHO_PADRAO'
+def test_gerar_html_uses_cabecalho_padrao_quando_vazio(settings_config, service_mocked, dados_ata, request_obj):
+    """Testa que usa cabecalho_padrao da Parametrizacao quando cabecalho está vazio."""
+    service_mocked.context['cabecalho_padrao'] = 'CABECALHO_PADRAO'
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch('relatorios.services.relatorios.ata_escolha.render', return_value=HttpResponse('OK')) as m_render:
         service_mocked.gerar(processo_uuid='proc-123', request=request_obj, formato='html', cabecalho='')
     context = m_render.call_args[0][2] if len(m_render.call_args[0]) >= 3 else m_render.call_args[1].get('context')
-    assert context['cabecalho'] == 'CABECALHO_PADRAO'
+    assert context['cabecalho_padrao'] == 'CABECALHO_PADRAO'
 
 
 @pytest.mark.parametrize('cabecalho,esperado', [
     ('  CABECALHO  ', 'CABECALHO'),
-    (None, 'PADRAO'),
+    (None, 'Cabeçalho Padrão Teste'),
 ])
 def test_gerar_cabecalho_tratamento(settings_config, service_mocked, dados_ata, request_obj, cabecalho, esperado):
-    """Testa tratamento de cabeçalho (stripped e None)."""
-    settings_config.RELATORIO_CABECALHO_PADRAO = 'PADRAO'
+    """Testa tratamento de cabeçalho (stripped) e uso de cabecalho_padrao quando vazio."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch('relatorios.services.relatorios.ata_escolha.render', return_value=HttpResponse('OK')) as m_render:
         service_mocked.gerar(processo_uuid='proc-123', request=request_obj, formato='html', cabecalho=cabecalho)
     context = m_render.call_args[0][2] if len(m_render.call_args[0]) >= 3 else m_render.call_args[1].get('context')
-    # O cabeçalho é processado pelo método gerar
     if cabecalho and cabecalho.strip():
         assert context['cabecalho'] == esperado
     else:
-        # Usa cabeçalho padrão se None ou vazio
-        assert context['cabecalho'] == esperado or context['cabecalho'] == 'PADRAO'
+        assert context['cabecalho_padrao'] == esperado
 
 
 def test_gerar_raises_exception_on_service_failure(settings_config, service_mocked, request_obj):

@@ -17,7 +17,6 @@ def configuracao_relatorio():
         tipo='LAUDA_CONVOCACAO',
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': '',
             'texto_final': '',
             'cabecalho_capa_ata': ''
@@ -65,7 +64,6 @@ def test_gerar_html_calls_render_with_context_and_default_header(settings, confi
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
-    settings.RELATORIO_CABECALHO_PADRAO = 'HEADER_PADRAO'
 
     svc = LaudaConvocacao(
         configuracao=configuracao_relatorio,
@@ -78,10 +76,10 @@ def test_gerar_html_calls_render_with_context_and_default_header(settings, confi
         response, dados = svc.gerar(processo_uuid='xyz', request=_make_request(), formato='html', cabecalho='')
 
     assert isinstance(response, HttpResponse)
-    # Verifica que o contexto enviado para render inclui o cabeçalho padrão
+    # Verifica que o contexto enviado para render inclui o cabecalho_padrao da Parametrizacao
     _, args, kwargs = m_render.mock_calls[0]
     context = args[2] if len(args) >= 3 else kwargs.get('context')
-    assert context['cabecalho'] == 'HEADER_PADRAO'
+    assert context['cabecalho_padrao'] == 'Cabeçalho Padrão Teste'
     assert dados == {'cargos': []}
 
 

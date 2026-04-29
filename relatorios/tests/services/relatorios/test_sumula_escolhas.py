@@ -20,7 +20,6 @@ def configuracao_relatorio():
         tipo='SUMULA_ESCOLHAS',
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': '',
             'texto_final': '',
             'cabecalho_capa_ata': ''
@@ -295,13 +294,12 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa que usa cabeçalho padrão quando não fornecido."""
+        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
-        sumula_escolhas_service.context['usar_cabecalho_padrao'] = True
         sumula_escolhas_service.context['cabecalho_padrao'] = 'Cabeçalho Padrão'
-        
+
         with patch('relatorios.services.relatorios.sumula_escolhas.render', return_value=HttpResponse('OK')) as m_render:
             response, dados = sumula_escolhas_service.gerar(
                 processo_uuid='proc-123',
@@ -309,10 +307,10 @@ class TestGerar:
                 formato='html',
                 cabecalho=''
             )
-        
+
         _, args, kwargs = m_render.mock_calls[0]
         context = args[2] if len(args) >= 3 else kwargs.get('context')
-        assert context['cabecalho'] == 'Cabeçalho Padrão'
+        assert context['cabecalho_padrao'] == 'Cabeçalho Padrão'
     
     def test_gerar_filtra_escolhas_realizadas(
         self,
