@@ -305,7 +305,7 @@ def test_gerar_processo_uuid_none(settings_config, service_mocked, dados_ata, re
 def test_render_to_docx_variacoes(settings_config, service, dados_ata, cabecalho, cargos_list):
     """Testa geração de DOCX com diferentes variações de dados."""
     cargos = _make_cargo_list(**(cargos_list or {})) if cargos_list else dados_ata['cargos']
-    response = service.render_to_docx(cargos, cabecalho, filename='test.docx')
+    response = service.render_to_docx(cargos, {'cabecalho': cabecalho}, filename='test.docx')
     assert isinstance(response, HttpResponse)
     assert hasattr(response, 'content')
     if cabecalho == 'CABECALHO TESTE':
