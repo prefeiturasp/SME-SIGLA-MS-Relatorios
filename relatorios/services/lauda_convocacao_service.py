@@ -5,10 +5,12 @@ import copy
 import logging
 from typing import Dict, List, Optional, Set, Union
 from requests import RequestException
+from sigla_sdk.context import get_correlation_id
 
 from .candidatos_api_service import CandidatosService
 from .processo_convocacao_api_service import ProcessoConvocacaoService
 from .agendas_api_service import AgendasService
+from .escolhas_api_service import EscolhasService
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ class LaudaConvocacaoService:
         candidatos_base_url: str = 'https://example.com',
         processo_base_url: str = 'https://example.com',
         agendas_base_url: str = 'https://example.com',
+        escolhas_base_url: str = 'https://example.com',
         timeout_seconds: int = 30
     ):
         """
@@ -46,6 +49,10 @@ class LaudaConvocacaoService:
         )
         self.agendas_service = AgendasService(
             base_url=agendas_base_url,
+            timeout_seconds=timeout_seconds
+        )
+        self.escolhas_service = EscolhasService(
+            base_url=escolhas_base_url,
             timeout_seconds=timeout_seconds
         )
 
@@ -176,15 +183,46 @@ class LaudaConvocacaoService:
                 if isinstance(candidatos_geral_data, list):
                     candidatos_faltantes['geral'] = candidatos_geral_data
                 else:
-                    candidatos_faltantes['geral'] = [] 
+                    candidatos_faltantes['geral'] = []
+
+                # Buscar escolhas do tipo "reconvocacao" para complementar o status_especial
+                candidatos_uuids = [
+                    str(c.get('uuid'))
+                    for c in candidatos_faltantes['geral']
+                    if c.get('uuid') is not None
+                ]
+                reconvocacao_uuids: Set[str] = set()
+                if candidatos_uuids:
+                    escolhas_reconvocacao = self.escolhas_service.buscar_escolhas_por_candidatos(
+                        candidato_uuids=candidatos_uuids,
+                        situacao='reconvocacao',
+                    )
+                    reconvocacao_uuids = set(
+                        str(e.get('candidato_uuid'))
+                        for e in (escolhas_reconvocacao or [])
+                        if e.get('candidato_uuid') is not None
+                    )
 
                 for candidato in candidatos_faltantes['geral']:
-                    candidato['status_especial'] = 'JÁ CONVOCADO - LEI 13.398/02' if candidato.get('classificacao_nna') is not None else 'JÁ CONVOCADO - LEI 15.939/13' if candidato.get('classificacao_pcd') is not None else ''
+                    status_especial = (
+                        'JÁ CONVOCADO - LEI 13.398/02'
+                        if candidato.get('classificacao_nna') is not None
+                        else 'JÁ CONVOCADO - LEI 15.939/13'
+                        if candidato.get('classificacao_pcd') is not None
+                        else ''
+                    )
+                    if str(candidato.get('uuid')) in reconvocacao_uuids:
+                        status_especial = (
+                            f'{status_especial} - OPTOU POR RECONVOCAÇÃO'
+                            if status_especial
+                            else 'OPTOU POR RECONVOCAÇÃO'
+                        )
+                    candidato['status_especial'] = status_especial
 
                 logger.info(
                     'Encontrados %d candidatos Gerais faltantes',
-                    len(candidatos_faltantes['geral'])   
-                )       
+                    len(candidatos_faltantes['geral'])
+                )
 
             # Buscar candidatos NNA faltantes
             if lacunas_nna:
@@ -207,9 +245,39 @@ class LaudaConvocacaoService:
                 else:
                     candidatos_faltantes['nna'] = []
 
+                # Buscar escolhas do tipo "reconvocacao" para complementar o status_especial
+                candidatos_uuids = [
+                    str(c.get('uuid'))
+                    for c in candidatos_faltantes['nna']
+                    if c.get('uuid') is not None
+                ]
+                reconvocacao_uuids: Set[str] = set()
+                if candidatos_uuids:
+                    try:
+                        escolhas_reconvocacao = self.escolhas_service.buscar_escolhas_por_candidatos(
+                            candidato_uuids=candidatos_uuids,
+                            situacao='reconvocacao',
+                        )
+                        reconvocacao_uuids = set(
+                            str(e.get('candidato_uuid'))
+                            for e in (escolhas_reconvocacao or [])
+                            if e.get('candidato_uuid') is not None
+                        )
+                    except RequestException:
+                        logger.exception(
+                            'Erro ao buscar escolhas (reconvocacao) para candidatos NNA faltantes',
+                            extra={
+                                "correlation_id": get_correlation_id(),
+                                "candidatos_uuids_count": len(candidatos_uuids),
+                            },
+                        )
+
                 # Marcar candidatos como "CANDIDATOS JÁ CLASSIFICADO."
                 for candidato in candidatos_faltantes['nna']:
-                    candidato['status_especial'] = 'CANDIDATOS JÁ CLASSIFICADO.'
+                    status_especial = 'CANDIDATOS JÁ CLASSIFICADO.'
+                    if str(candidato.get('uuid')) in reconvocacao_uuids:
+                        status_especial = f'{status_especial} - OPTOU POR RECONVOCAÇÃO'
+                    candidato['status_especial'] = status_especial
 
                 logger.info(
                     'Encontrados %d candidatos NNA faltantes',
@@ -252,9 +320,39 @@ class LaudaConvocacaoService:
                     if c.get('classificacao_pcd') is not None and c.get('classificacao_pcd') in lacunas_pcd
                 ]
 
+                # Buscar escolhas do tipo "reconvocacao" para complementar o status_especial
+                candidatos_uuids = [
+                    str(c.get('uuid'))
+                    for c in candidatos_faltantes['pcd']
+                    if c.get('uuid') is not None
+                ]
+                reconvocacao_uuids: Set[str] = set()
+                if candidatos_uuids:
+                    try:
+                        escolhas_reconvocacao = self.escolhas_service.buscar_escolhas_por_candidatos(
+                            candidato_uuids=candidatos_uuids,
+                            situacao='reconvocacao',
+                        )
+                        reconvocacao_uuids = set(
+                            str(e.get('candidato_uuid'))
+                            for e in (escolhas_reconvocacao or [])
+                            if e.get('candidato_uuid') is not None
+                        )
+                    except RequestException:
+                        logger.exception(
+                            'Erro ao buscar escolhas (reconvocacao) para candidatos PCD faltantes',
+                            extra={
+                                "correlation_id": get_correlation_id(),
+                                "candidatos_uuids_count": len(candidatos_uuids),
+                            },
+                        )
+
                 # Marcar candidatos como "CANDIDATOS JÁ CLASSIFICADO."
                 for candidato in candidatos_faltantes['pcd']:
-                    candidato['status_especial'] = 'CANDIDATOS JÁ CLASSIFICADO.'
+                    status_especial = 'CANDIDATOS JÁ CLASSIFICADO.'
+                    if str(candidato.get('uuid')) in reconvocacao_uuids:
+                        status_especial = f'{status_especial} - OPTOU POR RECONVOCAÇÃO'
+                    candidato['status_especial'] = status_especial
 
                 logger.info(
                     'Encontrados %d candidatos PCD faltantes',

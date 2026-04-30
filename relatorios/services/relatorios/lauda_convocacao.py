@@ -46,7 +46,8 @@ class LaudaConvocacao(RelatorioBase):
         self.lauda_service = LaudaConvocacaoService(
             candidatos_base_url=settings.CANDIDATOS_API_URL,
             processo_base_url=settings.CONVOCACAO_API_URL,
-            agendas_base_url=settings.AGENDAS_API_URL
+            agendas_base_url=settings.AGENDAS_API_URL,
+            escolhas_base_url=settings.ESCOLHAS_API_URL
         )
     
     def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
