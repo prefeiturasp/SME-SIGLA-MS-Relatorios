@@ -23,6 +23,9 @@ def _make_service_with_mocks():
     svc.candidatos_service = Mock()
     svc.processo_service = Mock()
     svc.agendas_service = Mock()
+    svc.escolhas_service = Mock()
+    # Por padrão, não há escolhas de reconvocação (evita dependência de request extra nos testes)
+    svc.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
     return svc
 
 
