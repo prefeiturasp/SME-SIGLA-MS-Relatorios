@@ -24,7 +24,7 @@ def _svc(base='http://api.local', timeout=12):
 
 # -------- buscar_processo_convocacao ----------
 
-@patch('requests.get')
+@patch('relatorios.services.processo_convocacao_api_service.http_client.get')
 def test_buscar_processo_convocacao_success(mock_get):
     mock_get.return_value = _Resp(payload={'uuid': 'P1'})
     svc = _svc(timeout=5)
@@ -37,7 +37,7 @@ def test_buscar_processo_convocacao_success(mock_get):
     )
 
 
-@patch('requests.get')
+@patch('relatorios.services.processo_convocacao_api_service.http_client.get')
 def test_buscar_processo_convocacao_http_error(mock_get):
     mock_get.return_value = _Resp(None, status_code=404)
     svc = _svc()
@@ -47,7 +47,7 @@ def test_buscar_processo_convocacao_http_error(mock_get):
 
 # -------- buscar_processos_por_concurso ----------
 
-@patch('requests.get')
+@patch('relatorios.services.processo_convocacao_api_service.http_client.get')
 def test_buscar_processos_por_concurso_success(mock_get):
     mock_get.return_value = _Resp(payload={'results': [{'uuid': 'P1'}]})
     svc = _svc(timeout=7)
@@ -61,7 +61,7 @@ def test_buscar_processos_por_concurso_success(mock_get):
     )
 
 
-@patch('requests.get', side_effect=requests.RequestException('boom'))
+@patch('relatorios.services.processo_convocacao_api_service.http_client.get', side_effect=requests.RequestException('boom'))
 def test_buscar_processos_por_concurso_request_exception(mock_get):
     svc = _svc()
     with pytest.raises(requests.RequestException):

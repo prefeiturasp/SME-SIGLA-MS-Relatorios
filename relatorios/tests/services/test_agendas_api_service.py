@@ -22,7 +22,7 @@ def _svc(base='http://api.local', timeout=30):
     return AgendasService(base_url=base, timeout_seconds=timeout)
 
 
-@patch('requests.get')
+@patch('relatorios.services.agendas_api_service.http_client.get')
 def test_buscar_agendas_success_with_pagination_and_headers(mock_get):
     mock_resp = _Resp(payload={'results': []}, status_code=200)
     mock_get.return_value = mock_resp
@@ -39,7 +39,7 @@ def test_buscar_agendas_success_with_pagination_and_headers(mock_get):
     )
 
 
-@patch('requests.get')
+@patch('relatorios.services.agendas_api_service.http_client.get')
 def test_buscar_agendas_respects_trailing_slash_in_base_url(mock_get):
     mock_get.return_value = _Resp(payload=[], status_code=200)
 
@@ -51,7 +51,7 @@ def test_buscar_agendas_respects_trailing_slash_in_base_url(mock_get):
     assert called_args[0] == 'http://api.local/api/v1/agendas/'
 
 
-@patch('requests.get')
+@patch('relatorios.services.agendas_api_service.http_client.get')
 def test_buscar_agendas_http_error_raises(mock_get):
     mock_get.return_value = _Resp(None, status_code=500)
 
@@ -60,7 +60,7 @@ def test_buscar_agendas_http_error_raises(mock_get):
         svc.buscar_agendas(processo_convocacao_uuid='P-ERR')
 
 
-@patch('requests.get', side_effect=requests.RequestException('boom'))
+@patch('relatorios.services.agendas_api_service.http_client.get', side_effect=requests.RequestException('boom'))
 def test_buscar_agendas_request_exception_is_propagated(mock_get):
     svc = _svc()
     with pytest.raises(requests.RequestException):

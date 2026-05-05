@@ -161,8 +161,7 @@ class SumulaReconvocacao(RelatorioBase):
         # Agrupar por cargo
         cargos_list = self._agrupar_por_cargo(candidatos_com_escolhas)
         
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
+        cabecalho_final = self.context.get('cabecalho_padrao', '') or self.context.get('cabecalho', '')
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context.update({
             'cargos': cargos_list,
@@ -328,16 +327,22 @@ class SumulaReconvocacao(RelatorioBase):
                 except Exception as exc:
                     logger.warning('Não foi possível inserir o logotipo no XLS (reconvocacao): %s', exc)
             
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            if cabecalho:
+            cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+            if cabecalho_padrao:
                 ws.merge_cells(f'A{row}:D{row}')
                 cell = ws[f'A{row}']
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-                cell.value = cabecalho_texto
+                cell.value = self.processar_cabecalho_html(cabecalho_padrao)
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-            
+            if self.context.get('cabecalho'):
+                ws.merge_cells(f'A{row}:D{row}')
+                cell = ws[f'A{row}']
+                cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
+                cell.font = title_font
+                cell.alignment = center_wrap_align
+                row += 2
+
             for cargo in context.get('cargos', []):
                 cargo_descricao = cargo.get('descricao', '')
                 
@@ -455,15 +460,14 @@ class SumulaReconvocacao(RelatorioBase):
             table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
             
             # Cabeçalho
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            if cabecalho:
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-                p = doc.add_paragraph()
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                run = p.add_run(cabecalho_texto)
-                run.font.size = Pt(14)
-                run.font.bold = True
-                doc.add_paragraph()
+            for cab in [self.context.get('cabecalho_padrao', ''), self.context.get('cabecalho', '')]:
+                if cab:
+                    p = doc.add_paragraph()
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = p.add_run(self.processar_cabecalho_html(cab))
+                    run.font.size = Pt(14)
+                    run.font.bold = True
+                    doc.add_paragraph()
             
             # Processar cargos
             for cargo in cargos_list:

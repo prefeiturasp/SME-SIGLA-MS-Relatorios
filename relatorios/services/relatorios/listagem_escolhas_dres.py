@@ -123,12 +123,18 @@ class ListagemEscolhasDres(RelatorioBase):
                     logger.warning('Não foi possível inserir o logotipo no XLS (listagem_escolhas_dres): %s', exc)
 
             # Cabeçalho
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            if cabecalho:
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+            if cabecalho_padrao:
                 ws.merge_cells(f'A{row}:O{row}')
                 cell = ws[f'A{row}']
-                cell.value = cabecalho_texto
+                cell.value = self.processar_cabecalho_html(cabecalho_padrao)
+                cell.font = title_font
+                cell.alignment = center_wrap_align
+                row += 2
+            if self.context.get('cabecalho'):
+                ws.merge_cells(f'A{row}:O{row}')
+                cell = ws[f'A{row}']
+                cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
@@ -297,15 +303,14 @@ class ListagemEscolhasDres(RelatorioBase):
             table_header_color = RGBColor(74, 85, 104)  # #4a5568
             
             # Cabeçalho
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            if cabecalho:
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-                p = doc.add_paragraph()
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                run = p.add_run(cabecalho_texto)
-                run.font.size = Pt(12)
-                run.font.bold = True
-                doc.add_paragraph()
+            for cab in [self.context.get('cabecalho_padrao', ''), self.context.get('cabecalho', '')]:
+                if cab:
+                    p = doc.add_paragraph()
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = p.add_run(self.processar_cabecalho_html(cab))
+                    run.font.size = Pt(12)
+                    run.font.bold = True
+                    doc.add_paragraph()
             
             # Título
             p = doc.add_paragraph()
@@ -555,11 +560,9 @@ class ListagemEscolhasDres(RelatorioBase):
                 'escolhas': items_ordenados
             })
         
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
         if cabecalho is not None:
             self.context['cabecalho'] = cabecalho
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        self.context['cabecalho'] = cabecalho_final
+        cabecalho_final = self.context.get('cabecalho_padrao', '') or self.context.get('cabecalho', '')
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         
         # Preparar dados para salvar no banco

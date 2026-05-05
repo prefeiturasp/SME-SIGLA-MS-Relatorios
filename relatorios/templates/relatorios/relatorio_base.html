@@ -100,13 +100,13 @@
         <div class="logo-container">
             <img src="{{ logo_url }}" alt="Logo">
         </div>
-        {% endif %}
-
-        {% if usar_cabecalho_padrao and cabecalho_padrao %}
+        {% endif %}        
+        {% if cabecalho_padrao %}
         <div class="cabecalho">
             {{ cabecalho_padrao|safe|linebreaksbr }}
         </div>
-        {% elif cabecalho %}
+        {% endif %}
+        {% if cabecalho %}
         <div class="cabecalho">
             {{ cabecalho|safe|linebreaksbr }}
         </div>

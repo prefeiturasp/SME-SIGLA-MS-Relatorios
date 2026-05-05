@@ -46,7 +46,8 @@ class LaudaConvocacao(RelatorioBase):
         self.lauda_service = LaudaConvocacaoService(
             candidatos_base_url=settings.CANDIDATOS_API_URL,
             processo_base_url=settings.CONVOCACAO_API_URL,
-            agendas_base_url=settings.AGENDAS_API_URL
+            agendas_base_url=settings.AGENDAS_API_URL,
+            escolhas_base_url=settings.ESCOLHAS_API_URL
         )
     
     def gerar(self, processo_uuid: str, request, formato: str = 'html', cabecalho: str = '', **kwargs):
@@ -74,16 +75,8 @@ class LaudaConvocacao(RelatorioBase):
             logger.error('Falha ao processar lauda de convocação: %s', exc)
             raise
         
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão
         if cabecalho:
-            self.context['cabecalho'] = cabecalho
-        if self.context['usar_cabecalho_padrao']:
-            cabecalho_final = self.context['cabecalho_padrao']
-        elif self.context['cabecalho']:
-            cabecalho_final = self.context['cabecalho']
-        else:
-            cabecalho_final = getattr(settings, 'RELATORIO_CABECALHO_PADRAO', '')
-        self.context['cabecalho'] = cabecalho_final
+            self.context['cabecalho'] = cabecalho        
         logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
         self.context['is_pdf'] = False
         self.context['logo_url'] = logo_url
@@ -92,7 +85,7 @@ class LaudaConvocacao(RelatorioBase):
             logger.info('Gerando Word: %s', filename)
             response = self.render_to_docx(
                 dados_lauda.get('cargos', []),
-                cabecalho_final,
+                self.context,
                 self.context['texto_final'],
                 filename=filename
             )
@@ -136,13 +129,14 @@ class LaudaConvocacao(RelatorioBase):
         
         return response, dados_lauda
     
-    def render_to_docx(self, cargos_list, cabecalho, texto_final, filename='lauda_convocacao.docx'):
+    def render_to_docx(self, cargos_list, context, texto_final, filename='lauda_convocacao.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
         
         Args:
             cargos_list: Lista de cargos com suas sessões e candidatos
-            cabecalho: Texto do cabeçalho do relatório
+            context: Contexto com os dados do relatório
+            texto_final: Texto final do relatório
             filename: Nome do arquivo Word gerado
         
         Returns:
@@ -169,9 +163,19 @@ class LaudaConvocacao(RelatorioBase):
             cargo_color = RGBColor(102, 126, 234)  # #667eea
             table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
             
+            # Cabeçalho padrão
+            if context.get('cabecalho_padrao'):
+                cabecalho_texto = self.processar_cabecalho_html(context.get('cabecalho_padrao'))
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(cabecalho_texto)
+                run.font.size = Pt(14)
+                run.font.bold = True
+                doc.add_paragraph()
+
             # Cabeçalho
-            if cabecalho:
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            if context.get('cabecalho'):
+                cabecalho_texto = self.processar_cabecalho_html(context.get('cabecalho'))
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 run = p.add_run(cabecalho_texto)
@@ -367,13 +371,18 @@ class LaudaConvocacao(RelatorioBase):
         c.alignment = center
         row_idx += 1
 
-        cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        if cabecalho:
+        cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+        if cabecalho_padrao:
             ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
             c = ws.cell(row=row_idx, column=1)
-            # texto simples (sem HTML); se precisar, poderia limpar tags com BeautifulSoup
-            cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-            c.value = cabecalho_texto
+            c.value = self.processar_cabecalho_html(cabecalho_padrao)
+            c.font = label_font
+            c.alignment = left
+            row_idx += 1
+        if self.context.get('cabecalho'):
+            ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=6)
+            c = ws.cell(row=row_idx, column=1)
+            c.value = self.processar_cabecalho_html(self.context['cabecalho'])
             c.font = label_font
             c.alignment = left
             row_idx += 1

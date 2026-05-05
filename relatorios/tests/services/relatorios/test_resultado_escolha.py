@@ -143,7 +143,6 @@ def configuracao_relatorio():
         tipo='RESULTADO_ESCOLHA',
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': 'Cabeçalho Teste',
             'texto_final': 'Texto Final Teste',
             'cabecalho_capa_ata': '',
@@ -508,9 +507,7 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa que usa cabeçalho padrão quando não fornecido."""
-        # Configurar para usar cabeçalho padrão
-        resultado_escolha_service.context['usar_cabecalho_padrao'] = True
+        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
         resultado_escolha_service.context['cabecalho_padrao'] = 'Cabeçalho Padrão'
         
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response
@@ -534,7 +531,7 @@ class TestGerar:
         
         _, args, kwargs = m_render.mock_calls[0]
         context = args[2] if len(args) >= 3 else kwargs.get('context')
-        assert context['cabecalho'] == 'Cabeçalho Padrão'
+        assert context['cabecalho_padrao'] == 'Cabeçalho Padrão'
     
     def test_gerar_tipo_resultado_escolha_unificado(
         self,
@@ -1275,7 +1272,6 @@ class TestGerar:
         config_invalida = ConfiguracaoRelatorio.objects.create(
             tipo='TIPO_INVALIDO',
             usar_logotipo=False,
-            usar_cabecalho_padrao=False,
             cabecalho='',
             texto_final='',
             cabecalho_capa_ata=''
@@ -1482,7 +1478,8 @@ class TestGerar:
                 resultado_escolha_service.render_to_xls(
                     cargos_list,
                     'Cabeçalho',
-                    'test.xlsx'
+                    '',
+                    filename='test.xlsx'
                 )
 
 
@@ -1516,9 +1513,10 @@ class TestRenderToXls:
         response = resultado_escolha_service.render_to_xls(
             cargos_list,
             'Cabeçalho Teste',
-            'test.xlsx'
+            '',
+            filename='test.xlsx'
         )
-        
+
         assert isinstance(response, HttpResponse)
         assert 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in response['Content-Type']
         assert 'attachment' in response['Content-Disposition']
@@ -1536,11 +1534,12 @@ class TestRenderToXls:
         response = resultado_escolha_service.render_to_xls(
             cargos_list,
             '',
-            'test.xlsx'
+            '',
+            filename='test.xlsx'
         )
-        
+
         assert isinstance(response, HttpResponse)
-    
+
     def test_render_to_xls_multiplos_cargos(self, resultado_escolha_service):
         """Testa geração de Excel com múltiplos cargos."""
         cargos_list = [
@@ -1567,11 +1566,12 @@ class TestRenderToXls:
         response = resultado_escolha_service.render_to_xls(
             cargos_list,
             'Cabeçalho',
-            'test.xlsx'
+            '',
+            filename='test.xlsx'
         )
-        
+
         assert isinstance(response, HttpResponse)
-    
+
     @patch('relatorios.services.relatorios.resultado_escolha.OPENPYXL_AVAILABLE', False)
     def test_render_to_xls_openpyxl_nao_disponivel(self, resultado_escolha_service):
         """Testa erro quando openpyxl não está disponível."""
@@ -1581,7 +1581,8 @@ class TestRenderToXls:
             resultado_escolha_service.render_to_xls(
                 cargos_list,
                 'Cabeçalho',
-                'test.xlsx'
+                '',
+                filename='test.xlsx'
             )
 
 
@@ -2420,7 +2421,7 @@ class TestRenderToXlsResumoDreEscola:
             }
         ]
         
-        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
         assert 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in response['Content-Type']
@@ -2438,7 +2439,7 @@ class TestRenderToXlsResumoDreEscola:
             mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
             
-            response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+            response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
     
@@ -2448,7 +2449,7 @@ class TestRenderToXlsResumoDreEscola:
         
         cargos_list = [{'codigo': '123', 'descricao': 'Professor', 'tipos_escolha': []}]
         
-        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
 
@@ -2506,7 +2507,6 @@ class TestTiposAntigosCompatibilidade:
             tipo='RESULTADO_ESCOLHA_SIM',
             defaults={
                 'usar_logotipo': False,
-                'usar_cabecalho_padrao': False,
                 'cabecalho': '',
                 'texto_final': '',
                 'cabecalho_capa_ata': ''
@@ -2569,7 +2569,7 @@ class TestTiposAntigosCompatibilidade:
             }
         ]
         
-        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
     
@@ -2606,7 +2606,7 @@ class TestTiposAntigosCompatibilidade:
         cargos_list = [{'codigo': '123', 'descricao': 'Professor', 'tipos_escolha': []}]
         
         with patch('relatorios.services.relatorios.resultado_escolha.requests.get', side_effect=Exception('Erro')):
-            response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+            response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
     
@@ -2619,7 +2619,7 @@ class TestTiposAntigosCompatibilidade:
         
         cargos_list = [{'codigo': '123', 'descricao': 'Professor', 'tipos_escolha': []}]
         
-        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
     
@@ -2655,7 +2655,7 @@ class TestTiposAntigosCompatibilidade:
             }
         ]
         
-        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho')
+        response = resultado_escolha_service.render_to_xls(cargos_list, 'Cabeçalho', '')
         
         assert isinstance(response, HttpResponse)
     

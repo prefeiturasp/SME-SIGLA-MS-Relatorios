@@ -75,9 +75,7 @@ class LaudaVagas(RelatorioBase):
         cargos_list = self._preparar_dados_template(vagas_agrupadas)
         # Converter todos os UUIDs para strings para garantir serialização JSON
         cargos_list = convert_uuids_to_strings(cargos_list)
-        # Obter cabeçalho: prioriza o enviado no request; se vier vazio, usa o padrão do settings
-        cabecalho_final = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-        logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
+        logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''        
         self.context.update({
             'logo_url': logo_url,
             'cargos': cargos_list,
@@ -95,7 +93,7 @@ class LaudaVagas(RelatorioBase):
             logger.info('Gerando Word: %s', filename)
             response = self.render_to_docx(
                 cargos_list,
-                cabecalho_final,
+                self.context,
                 self.context['texto_final'],
                 filename=filename
             )
@@ -259,12 +257,18 @@ class LaudaVagas(RelatorioBase):
                 except Exception as exc:
                     logger.warning('Não foi possível inserir o logotipo no XLS: %s', exc)
 
-            cabecalho = self.context['cabecalho_padrao'] if self.context['usar_cabecalho_padrao'] else self.context['cabecalho']
-            if cabecalho:
+            cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+            if cabecalho_padrao:
                 ws.merge_cells(f'A{row}:D{row}')
                 cell = ws[f'A{row}']
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
-                cell.value = cabecalho_texto
+                cell.value = self.processar_cabecalho_html(cabecalho_padrao)
+                cell.font = title_font
+                cell.alignment = center_wrap_align
+                row += 2
+            if self.context.get('cabecalho'):
+                ws.merge_cells(f'A{row}:D{row}')
+                cell = ws[f'A{row}']
+                cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
@@ -367,14 +371,14 @@ class LaudaVagas(RelatorioBase):
             logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
             raise
     
-    def render_to_docx(self, cargos_list, cabecalho, texto_final, filename='relatorio_vagas.docx'):
+    def render_to_docx(self, cargos_list, context, texto_final, filename='relatorio_vagas.docx'):
         """
         Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
         Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL AO XLS.
         
         Args:
             cargos_list: Lista de cargos com suas DREs e vagas (estrutura hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
+            context: Contexto com os dados do relatório
             texto_final: Texto final do relatório
             filename: Nome do arquivo Word gerado
         
@@ -402,15 +406,25 @@ class LaudaVagas(RelatorioBase):
             dre_color = RGBColor(52, 73, 94)  # #34495e
             table_header_color = RGBColor(236, 240, 241)  # #ECF0F1
             
-            # Cabeçalho
-            if cabecalho:
-                cabecalho_texto = self.processar_cabecalho_html(cabecalho)
+            # Cabeçalho padrao
+            if context.get('cabecalho_padrao'):
+                cabecalho_texto = self.processar_cabecalho_html(context.get('cabecalho_padrao'))
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 run = p.add_run(cabecalho_texto)
                 run.font.size = Pt(14)
                 run.font.bold = True
                 doc.add_paragraph()
+
+            # Cabeçalho 
+            if context.get('cabecalho'):
+                cabecalho_texto = self.processar_cabecalho_html(context.get('cabecalho'))
+                p = doc.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(cabecalho_texto)
+                run.font.size = Pt(14)
+                run.font.bold = True
+                doc.add_paragraph()    
             
             # Processar cargos
             for cargo in cargos_list:

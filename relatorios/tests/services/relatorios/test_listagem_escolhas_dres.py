@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from datetime import datetime
 
-from relatorios.services.relatorios.listagem_escolhas_dres import ListagemEscolhasDres
+from relatorios.services.relatorios.listagem_escolhas_dres import ListagemEscolhasDres, OPENPYXL_AVAILABLE
 from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 
 
@@ -23,7 +23,6 @@ def configuracao_relatorio():
         tipo='LISTAGEM_ESCOLHAS_DRES',
         defaults={
             'usar_logotipo': False,
-            'usar_cabecalho_padrao': False,
             'cabecalho': '',
             'texto_final': '',
             'cabecalho_capa_ata': ''
@@ -241,28 +240,26 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa geração de relatório DOCX com sucesso (via PDF->DOCX)."""
+        """Testa geração de relatório DOCX com sucesso."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
 
-        mock_pdf2docx = MagicMock()
-        with patch.object(listagem_escolhas_dres_service, 'render_to_pdf', return_value=HttpResponse(b'%PDF-1.4', content_type='application/pdf')), \
-             patch.dict('sys.modules', {'pdf2docx': mock_pdf2docx}):
-            tmp_dir = MagicMock()
-            tmp_dir.__enter__ = MagicMock(return_value='/tmp/test')
-            tmp_dir.__exit__ = MagicMock(return_value=None)
-            m_file = MagicMock()
-            m_file.__enter__ = MagicMock(return_value=m_file)
-            m_file.__exit__ = MagicMock(return_value=None)
-            m_file.read = MagicMock(return_value=b'DOCX')
-            with patch('relatorios.services.relatorios.listagem_escolhas_dres.tempfile.TemporaryDirectory', return_value=tmp_dir), \
-                 patch('builtins.open', return_value=m_file):
-                response, dados = listagem_escolhas_dres_service.gerar(
-                    processo_uuid='proc-123',
-                    request=_make_request(),
-                    formato='docx',
-                    cabecalho='Cabeçalho Teste'
-                )
+        mock_response = HttpResponse(
+            b'DOCX',
+            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        mock_response['Content-Disposition'] = 'attachment; filename="listagem_escolhas_dres_proc-123.docx"'
+        with patch.object(
+            listagem_escolhas_dres_service,
+            'render_to_docx',
+            return_value=mock_response
+        ):
+            response, dados = listagem_escolhas_dres_service.gerar(
+                processo_uuid='proc-123',
+                request=_make_request(),
+                formato='docx',
+                cabecalho='Cabeçalho Teste'
+            )
 
         assert isinstance(response, HttpResponse)
         assert 'docx' in response.get('Content-Disposition', '') or 'listagem' in response.get('Content-Disposition', '')
@@ -273,12 +270,11 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa que usa cabeçalho padrão quando não fornecido."""
+        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
-        listagem_escolhas_dres_service.context['usar_cabecalho_padrao'] = True
         listagem_escolhas_dres_service.context['cabecalho_padrao'] = 'Cabeçalho Padrão'
-        
+
         with patch('relatorios.services.relatorios.listagem_escolhas_dres.render', return_value=HttpResponse('OK')) as m_render:
             response, dados = listagem_escolhas_dres_service.gerar(
                 processo_uuid='proc-123',
@@ -286,10 +282,10 @@ class TestGerar:
                 formato='html',
                 cabecalho=''
             )
-        
+
         _, args, kwargs = m_render.mock_calls[0]
         context = args[2] if len(args) >= 3 else kwargs.get('context')
-        assert context['cabecalho'] == 'Cabeçalho Padrão'
+        assert context['cabecalho_padrao'] == 'Cabeçalho Padrão'
     
     def test_gerar_erro_buscar_candidatos(
         self,
@@ -444,27 +440,25 @@ class TestGerar:
         mock_candidatos_response,
         mock_escolhas_response
     ):
-        """Testa geração com formato DOC (tratado como DOCX via PDF->DOCX)."""
+        """Testa geração com formato DOC (tratado como DOCX)."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
 
-        mock_pdf2docx = MagicMock()
-        with patch.object(listagem_escolhas_dres_service, 'render_to_pdf', return_value=HttpResponse(b'%PDF-1.4', content_type='application/pdf')), \
-             patch.dict('sys.modules', {'pdf2docx': mock_pdf2docx}):
-            tmp_dir = MagicMock()
-            tmp_dir.__enter__ = MagicMock(return_value='/tmp/test')
-            tmp_dir.__exit__ = MagicMock(return_value=None)
-            m_file = MagicMock()
-            m_file.__enter__ = MagicMock(return_value=m_file)
-            m_file.__exit__ = MagicMock(return_value=None)
-            m_file.read = MagicMock(return_value=b'DOCX')
-            with patch('relatorios.services.relatorios.listagem_escolhas_dres.tempfile.TemporaryDirectory', return_value=tmp_dir), \
-                 patch('builtins.open', return_value=m_file):
-                response, dados = listagem_escolhas_dres_service.gerar(
-                    processo_uuid='proc-123',
-                    request=_make_request(),
-                    formato='doc'
-                )
+        mock_response = HttpResponse(
+            b'DOCX',
+            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        mock_response['Content-Disposition'] = 'attachment; filename="listagem_escolhas_dres_proc-123.docx"'
+        with patch.object(
+            listagem_escolhas_dres_service,
+            'render_to_docx',
+            return_value=mock_response
+        ):
+            response, dados = listagem_escolhas_dres_service.gerar(
+                processo_uuid='proc-123',
+                request=_make_request(),
+                formato='doc'
+            )
 
         assert isinstance(response, HttpResponse)
     
@@ -592,6 +586,7 @@ class TestGerar:
 class TestRenderToXls:
     """Testes para o método render_to_xls."""
     
+    @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado")
     def test_render_to_xls_success(self, listagem_escolhas_dres_service):
         """Testa geração de Excel com sucesso."""
         escolhas_list = [
@@ -627,6 +622,7 @@ class TestRenderToXls:
         assert 'attachment' in response['Content-Disposition']
         assert 'test.xlsx' in response['Content-Disposition']
 
+    @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado")
     def test_render_to_xls_sem_cabecalho(self, listagem_escolhas_dres_service):
         """Testa geração de Excel sem cabeçalho."""
         escolhas_list = []
@@ -641,6 +637,7 @@ class TestRenderToXls:
         
         assert isinstance(response, HttpResponse)
     
+    @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado")
     def test_render_to_xls_tipo_vaga_d(self, listagem_escolhas_dres_service):
         """Testa formatação especial para tipo_vaga 'D'."""
         escolhas_list = [
@@ -673,6 +670,7 @@ class TestRenderToXls:
         
         assert isinstance(response, HttpResponse)
     
+    @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado")
     def test_render_to_xls_tipo_vaga_p(self, listagem_escolhas_dres_service):
         """Testa formatação especial para tipo_vaga 'P'."""
         escolhas_list = [
@@ -705,6 +703,7 @@ class TestRenderToXls:
         
         assert isinstance(response, HttpResponse)
     
+    @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado")
     def test_render_to_xls_multiplas_escolhas(self, listagem_escolhas_dres_service):
         """Testa geração de Excel com múltiplas escolhas."""
         escolhas_list = [
@@ -768,6 +767,7 @@ class TestRenderToXls:
                 filename='test.xlsx'
             )
     
+    @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado")
     def test_render_to_xls_exception(
         self,
         listagem_escolhas_dres_service

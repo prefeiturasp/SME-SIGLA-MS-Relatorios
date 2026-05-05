@@ -10,7 +10,7 @@ from relatorios.serializers import RelatorioCreateSerializer, RelatorioSerialize
 from relatorios.services.factory.relatorio_factory import RelatorioFactory
 from relatorios.services.ata_escolha_service import CargoObrigatorioError
 from relatorios.utils import CustomPagination
-from relatorios.middleware import get_correlation_id
+from sigla_sdk.context import get_correlation_id
 
 
 logger = logging.getLogger(__name__)
