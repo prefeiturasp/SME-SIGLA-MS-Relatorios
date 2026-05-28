@@ -37,9 +37,20 @@ def test_candidatos_extra_endpoints_success(mock_get):
     svc = CandidatosService(base_url="http://api.local", timeout_seconds=7)
     mock_get.return_value = _Resp({"results": []})
 
-    assert svc.buscar_concurso_candidatos_por_processo("proc-1").status_code == 200
-    assert svc.buscar_reclassificados_por_concurso("conc-1", "proc-1").status_code == 200
-    assert svc.buscar_eliminados_por_concurso("conc-1", "proc-1", 100, 1).status_code == 200
+    assert (
+        svc.buscar_concurso_candidatos_por_processo("proc-1").status_code
+        == 200
+    )
+    assert (
+        svc.buscar_reclassificados_por_concurso("conc-1", "proc-1").status_code
+        == 200
+    )
+    assert (
+        svc.buscar_eliminados_por_concurso(
+            "conc-1", "proc-1", 100, 1
+        ).status_code
+        == 200
+    )
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")

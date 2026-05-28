@@ -1,5 +1,9 @@
-from .relatorios import RelatorioViewSet
 from .parametrizacao import ParametrizacaoViewSet
 from .personalizacao import PersonalizacaoViewSet
+from .relatorios import RelatorioViewSet
 
-__all__ = ['RelatorioViewSet', 'ParametrizacaoViewSet', 'PersonalizacaoViewSet']
+__all__ = [
+    "RelatorioViewSet",
+    "ParametrizacaoViewSet",
+    "PersonalizacaoViewSet",
+]

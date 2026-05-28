@@ -7,7 +7,6 @@ from django.test import RequestFactory
 from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 from relatorios.services.relatorios.lauda_convocacao import LaudaConvocacao
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -24,7 +23,9 @@ def svc(settings):
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.CONVOCACAO_API_URL = "http://convocacao"
     settings.AGENDAS_API_URL = "http://agendas"
-    cfg = ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_CONVOCACAO")[0]
+    cfg = ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_CONVOCACAO")[
+        0
+    ]
     par = Parametrizacao.objects.get_or_create(cabecalho="Cab Padrao")[0]
     return LaudaConvocacao(configuracao=cfg, parametrizacao=par)
 
@@ -54,10 +55,23 @@ def _cargos():
 
 
 def test_renderers_xls_docx_with_logo_and_text(svc):
-    svc.context.update({"usar_logotipo": True, "logo_url": "http://img/logo.png", "texto_final": "Rodape"})
-    with patch("relatorios.services.relatorios.lauda_convocacao.requests.get", return_value=_Resp()):
-        xls = svc._render_xls(_cargos(), context=svc.context, filename="conv-extra.xlsx")
-    docx = svc.render_to_docx(_cargos(), svc.context, "Rodape", filename="conv-extra.docx")
+    svc.context.update(
+        {
+            "usar_logotipo": True,
+            "logo_url": "http://img/logo.png",
+            "texto_final": "Rodape",
+        }
+    )
+    with patch(
+        "relatorios.services.relatorios.lauda_convocacao.requests.get",
+        return_value=_Resp(),
+    ):
+        xls = svc._render_xls(
+            _cargos(), context=svc.context, filename="conv-extra.xlsx"
+        )
+    docx = svc.render_to_docx(
+        _cargos(), svc.context, "Rodape", filename="conv-extra.docx"
+    )
     assert isinstance(xls, HttpResponse)
     assert isinstance(docx, HttpResponse)
     assert "conv-extra.xlsx" in xls["Content-Disposition"]
@@ -65,18 +79,29 @@ def test_renderers_xls_docx_with_logo_and_text(svc):
 
 
 def test_render_xls_logo_error_path(svc):
-    svc.context.update({"usar_logotipo": True, "logo_url": "http://img/logo.png"})
-    with patch("relatorios.services.relatorios.lauda_convocacao.requests.get", side_effect=RuntimeError("img err")):
-        xls = svc._render_xls(_cargos(), context=svc.context, filename="conv-logo-err.xlsx")
+    svc.context.update(
+        {"usar_logotipo": True, "logo_url": "http://img/logo.png"}
+    )
+    with patch(
+        "relatorios.services.relatorios.lauda_convocacao.requests.get",
+        side_effect=RuntimeError("img err"),
+    ):
+        xls = svc._render_xls(
+            _cargos(), context=svc.context, filename="conv-logo-err.xlsx"
+        )
     assert isinstance(xls, HttpResponse)
 
 
 def test_gerar_doc_and_xls_routes(svc):
     req = RequestFactory().get("/x")
     svc.lauda_service = Mock()
-    svc.lauda_service.processar_lauda_convocacao.return_value = {"cargos": _cargos()}
+    svc.lauda_service.processar_lauda_convocacao.return_value = {
+        "cargos": _cargos()
+    }
 
-    with patch.object(svc, "render_to_docx", return_value=HttpResponse("docx")):
+    with patch.object(
+        svc, "render_to_docx", return_value=HttpResponse("docx")
+    ):
         resp_docx, _ = svc.gerar("p1", req, formato="docx")
         assert resp_docx.status_code == 200
     with patch.object(svc, "_render_xls", return_value=HttpResponse("xls")):

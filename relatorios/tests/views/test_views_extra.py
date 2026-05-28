@@ -9,7 +9,6 @@ from rest_framework.test import APIClient
 
 from relatorios.services.ata_escolha_service import CargoObrigatorioError
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -69,18 +68,27 @@ def test_create_returns_docx_when_query_param_docx(mock_factory, client):
 @patch("relatorios.views.relatorios.RelatorioFactory.obter_relatorio")
 def test_create_handles_cargo_obrigatorio_error(mock_factory, client):
     svc = Mock()
-    svc.gerar.side_effect = CargoObrigatorioError(cargos=[{"codigo": "1"}], message="Selecione cargo")
+    svc.gerar.side_effect = CargoObrigatorioError(
+        cargos=[{"codigo": "1"}], message="Selecione cargo"
+    )
     mock_factory.return_value = svc
 
-    response = client.post(reverse("relatorio-list"), _payload("ATA_ESCOLHA"), format="json")
+    response = client.post(
+        reverse("relatorio-list"), _payload("ATA_ESCOLHA"), format="json"
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.data["error"] == "Selecione cargo"
     assert response.data["cargos"] == [{"codigo": "1"}]
 
 
-@patch("relatorios.views.relatorios.RelatorioFactory.obter_relatorio", side_effect=ValueError("tipo inválido"))
+@patch(
+    "relatorios.views.relatorios.RelatorioFactory.obter_relatorio",
+    side_effect=ValueError("tipo inválido"),
+)
 def test_create_handles_value_error(mock_factory, client):
-    response = client.post(reverse("relatorio-list"), _payload(), format="json")
+    response = client.post(
+        reverse("relatorio-list"), _payload(), format="json"
+    )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "tipo inválido" in response.data["error"]
 
@@ -91,6 +99,8 @@ def test_create_handles_generic_exception(mock_factory, client):
     svc.gerar.side_effect = RuntimeError("falha inesperada")
     mock_factory.return_value = svc
 
-    response = client.post(reverse("relatorio-list"), _payload(), format="json")
+    response = client.post(
+        reverse("relatorio-list"), _payload(), format="json"
+    )
     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert "Erro ao gerar relatório" in response.data["error"]

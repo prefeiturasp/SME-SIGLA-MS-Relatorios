@@ -1,1 +1,1 @@
-# Management commands for agenda app 
+# Management commands for agenda app
