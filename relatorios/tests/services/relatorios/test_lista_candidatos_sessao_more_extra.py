@@ -1,12 +1,13 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from django.http import HttpResponse
 from django.test import RequestFactory
 
 from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
-from relatorios.services.relatorios.lista_candidatos_sessao import ListaCandidatosSessao
-
+from relatorios.services.relatorios.lista_candidatos_sessao import (
+    ListaCandidatosSessao,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -27,22 +28,42 @@ class _Resp:
 def svc(settings):
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.AGENDAS_API_URL = "http://agendas"
-    cfg = ConfiguracaoRelatorio.objects.get_or_create(tipo="LISTA_CANDIDATOS_SESSAO")[0]
+    cfg = ConfiguracaoRelatorio.objects.get_or_create(
+        tipo="LISTA_CANDIDATOS_SESSAO"
+    )[0]
     par = Parametrizacao.objects.get_or_create(cabecalho="Cab Padrao")[0]
     return ListaCandidatosSessao(configuracao=cfg, parametrizacao=par)
 
 
 def test_fetch_candidatos_variants_and_build_context(svc, monkeypatch):
-    monkeypatch.setattr(svc.candidatos_service, "buscar_por_uuids", lambda **kw: _Resp({"results": [{"x": 1}]}))
+    monkeypatch.setattr(
+        svc.candidatos_service,
+        "buscar_por_uuids",
+        lambda **kw: _Resp({"results": [{"x": 1}]}),
+    )
     assert svc._fetch_candidatos(["u1"]) == [{"x": 1}]
-    monkeypatch.setattr(svc.candidatos_service, "buscar_por_uuids", lambda **kw: _Resp([{"y": 2}]))
+    monkeypatch.setattr(
+        svc.candidatos_service,
+        "buscar_por_uuids",
+        lambda **kw: _Resp([{"y": 2}]),
+    )
     assert svc._fetch_candidatos(["u1"]) == [{"y": 2}]
-    monkeypatch.setattr(svc.candidatos_service, "buscar_por_uuids", lambda **kw: _Resp("invalid"))
+    monkeypatch.setattr(
+        svc.candidatos_service,
+        "buscar_por_uuids",
+        lambda **kw: _Resp("invalid"),
+    )
     assert svc._fetch_candidatos(["u1"]) == []
     assert svc._fetch_candidatos([]) == []
 
     ctx = svc._build_context(
-        [{"classificacao": 1, "candidato": {"nome": "A", "cpf": "1"}, "codigo_inscricao": "X"}],
+        [
+            {
+                "classificacao": 1,
+                "candidato": {"nome": "A", "cpf": "1"},
+                "codigo_inscricao": "X",
+            }
+        ],
         {"sessao": "S1"},
     )
     assert ctx["agenda"]["sessao"] == "S1"
@@ -64,7 +85,16 @@ def test_render_xls_and_docx_with_logo_and_sections(svc):
                     "sessao": "S1",
                     "cargo_nome": "Professor",
                 },
-                "candidatos": [{"classificacao": 1, "classificacao_nna": None, "classificacao_pcd": None, "inscricao": "I1", "nome": "N1", "cpf": "C1"}],
+                "candidatos": [
+                    {
+                        "classificacao": 1,
+                        "classificacao_nna": None,
+                        "classificacao_pcd": None,
+                        "inscricao": "I1",
+                        "nome": "N1",
+                        "cpf": "C1",
+                    }
+                ],
             },
             {
                 "agenda": {"sessao": "S2"},
@@ -72,7 +102,10 @@ def test_render_xls_and_docx_with_logo_and_sections(svc):
             },
         ],
     }
-    with patch("relatorios.services.relatorios.lista_candidatos_sessao.requests.get", return_value=_Resp({})):
+    with patch(
+        "relatorios.services.relatorios.lista_candidatos_sessao.requests.get",
+        return_value=_Resp({}),
+    ):
         xls = svc._render_xls(context, filename="lista-extra.xlsx")
     docx = svc._render_docx(context, filename="lista-extra.docx")
     assert isinstance(xls, HttpResponse)
@@ -86,21 +119,47 @@ def test_gerar_docx_xls_and_exception_path(svc, monkeypatch):
     monkeypatch.setattr(
         svc.agendas_service,
         "buscar_agendas",
-        lambda **kw: _Resp({"results": [{"retardatario": False, "candidatos_uuids": ["u1"], "sessao": "S"}]}),
+        lambda **kw: _Resp(
+            {
+                "results": [
+                    {
+                        "retardatario": False,
+                        "candidatos_uuids": ["u1"],
+                        "sessao": "S",
+                    }
+                ]
+            }
+        ),
     )
     monkeypatch.setattr(
         svc.candidatos_service,
         "buscar_por_uuids",
-        lambda **kw: _Resp({"results": [{"classificacao": 1, "codigo_inscricao": "I", "candidato": {"nome": "N", "cpf": "C"}}]}),
+        lambda **kw: _Resp(
+            {
+                "results": [
+                    {
+                        "classificacao": 1,
+                        "codigo_inscricao": "I",
+                        "candidato": {"nome": "N", "cpf": "C"},
+                    }
+                ]
+            }
+        ),
     )
 
     with patch.object(svc, "_render_xls", return_value=HttpResponse("ok-xls")):
         r_xls, _ = svc.gerar("p1", req, formato="xls")
         assert r_xls.status_code == 200
-    with patch.object(svc, "_render_docx", return_value=HttpResponse("ok-docx")):
+    with patch.object(
+        svc, "_render_docx", return_value=HttpResponse("ok-docx")
+    ):
         r_docx, _ = svc.gerar("p1", req, formato="docx")
         assert r_docx.status_code == 200
 
-    monkeypatch.setattr(svc.agendas_service, "buscar_agendas", lambda **kw: (_ for _ in ()).throw(RuntimeError("erro agenda")))
+    monkeypatch.setattr(
+        svc.agendas_service,
+        "buscar_agendas",
+        lambda **kw: (_ for _ in ()).throw(RuntimeError("erro agenda")),
+    )
     with pytest.raises(RuntimeError):
         svc.gerar("p1", req, formato="html")

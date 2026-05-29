@@ -1,8 +1,10 @@
 """
 Configuração para testes do app relatorios.
 """
-import pytest
+
 import uuid
+
+import pytest
 
 from ..models import Relatorio
 
@@ -10,7 +12,8 @@ from ..models import Relatorio
 @pytest.fixture(autouse=True)
 def _remove_sigla_sdk_middlewares_for_tests(settings):
     settings.MIDDLEWARE = [
-        m for m in settings.MIDDLEWARE
+        m
+        for m in settings.MIDDLEWARE
         if not m.startswith("sigla_sdk.middlewares.")
     ]
 
