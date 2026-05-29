@@ -592,8 +592,7 @@ class AtaEscolhaService:
             )
 
             # Extrair códigos de cargo das agendas
-            agendas_data_temp = response_agendas.json()
-            breakpoint()
+            agendas_data_temp = response_agendas.json()            
             if (
                 isinstance(agendas_data_temp, dict)
                 and "results" in agendas_data_temp
@@ -689,7 +688,6 @@ class AtaEscolhaService:
                 self.processo_service.buscar_processo_convocacao(processo_uuid)
             )
             processo_data = response_processo.json()
-            breakpoint()
             classificacoes_pcd, classificacoes_nna, classificacoes_geral = (
                 [],
                 [],
@@ -723,7 +721,6 @@ class AtaEscolhaService:
                     uuids=todos_candidatos_uuids, order_by=ordering
                 )                         
                 dados_cargo = response_candidatos.json()
-                breakpoint()
                 if isinstance(dados_cargo, dict) and "results" in dados_cargo:
                     candidatos_cargo = dados_cargo["results"]
                 elif isinstance(dados_cargo, list):
@@ -737,7 +734,6 @@ class AtaEscolhaService:
 
                 # Separar por tipo e identificar lacunas por cargo (PCD primeiro)  # noqa: E501
                 candidatos_sep_cargo = self._separar_por_tipo(candidatos_cargo)
-                breakpoint()
                 lacunas_geral = []
                 lacunas_nna = []
                 lacunas_pcd = []
