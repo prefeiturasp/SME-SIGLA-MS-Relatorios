@@ -10,7 +10,6 @@ from relatorios.services.relatorios.nao_escolhas import SumulaNaoEscolhas
 from relatorios.services.relatorios.reconvocacao import SumulaReconvocacao
 from relatorios.services.relatorios.relacao_vagas import RelacaoVagas
 
-
 pytestmark = pytest.mark.django_db
 
 
@@ -22,11 +21,21 @@ def parametrizacao():
 @pytest.fixture
 def cfgs():
     return {
-        "nao": ConfiguracaoRelatorio.objects.get_or_create(tipo="SUMULA_NAO_ESCOLHAS")[0],
-        "reco": ConfiguracaoRelatorio.objects.get_or_create(tipo="SUMULA_RECONVOCACAO")[0],
-        "relacao": ConfiguracaoRelatorio.objects.get_or_create(tipo="RELACAO_VAGAS")[0],
-        "lauda_vagas": ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_VAGAS")[0],
-        "lauda_conv": ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_CONVOCACAO")[0],
+        "nao": ConfiguracaoRelatorio.objects.get_or_create(
+            tipo="SUMULA_NAO_ESCOLHAS"
+        )[0],
+        "reco": ConfiguracaoRelatorio.objects.get_or_create(
+            tipo="SUMULA_RECONVOCACAO"
+        )[0],
+        "relacao": ConfiguracaoRelatorio.objects.get_or_create(
+            tipo="RELACAO_VAGAS"
+        )[0],
+        "lauda_vagas": ConfiguracaoRelatorio.objects.get_or_create(
+            tipo="LAUDA_VAGAS"
+        )[0],
+        "lauda_conv": ConfiguracaoRelatorio.objects.get_or_create(
+            tipo="LAUDA_CONVOCACAO"
+        )[0],
     }
 
 
@@ -102,10 +111,14 @@ def _cargos_lauda_conv():
 
 
 def test_sumula_nao_escolhas_renderers(cfgs, parametrizacao):
-    svc = SumulaNaoEscolhas(configuracao=cfgs["nao"], parametrizacao=parametrizacao)
+    svc = SumulaNaoEscolhas(
+        configuracao=cfgs["nao"], parametrizacao=parametrizacao
+    )
     svc.context.update({"cargos": _cargos_candidatos(), "texto_final": "fim"})
     xls = svc.render_to_xls(context=svc.context, filename="nao.xlsx")
-    docx = svc.render_to_docx(_cargos_candidatos(), "cab", "fim", filename="nao.docx")
+    docx = svc.render_to_docx(
+        _cargos_candidatos(), "cab", "fim", filename="nao.docx"
+    )
     assert isinstance(xls, HttpResponse)
     assert isinstance(docx, HttpResponse)
     assert "nao.xlsx" in xls["Content-Disposition"]
@@ -113,10 +126,14 @@ def test_sumula_nao_escolhas_renderers(cfgs, parametrizacao):
 
 
 def test_sumula_reconvocacao_renderers(cfgs, parametrizacao):
-    svc = SumulaReconvocacao(configuracao=cfgs["reco"], parametrizacao=parametrizacao)
+    svc = SumulaReconvocacao(
+        configuracao=cfgs["reco"], parametrizacao=parametrizacao
+    )
     svc.context.update({"cargos": _cargos_candidatos(), "texto_final": "fim"})
     xls = svc.render_to_xls(context=svc.context, filename="reco.xlsx")
-    docx = svc.render_to_docx(_cargos_candidatos(), "cab", "fim", filename="reco.docx")
+    docx = svc.render_to_docx(
+        _cargos_candidatos(), "cab", "fim", filename="reco.docx"
+    )
     assert isinstance(xls, HttpResponse)
     assert isinstance(docx, HttpResponse)
     assert "reco.xlsx" in xls["Content-Disposition"]
@@ -124,10 +141,14 @@ def test_sumula_reconvocacao_renderers(cfgs, parametrizacao):
 
 
 def test_relacao_vagas_renderers(cfgs, parametrizacao):
-    svc = RelacaoVagas(configuracao=cfgs["relacao"], parametrizacao=parametrizacao)
+    svc = RelacaoVagas(
+        configuracao=cfgs["relacao"], parametrizacao=parametrizacao
+    )
     svc.context.update({"cargos": _cargos_dres_vagas(), "texto_final": "fim"})
     xls = svc.render_to_xls(context=svc.context, filename="relacao.xlsx")
-    docx = svc.render_to_docx(_cargos_dres_vagas(), "cab", "fim", filename="relacao.docx")
+    docx = svc.render_to_docx(
+        _cargos_dres_vagas(), "cab", "fim", filename="relacao.docx"
+    )
     assert isinstance(xls, HttpResponse)
     assert isinstance(docx, HttpResponse)
     assert "relacao.xlsx" in xls["Content-Disposition"]
@@ -135,10 +156,14 @@ def test_relacao_vagas_renderers(cfgs, parametrizacao):
 
 
 def test_lauda_vagas_renderers(cfgs, parametrizacao):
-    svc = LaudaVagas(configuracao=cfgs["lauda_vagas"], parametrizacao=parametrizacao)
+    svc = LaudaVagas(
+        configuracao=cfgs["lauda_vagas"], parametrizacao=parametrizacao
+    )
     svc.context.update({"cargos": _cargos_dres_vagas(), "texto_final": "fim"})
     xls = svc.render_to_xls(context=svc.context, filename="lauda-vagas.xlsx")
-    docx = svc.render_to_docx(_cargos_dres_vagas(), svc.context, "fim", filename="lauda-vagas.docx")
+    docx = svc.render_to_docx(
+        _cargos_dres_vagas(), svc.context, "fim", filename="lauda-vagas.docx"
+    )
     assert isinstance(xls, HttpResponse)
     assert isinstance(docx, HttpResponse)
     assert "lauda-vagas.xlsx" in xls["Content-Disposition"]
@@ -146,10 +171,16 @@ def test_lauda_vagas_renderers(cfgs, parametrizacao):
 
 
 def test_lauda_convocacao_renderers(cfgs, parametrizacao):
-    svc = LaudaConvocacao(configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao)
+    svc = LaudaConvocacao(
+        configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao
+    )
     svc.context.update({"texto_final": "fim"})
-    xls = svc._render_xls(_cargos_lauda_conv(), context=svc.context, filename="lauda-conv.xlsx")
-    docx = svc.render_to_docx(_cargos_lauda_conv(), svc.context, "fim", filename="lauda-conv.docx")
+    xls = svc._render_xls(
+        _cargos_lauda_conv(), context=svc.context, filename="lauda-conv.xlsx"
+    )
+    docx = svc.render_to_docx(
+        _cargos_lauda_conv(), svc.context, "fim", filename="lauda-conv.docx"
+    )
     assert isinstance(xls, HttpResponse)
     assert isinstance(docx, HttpResponse)
     assert "lauda-conv.xlsx" in xls["Content-Disposition"]
@@ -157,37 +188,101 @@ def test_lauda_convocacao_renderers(cfgs, parametrizacao):
 
 
 def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
-    nao = SumulaNaoEscolhas(configuracao=cfgs["nao"], parametrizacao=parametrizacao)
-    nao.context.update({"cargos": _cargos_candidatos(), "usar_logotipo": True, "logo_url": "http://x/logo.png"})
+    nao = SumulaNaoEscolhas(
+        configuracao=cfgs["nao"], parametrizacao=parametrizacao
+    )
+    nao.context.update(
+        {
+            "cargos": _cargos_candidatos(),
+            "usar_logotipo": True,
+            "logo_url": "http://x/logo.png",
+        }
+    )
 
-    reco = SumulaReconvocacao(configuracao=cfgs["reco"], parametrizacao=parametrizacao)
-    reco.context.update({"cargos": _cargos_candidatos(), "usar_logotipo": True, "logo_url": "http://x/logo.png"})
+    reco = SumulaReconvocacao(
+        configuracao=cfgs["reco"], parametrizacao=parametrizacao
+    )
+    reco.context.update(
+        {
+            "cargos": _cargos_candidatos(),
+            "usar_logotipo": True,
+            "logo_url": "http://x/logo.png",
+        }
+    )
 
-    relacao = RelacaoVagas(configuracao=cfgs["relacao"], parametrizacao=parametrizacao)
-    relacao.context.update({"cargos": _cargos_dres_vagas(), "usar_logotipo": True, "logo_url": "http://x/logo.png"})
+    relacao = RelacaoVagas(
+        configuracao=cfgs["relacao"], parametrizacao=parametrizacao
+    )
+    relacao.context.update(
+        {
+            "cargos": _cargos_dres_vagas(),
+            "usar_logotipo": True,
+            "logo_url": "http://x/logo.png",
+        }
+    )
 
-    lauda_vagas = LaudaVagas(configuracao=cfgs["lauda_vagas"], parametrizacao=parametrizacao)
-    lauda_vagas.context.update({"cargos": _cargos_dres_vagas(), "usar_logotipo": True, "logo_url": "http://x/logo.png"})
+    lauda_vagas = LaudaVagas(
+        configuracao=cfgs["lauda_vagas"], parametrizacao=parametrizacao
+    )
+    lauda_vagas.context.update(
+        {
+            "cargos": _cargos_dres_vagas(),
+            "usar_logotipo": True,
+            "logo_url": "http://x/logo.png",
+        }
+    )
 
-    lauda_conv = LaudaConvocacao(configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao)
-    lauda_conv.context.update({"usar_logotipo": True, "logo_url": "http://x/logo.png"})
+    lauda_conv = LaudaConvocacao(
+        configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao
+    )
+    lauda_conv.context.update(
+        {"usar_logotipo": True, "logo_url": "http://x/logo.png"}
+    )
 
-    with patch("relatorios.services.relatorios.nao_escolhas.requests.get", side_effect=RuntimeError("img err")):
+    with patch(
+        "relatorios.services.relatorios.nao_escolhas.requests.get",
+        side_effect=RuntimeError("img err"),
+    ):
         nao.render_to_xls(context=nao.context, filename="n.xlsx")
-    with patch("relatorios.services.relatorios.reconvocacao.requests.get", side_effect=RuntimeError("img err")):
+    with patch(
+        "relatorios.services.relatorios.reconvocacao.requests.get",
+        side_effect=RuntimeError("img err"),
+    ):
         reco.render_to_xls(context=reco.context, filename="r.xlsx")
-    with patch("relatorios.services.relatorios.relacao_vagas.requests.get", side_effect=RuntimeError("img err")):
+    with patch(
+        "relatorios.services.relatorios.relacao_vagas.requests.get",
+        side_effect=RuntimeError("img err"),
+    ):
         relacao.render_to_xls(context=relacao.context, filename="rv.xlsx")
-    with patch("relatorios.services.relatorios.lauda_vagas.requests.get", side_effect=RuntimeError("img err")):
-        lauda_vagas.render_to_xls(context=lauda_vagas.context, filename="lv.xlsx")
-    with patch("relatorios.services.relatorios.lauda_convocacao.requests.get", side_effect=RuntimeError("img err")):
-        lauda_conv._render_xls(_cargos_lauda_conv(), context=lauda_conv.context, filename="lc.xlsx")
+    with patch(
+        "relatorios.services.relatorios.lauda_vagas.requests.get",
+        side_effect=RuntimeError("img err"),
+    ):
+        lauda_vagas.render_to_xls(
+            context=lauda_vagas.context, filename="lv.xlsx"
+        )
+    with patch(
+        "relatorios.services.relatorios.lauda_convocacao.requests.get",
+        side_effect=RuntimeError("img err"),
+    ):
+        lauda_conv._render_xls(
+            _cargos_lauda_conv(),
+            context=lauda_conv.context,
+            filename="lc.xlsx",
+        )
 
 
 def test_gerar_else_json_path_lauda_convocacao(cfgs, parametrizacao):
-    svc = LaudaConvocacao(configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao)
+    svc = LaudaConvocacao(
+        configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao
+    )
     svc.lauda_service = Mock()
-    svc.lauda_service.processar_lauda_convocacao.return_value = {"cargos": [], "processo": "p1"}
-    resp, dados = svc.gerar("p1", Mock(build_absolute_uri=lambda x: x), formato="json")
+    svc.lauda_service.processar_lauda_convocacao.return_value = {
+        "cargos": [],
+        "processo": "p1",
+    }
+    resp, dados = svc.gerar(
+        "p1", Mock(build_absolute_uri=lambda x: x), formato="json"
+    )
     assert isinstance(resp, JsonResponse)
     assert dados["processo"] == "p1"

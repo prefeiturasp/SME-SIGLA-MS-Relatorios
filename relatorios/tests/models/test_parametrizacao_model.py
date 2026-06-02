@@ -1,10 +1,11 @@
 """
 Testes unitários para o model Parametrizacao usando pytest.
 """
+
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from relatorios.models import Parametrizacao
 
+from relatorios.models import Parametrizacao
 
 pytestmark = pytest.mark.django_db
 
@@ -21,13 +22,10 @@ def parametrizacao():
 def parametrizacao_com_logo():
     """Cria uma Parametrizacao com logo de teste."""
     logo = SimpleUploadedFile(
-        "logo.png",
-        b"fake image content",
-        content_type="image/png"
+        "logo.png", b"fake image content", content_type="image/png"
     )
     return Parametrizacao.objects.create(
-        cabecalho="<h1>Cabeçalho com Logo</h1>",
-        logo=logo
+        cabecalho="<h1>Cabeçalho com Logo</h1>", logo=logo
     )
 
 
@@ -52,7 +50,7 @@ class TestParametrizacaoModel:
         parametrizacao = Parametrizacao.objects.create(
             cabecalho="<h1>Teste</h1>"
         )
-        
+
         assert parametrizacao.pk is not None
         assert parametrizacao.cabecalho == "<h1>Teste</h1>"
         assert not parametrizacao.logo  # ImageField retorna False quando vazio
@@ -61,7 +59,7 @@ class TestParametrizacaoModel:
     def test_parametrizacao_with_default_cabecalho(self):
         """Testa criação de Parametrizacao com cabeçalho padrão vazio."""
         parametrizacao = Parametrizacao.objects.create()
-        
+
         assert parametrizacao.cabecalho == ""
         assert not parametrizacao.logo  # ImageField retorna False quando vazio
 
@@ -73,7 +71,9 @@ class TestParametrizacaoModel:
     def test_parametrizacao_uuid_auto_generated(self, parametrizacao):
         """Testa se UUID é gerado automaticamente."""
         assert parametrizacao.uuid is not None
-        assert isinstance(parametrizacao.uuid, str) or hasattr(parametrizacao.uuid, 'hex')
+        assert isinstance(parametrizacao.uuid, str) or hasattr(
+            parametrizacao.uuid, "hex"
+        )
 
     def test_parametrizacao_timestamps(self, parametrizacao):
         """Testa se timestamps são criados automaticamente."""
@@ -89,7 +89,7 @@ class TestParametrizacaoModel:
     def test_parametrizacao_ordering(self, parametrizacoes_multiplas):
         """Testa ordenação padrão do model (mais recente primeiro)."""
         parametrizacoes = Parametrizacao.objects.all()
-        
+
         # Verifica que está ordenado por -criado_em
         timestamps = [p.criado_em for p in parametrizacoes]
         assert timestamps == sorted(timestamps, reverse=True)
@@ -118,22 +118,21 @@ class TestParametrizacaoModel:
 
     def test_parametrizacao_verbose_names(self):
         """Testa se os verbose names estão configurados corretamente."""
-        assert Parametrizacao._meta.verbose_name == 'Parametrização'
-        assert Parametrizacao._meta.verbose_name_plural == 'Parametrizações'
+        assert Parametrizacao._meta.verbose_name == "Parametrização"
+        assert Parametrizacao._meta.verbose_name_plural == "Parametrizações"
 
     def test_parametrizacao_field_verbose_names(self):
         """Testa se os verbose names dos campos estão configurados."""
-        cabecalho_field = Parametrizacao._meta.get_field('cabecalho')
-        logo_field = Parametrizacao._meta.get_field('logo')
-        
+        cabecalho_field = Parametrizacao._meta.get_field("cabecalho")
+        logo_field = Parametrizacao._meta.get_field("logo")
+
         assert cabecalho_field.verbose_name == "Cabeçalho Padrão"
         assert logo_field.verbose_name == "Logo"
 
     def test_parametrizacao_field_help_texts(self):
         """Testa se os help texts dos campos estão configurados."""
-        cabecalho_field = Parametrizacao._meta.get_field('cabecalho')
-        logo_field = Parametrizacao._meta.get_field('logo')
-        
+        cabecalho_field = Parametrizacao._meta.get_field("cabecalho")
+        logo_field = Parametrizacao._meta.get_field("logo")
+
         assert "Cabeçalho padrão em HTML" in cabecalho_field.help_text
         assert "Logo para os relatórios" in logo_field.help_text
-

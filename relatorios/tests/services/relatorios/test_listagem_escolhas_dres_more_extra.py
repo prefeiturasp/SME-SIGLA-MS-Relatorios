@@ -4,8 +4,9 @@ import pytest
 from django.http import HttpResponse
 
 from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
-from relatorios.services.relatorios.listagem_escolhas_dres import ListagemEscolhasDres
-
+from relatorios.services.relatorios.listagem_escolhas_dres import (
+    ListagemEscolhasDres,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -19,7 +20,9 @@ class _ImgResp:
 
 @pytest.fixture
 def svc():
-    cfg = ConfiguracaoRelatorio.objects.get_or_create(tipo="LISTAGEM_ESCOLHAS_DRES")[0]
+    cfg = ConfiguracaoRelatorio.objects.get_or_create(
+        tipo="LISTAGEM_ESCOLHAS_DRES"
+    )[0]
     par = Parametrizacao.objects.get_or_create(cabecalho="Cabecalho Padrao")[0]
     return ListagemEscolhasDres(configuracao=cfg, parametrizacao=par)
 
@@ -69,8 +72,13 @@ def test_render_to_xls_with_logo_headers_and_footer(svc):
         "texto_final": "Rodape final",
     }
 
-    with patch("relatorios.services.relatorios.listagem_escolhas_dres.requests.get", return_value=_ImgResp()):
-        response = svc.render_to_xls(context=context, filename="listagem-extra.xlsx")
+    with patch(
+        "relatorios.services.relatorios.listagem_escolhas_dres.requests.get",
+        return_value=_ImgResp(),
+    ):
+        response = svc.render_to_xls(
+            context=context, filename="listagem-extra.xlsx"
+        )
 
     assert isinstance(response, HttpResponse)
     assert response.status_code == 200

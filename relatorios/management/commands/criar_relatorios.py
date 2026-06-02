@@ -1,29 +1,30 @@
 """
 Django management command to create sample relatorios.
 """
-from django.core.management.base import BaseCommand
-from relatorios.models import Relatorio
+
 import random
+
+from django.core.management.base import BaseCommand
+
+from relatorios.models import Relatorio
 
 
 class Command(BaseCommand):
-    help = 'Cria relatórios de exemplo para desenvolvimento'
+    help = "Cria relatórios de exemplo para desenvolvimento"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--count',
+            "--count",
             type=int,
             default=5,
-            help='Número de relatórios a serem criados (padrão: 5)'
+            help="Número de relatórios a serem criados (padrão: 5)",
         )
 
     def handle(self, *args, **options):
-        count = options['count']
-        
-        self.stdout.write(
-            self.style.SUCCESS(f'Criando {count} relatórios...')
-        )
-        
+        count = options["count"]
+
+        self.stdout.write(self.style.SUCCESS(f"Criando {count} relatórios..."))
+
         tipos = ["agenda", "convocacao", "selecao", "avaliacao"]
         criados = []
 
@@ -37,6 +38,6 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'✅ {len(criados)} relatórios criados com sucesso!'
+                f"✅ {len(criados)} relatórios criados com sucesso!"
             )
-        ) 
+        )
