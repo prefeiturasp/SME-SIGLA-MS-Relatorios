@@ -1,6 +1,4 @@
-"""
-Constantes para os tipos de relatórios disponíveis no sistema.
-"""
+"""Constantes para os tipos de relatórios disponíveis no sistema."""
 
 TIPOS_RELATORIOS = [
     ("LAUDA_VAGAS", "Lauda de Vagas"),

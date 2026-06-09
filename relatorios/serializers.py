@@ -1,3 +1,4 @@
+"""Módulo serializers."""
 from rest_framework import serializers
 
 from .models import ConfiguracaoRelatorio, Relatorio
@@ -7,6 +8,7 @@ class RelatorioSerializer(serializers.ModelSerializer):
     """Serializer para o modelo Relatorio."""
 
     class Meta:
+        """Define Meta."""
         model = Relatorio
         fields = [
             "uuid",
@@ -29,6 +31,7 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
     """Serializer para o modelo ConfiguracaoRelatorio."""
 
     class Meta:
+        """Define Meta."""
         model = ConfiguracaoRelatorio
         fields = [
             "uuid",

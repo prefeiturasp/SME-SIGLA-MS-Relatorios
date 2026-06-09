@@ -1,40 +1,27 @@
+"""Módulo utils."""
+from __future__ import annotations
+from typing import Any
 import logging
 import uuid
-
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-
 logger = logging.getLogger(__name__)
-
 DEFAULT_PAGE = 1
 DEFAULT_PAGE_SIZE = 10
 
-
 class CustomPagination(PageNumberPagination):
-    page = DEFAULT_PAGE
+    """Define CustomPagination."""
+    page = DEFAULT_PAGE  # type: ignore[assignment]
     page_size = DEFAULT_PAGE_SIZE
-    page_size_query_param = "page_size"
+    page_size_query_param = 'page_size'
 
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "links": {
-                    "next": self.get_next_link(),
-                    "previous": self.get_previous_link(),
-                },
-                "count": self.page.paginator.count,
-                "page": int(self.request.GET.get("page", DEFAULT_PAGE)),
-                "page_size": int(
-                    self.request.GET.get("page_size", self.page_size)
-                ),
-                "results": data,
-            }
-        )
+    def get_paginated_response(self, data: Any) -> Any:
+        """Executa get paginated response."""
+        return Response({'links': {'next': self.get_next_link(), 'previous': self.get_previous_link()}, 'count': self.page.paginator.count, 'page': int(self.request.GET.get('page', DEFAULT_PAGE)), 'page_size': int(self.request.GET.get('page_size', self.page_size)), 'results': data})  # type: ignore[has-type,union-attr]
 
+def convert_uuids_to_strings(obj: Any) -> Any:
+    """Converte recursivamente todos os objetos UUID para strings em uma estrutura.
 
-def convert_uuids_to_strings(obj):
-    """
-    Converte recursivamente todos os objetos UUID para strings em uma estrutura
     de dados.
 
     Args:
@@ -46,12 +33,10 @@ def convert_uuids_to_strings(obj):
     if isinstance(obj, uuid.UUID):
         return str(obj)
     elif isinstance(obj, dict):
-        return {
-            key: convert_uuids_to_strings(value) for key, value in obj.items()
-        }
+        return {key: convert_uuids_to_strings(value) for key, value in obj.items()}
     elif isinstance(obj, list):
         return [convert_uuids_to_strings(item) for item in obj]
     elif isinstance(obj, tuple):
-        return tuple(convert_uuids_to_strings(item) for item in obj)
+        return tuple((convert_uuids_to_strings(item) for item in obj))
     else:
         return obj
