@@ -1,73 +1,124 @@
 """Serviços para integração com API de candidatos."""
+
 from __future__ import annotations
-from typing import Any
+
 import logging
+
 import requests
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
+
 logger = logging.getLogger(__name__)
+
 
 class CandidatosService:
     """Service para integração com API de candidatos."""
 
-    def __init__(self, base_url: str='https://example.com', timeout_seconds: int=30) -> None:
+    def __init__(
+        self, base_url: str = "https://example.com", timeout_seconds: int = 30
+    ) -> None:
         """Inicializa o serviço de candidatos.
-        
+
         Args:
             self: Instância do objeto.
             base_url: URL base da API de candidatos.
             timeout_seconds: Timeout em segundos para as requisições.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
-        self._default_headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
+        self._default_headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
 
-    def buscar_habilitados(self, processo_uuid: str, codigo_cargo: list[str] | str | None=None, ordering: str='ranking_escolha') -> requests.Response:
+    def buscar_habilitados(
+        self,
+        processo_uuid: str,
+        codigo_cargo: list[str] | str | None = None,
+        ordering: str = "ranking_escolha",
+    ) -> requests.Response:
         """Busca candidatos habilitados por processo_uuid, ordenados por.
-        
+
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             codigo_cargo: Código(s) de cargo para filtragem (opcional).
             ordering: Campo para ordenação (padrão: 'ranking_escolha').
-        
+
         Returns:
             Resposta HTTP com o resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        url = f'{self.base_url}/api/v1/habilitados/'
-        params = {'processo_uuid': processo_uuid, 'ordering': ordering}
+        url = f"{self.base_url}/api/v1/habilitados/"
+        params = {"processo_uuid": processo_uuid, "ordering": ordering}
         if codigo_cargo is not None:
             if isinstance(codigo_cargo, list):
                 if len(codigo_cargo) > 1:
-                    params['codigo_cargo__in'] = ','.join((str(c) for c in codigo_cargo))
+                    params["codigo_cargo__in"] = ",".join(
+                        str(c) for c in codigo_cargo
+                    )
                 elif len(codigo_cargo) == 1:
-                    params['codigo_cargo'] = str(codigo_cargo[0])
+                    params["codigo_cargo"] = str(codigo_cargo[0])
             else:
                 codigo_cargo_param = str(codigo_cargo)
-                if ',' in codigo_cargo_param:
-                    params['codigo_cargo__in'] = codigo_cargo_param
+                if "," in codigo_cargo_param:
+                    params["codigo_cargo__in"] = codigo_cargo_param
                 else:
-                    params['codigo_cargo'] = codigo_cargo_param
-        logger.info('Buscando candidatos habilitados', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers})
+                    params["codigo_cargo"] = codigo_cargo_param
+        logger.info(
+            "Buscando candidatos habilitados",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+            },
+        )
         try:
-            response = http_client.get(url, params=params, headers=self._default_headers, timeout=self.timeout_seconds)
+            response = http_client.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error('Erro ao buscar candidatos habilitados (processo_uuid=%s, codigo_cargo=%s): %s', processo_uuid, params.get('codigo_cargo') or params.get('codigo_cargo__in'), exc)
+            logger.error(
+                "Erro ao buscar candidatos habilitados (processo_uuid=%s, codigo_cargo=%s): %s",
+                processo_uuid,
+                params.get("codigo_cargo") or params.get("codigo_cargo__in"),
+                exc,
+            )
             raise
-        logger.info('Candidatos habilitados buscados com sucesso', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'status_code': response.status_code, 'response': str(response.json())[:100]})
+        logger.info(
+            "Candidatos habilitados buscados com sucesso",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
         return response  # type: ignore[no-any-return]
 
-    def buscar_habilitados_por_processos_e_classificacoes(self, processo_uuids: list[str] | str, classificacao: list[int] | list[str] | str | None=None, classificacao_nna: list[int] | list[str] | str | None=None, codigo_cargo: list[str] | str | None=None, ordering: str='ranking_escolha') -> requests.Response:
+    def buscar_habilitados_por_processos_e_classificacoes(
+        self,
+        processo_uuids: list[str] | str,
+        classificacao: list[int] | list[str] | str | None = None,
+        classificacao_nna: list[int] | list[str] | str | None = None,
+        codigo_cargo: list[str] | str | None = None,
+        ordering: str = "ranking_escolha",
+    ) -> requests.Response:
         """Busca candidatos habilitados em múltiplos processos com classificações.
-        
+
         Args:
             self: Instância do objeto.
             processo_uuids: Lista de UUIDs dos processos ou string com UUIDs.
@@ -75,229 +126,436 @@ class CandidatosService:
             classificacao_nna: Lista de classificações NNA ou string com.
             codigo_cargo: Lista de códigos de cargo ou string com códigos.
             ordering: Campo para ordenação (padrão: 'ranking_escolha').
-        
+
         Returns:
             Resposta HTTP com o resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        url = f'{self.base_url}/api/v1/habilitados/'
+        url = f"{self.base_url}/api/v1/habilitados/"
         if isinstance(processo_uuids, list):
-            processo_uuid_param = ','.join(processo_uuids)
+            processo_uuid_param = ",".join(processo_uuids)
         else:
             processo_uuid_param = processo_uuids
-        params = {'ordering': ordering}
+        params = {"ordering": ordering}
         if isinstance(processo_uuids, list):
             if len(processo_uuids) > 1:
-                params['processo_uuid__in'] = ','.join(processo_uuids)
+                params["processo_uuid__in"] = ",".join(processo_uuids)
             else:
-                params['processo_uuid'] = processo_uuids[0]
-        elif ',' in processo_uuid_param:
-            params['processo_uuid__in'] = processo_uuid_param
+                params["processo_uuid"] = processo_uuids[0]
+        elif "," in processo_uuid_param:
+            params["processo_uuid__in"] = processo_uuid_param
         else:
-            params['processo_uuid'] = processo_uuid_param
+            params["processo_uuid"] = processo_uuid_param
         if classificacao is not None:
             if isinstance(classificacao, list):
-                classificacao_param = ','.join((str(c) for c in classificacao))
+                classificacao_param = ",".join(str(c) for c in classificacao)
                 if len(classificacao) > 1:
-                    params['classificacao__in'] = classificacao_param
+                    params["classificacao__in"] = classificacao_param
                 else:
-                    params['classificacao'] = classificacao_param
+                    params["classificacao"] = classificacao_param
             else:
                 classificacao_param = str(classificacao)
-                if ',' in classificacao_param:
-                    params['classificacao__in'] = classificacao_param
+                if "," in classificacao_param:
+                    params["classificacao__in"] = classificacao_param
                 else:
-                    params['classificacao'] = classificacao_param
+                    params["classificacao"] = classificacao_param
         if classificacao_nna is not None:
             if isinstance(classificacao_nna, list):
-                classificacao_nna_param = ','.join((str(c) for c in classificacao_nna))
+                classificacao_nna_param = ",".join(
+                    str(c) for c in classificacao_nna
+                )
                 if len(classificacao_nna) > 1:
-                    params['classificacao_nna__in'] = classificacao_nna_param
+                    params["classificacao_nna__in"] = classificacao_nna_param
                 else:
-                    params['classificacao_nna'] = classificacao_nna_param
+                    params["classificacao_nna"] = classificacao_nna_param
             else:
                 classificacao_nna_param = str(classificacao_nna)
-                if ',' in classificacao_nna_param:
-                    params['classificacao_nna__in'] = classificacao_nna_param
+                if "," in classificacao_nna_param:
+                    params["classificacao_nna__in"] = classificacao_nna_param
                 else:
-                    params['classificacao_nna'] = classificacao_nna_param
+                    params["classificacao_nna"] = classificacao_nna_param
         if codigo_cargo is not None:
             if isinstance(codigo_cargo, list):
-                codigo_cargo_param = ','.join((str(c) for c in codigo_cargo))
+                codigo_cargo_param = ",".join(str(c) for c in codigo_cargo)
                 if len(codigo_cargo) > 1:
-                    params['codigo_cargo__in'] = codigo_cargo_param
+                    params["codigo_cargo__in"] = codigo_cargo_param
                 else:
-                    params['codigo_cargo'] = codigo_cargo_param
+                    params["codigo_cargo"] = codigo_cargo_param
             else:
                 codigo_cargo_param = str(codigo_cargo)
-                if ',' in codigo_cargo_param:
-                    params['codigo_cargo__in'] = codigo_cargo_param
+                if "," in codigo_cargo_param:
+                    params["codigo_cargo__in"] = codigo_cargo_param
                 else:
-                    params['codigo_cargo'] = codigo_cargo_param
-        logger.info('Buscando candidatos habilitados por processos e classificações', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params})
+                    params["codigo_cargo"] = codigo_cargo_param
+        logger.info(
+            "Buscando candidatos habilitados por processos e classificações",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            },
+        )
         try:
-            response = http_client.get(url, params=params, headers=self._default_headers, timeout=self.timeout_seconds)
+            response = http_client.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error('Erro ao buscar candidatos habilitados (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s): %s', processo_uuid_param, params.get('classificacao'), params.get('classificacao_nna'), params.get('codigo_cargo'), exc)
+            logger.error(
+                "Erro ao buscar candidatos habilitados (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s): %s",
+                processo_uuid_param,
+                params.get("classificacao"),
+                params.get("classificacao_nna"),
+                params.get("codigo_cargo"),
+                exc,
+            )
             raise
-        logger.info('Candidatos habilitados buscados com sucesso', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params, 'status_code': response.status_code, 'response': str(response.json())[:100]})
+        logger.info(
+            "Candidatos habilitados buscados com sucesso",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
         return response  # type: ignore[no-any-return]
 
-    def buscar_por_uuids(self, uuids: list[str], order_by: str='ranking_escolha') -> requests.Response:
+    def buscar_por_uuids(
+        self, uuids: list[str], order_by: str = "ranking_escolha"
+    ) -> requests.Response:
         """Busca candidatos habilitados por uma lista de UUIDs usando método POST.
-        
+
         Args:
             self: Instância do objeto.
             uuids: Lista de UUIDs dos candidatos.
             order_by: Campo para ordenação (padrão: 'ranking_escolha').
-        
+
         Returns:
             Resposta HTTP com o resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        url = f'{self.base_url}/api/v1/habilitados/buscar-por-uuids/'
-        params = {'order_by': order_by}
-        payload = {'uuids': uuids}
-        logger.info('Buscando candidatos por UUIDs', extra={'correlation_id': get_correlation_id(), 'method': 'POST', 'params': params, 'payload': payload, 'url': url, 'headers': self._default_headers})
+        url = f"{self.base_url}/api/v1/habilitados/buscar-por-uuids/"
+        params = {"order_by": order_by}
+        payload = {"uuids": uuids}
+        logger.info(
+            "Buscando candidatos por UUIDs",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "params": params,
+                "payload": payload,
+                "url": url,
+                "headers": self._default_headers,
+            },
+        )
         try:
-            response = http_client.post(url, params=params, json=payload, headers=self._default_headers, timeout=self.timeout_seconds)
+            response = http_client.post(
+                url,
+                params=params,
+                json=payload,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error('Erro ao buscar candidatos por UUIDs (total_uuids=%d, order_by=%s): %s', len(uuids), order_by, exc)
+            logger.error(
+                "Erro ao buscar candidatos por UUIDs (total_uuids=%d, order_by=%s): %s",
+                len(uuids),
+                order_by,
+                exc,
+            )
             raise
-        logger.info('Candidatos buscados por UUIDs com sucesso', extra={'correlation_id': get_correlation_id(), 'method': 'POST', 'url': url, 'headers': self._default_headers, 'params': params, 'payload': payload, 'status_code': response.status_code, 'response': str(response.json())[:100]})
+        logger.info(
+            "Candidatos buscados por UUIDs com sucesso",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "payload": payload,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
         return response  # type: ignore[no-any-return]
 
-    def buscar_candidatos_por_agendas(self, agendas_response: requests.Response, order_by: str='ranking_escolha') -> dict:
+    def buscar_candidatos_por_agendas(
+        self,
+        agendas_response: requests.Response,
+        order_by: str = "ranking_escolha",
+    ) -> dict:
         """Itera sobre as agendas retornadas e busca candidatos para cada agenda.
-        
+
         Args:
             self: Instância do objeto.
             agendas_response: Response da API de agendas (deve conter 'results'.
             order_by: Campo para ordenação (padrão: 'ranking_escolha').
-        
+
         Returns:
             Dicionário com os dados processados.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
         try:
             agendas_data = agendas_response.json()
-            if isinstance(agendas_data, dict) and 'results' in agendas_data:
-                agendas = agendas_data['results']
+            if isinstance(agendas_data, dict) and "results" in agendas_data:
+                agendas = agendas_data["results"]
             elif isinstance(agendas_data, list):
                 agendas = agendas_data
             else:
                 agendas = []
-            logger.info('Processando %d agendas para buscar candidatos', len(agendas))
-            resultado = {'agendas': []}  # type: ignore[var-annotated]
+            logger.info(
+                "Processando %d agendas para buscar candidatos", len(agendas)
+            )
+            resultado = {"agendas": []}  # type: ignore[var-annotated]
             for agenda in agendas:
-                candidatos_uuids = agenda.get('candidatos_uuids', [])
+                candidatos_uuids = agenda.get("candidatos_uuids", [])
                 if not candidatos_uuids:
-                    logger.warning('Agenda %s não possui candidatos_uuids', agenda.get('uuid', 'desconhecido'))
-                    resultado['agendas'].append({'agenda': agenda, 'candidatos': []})
+                    logger.warning(
+                        "Agenda %s não possui candidatos_uuids",
+                        agenda.get("uuid", "desconhecido"),
+                    )
+                    resultado["agendas"].append(
+                        {"agenda": agenda, "candidatos": []}
+                    )
                     continue
                 try:
-                    response_candidatos = self.buscar_por_uuids(uuids=candidatos_uuids, order_by=order_by)
+                    response_candidatos = self.buscar_por_uuids(
+                        uuids=candidatos_uuids, order_by=order_by
+                    )
                     candidatos_data = response_candidatos.json()
-                    if isinstance(candidatos_data, dict) and 'results' in candidatos_data:
-                        candidatos = candidatos_data['results']
+                    if (
+                        isinstance(candidatos_data, dict)
+                        and "results" in candidatos_data
+                    ):
+                        candidatos = candidatos_data["results"]
                     elif isinstance(candidatos_data, list):
                         candidatos = candidatos_data
                     else:
                         candidatos = []
-                    logger.info('Encontrados %d candidatos para agenda %s (de %d UUIDs)', len(candidatos), agenda.get('uuid', 'desconhecido'), len(candidatos_uuids))
-                    resultado['agendas'].append({'agenda': agenda, 'candidatos': candidatos})
+                    logger.info(
+                        "Encontrados %d candidatos para agenda %s (de %d UUIDs)",
+                        len(candidatos),
+                        agenda.get("uuid", "desconhecido"),
+                        len(candidatos_uuids),
+                    )
+                    resultado["agendas"].append(
+                        {"agenda": agenda, "candidatos": candidatos}
+                    )
                 except RequestException as exc:
-                    logger.error('Erro ao buscar candidatos para agenda %s: %s', agenda.get('uuid', 'desconhecido'), exc)
-                    resultado['agendas'].append({'agenda': agenda, 'candidatos': [], 'erro': str(exc)})
-            logger.info('Processamento concluído: %d agendas processadas', len(resultado['agendas']))
+                    logger.error(
+                        "Erro ao buscar candidatos para agenda %s: %s",
+                        agenda.get("uuid", "desconhecido"),
+                        exc,
+                    )
+                    resultado["agendas"].append(
+                        {"agenda": agenda, "candidatos": [], "erro": str(exc)}
+                    )
+            logger.info(
+                "Processamento concluído: %d agendas processadas",
+                len(resultado["agendas"]),
+            )
             return resultado
         except Exception as exc:
-            logger.error('Erro ao processar agendas e buscar candidatos: %s', exc)
+            logger.error(
+                "Erro ao processar agendas e buscar candidatos: %s", exc
+            )
             raise
 
-    def buscar_concurso_candidatos_por_processo(self, processo_uuid: str) -> requests.Response:
+    def buscar_concurso_candidatos_por_processo(
+        self, processo_uuid: str
+    ) -> requests.Response:
         """Busca ConcursoCandidato por processo_uuid.
-        
+
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-        
+
         Returns:
             Resposta HTTP com o resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        url = f'{self.base_url}/api/v1/habilitados/'
-        params = {'processo_uuid': processo_uuid, 'page_size': 10000}
-        logger.info('Buscando ConcursoCandidato', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params})
+        url = f"{self.base_url}/api/v1/habilitados/"
+        params = {"processo_uuid": processo_uuid, "page_size": 10000}
+        logger.info(
+            "Buscando ConcursoCandidato",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            },
+        )
         try:
-            response = http_client.get(url, params=params, headers=self._default_headers, timeout=self.timeout_seconds)
+            response = http_client.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error('Erro ao buscar ConcursoCandidato: %s', exc)
+            logger.error("Erro ao buscar ConcursoCandidato: %s", exc)
             raise
-        logger.info('ConcursoCandidato encontrado', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params, 'status_code': response.status_code, 'response': str(response.json())[:100]})
+        logger.info(
+            "ConcursoCandidato encontrado",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
         return response  # type: ignore[no-any-return]
 
-    def buscar_reclassificados_por_concurso(self, concurso_uuid: str, processo_uuid: str) -> requests.Response:
+    def buscar_reclassificados_por_concurso(
+        self, concurso_uuid: str, processo_uuid: str
+    ) -> requests.Response:
         """Busca candidatos reclassificados (de NNA/PCD -> GERAL) por.
-        
+
         Args:
             self: Instância do objeto.
             concurso_uuid: Parâmetro concurso uuid da operação.
             processo_uuid: Parâmetro processo uuid da operação.
-        
+
         Returns:
             Resposta HTTP com o resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        url = f'{self.base_url}/api/v1/reclassificados/'
-        params = {'concurso_uuid': concurso_uuid, 'processo_uuid': processo_uuid}
-        logger.info('Buscando reclassificados', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params})
+        url = f"{self.base_url}/api/v1/reclassificados/"
+        params = {
+            "concurso_uuid": concurso_uuid,
+            "processo_uuid": processo_uuid,
+        }
+        logger.info(
+            "Buscando reclassificados",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            },
+        )
         try:
-            response = http_client.get(url, params=params, headers=self._default_headers, timeout=self.timeout_seconds)
+            response = http_client.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error('Erro ao buscar reclassificados (concurso_uuid=%s): %s', concurso_uuid, exc)
+            logger.error(
+                "Erro ao buscar reclassificados (concurso_uuid=%s): %s",
+                concurso_uuid,
+                exc,
+            )
             raise
-        logger.info('Reclassificados encontrados', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params, 'status_code': response.status_code, 'response': str(response.json())[:100]})
+        logger.info(
+            "Reclassificados encontrados",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
         return response  # type: ignore[no-any-return]
 
-    def buscar_eliminados_por_concurso(self, concurso_uuid: str, processo_uuid: str, classificacao_max: int, classificacao_min: int) -> requests.Response:
+    def buscar_eliminados_por_concurso(
+        self,
+        concurso_uuid: str,
+        processo_uuid: str,
+        classificacao_max: int,
+        classificacao_min: int,
+    ) -> requests.Response:
         """Busca candidatos eliminados por concurso_uuid e classificacao_max e.
-        
+
         Args:
             self: Instância do objeto.
             concurso_uuid: Parâmetro concurso uuid da operação.
             processo_uuid: Parâmetro processo uuid da operação.
             classificacao_max: Parâmetro classificacao max da operação.
             classificacao_min: Parâmetro classificacao min da operação.
-        
+
         Returns:
             Resposta HTTP com o resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
-        url = f'{self.base_url}/api/v1/eliminados/'
-        params = {'concurso_uuid': concurso_uuid, 'processo_uuid': processo_uuid, 'classificacao_max': classificacao_max, 'classificacao_min': classificacao_min}
-        logger.info('Buscando eliminados', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params})
+        url = f"{self.base_url}/api/v1/eliminados/"
+        params = {
+            "concurso_uuid": concurso_uuid,
+            "processo_uuid": processo_uuid,
+            "classificacao_max": classificacao_max,
+            "classificacao_min": classificacao_min,
+        }
+        logger.info(
+            "Buscando eliminados",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+            },
+        )
         try:
-            response = http_client.get(url, params=params, headers=self._default_headers, timeout=self.timeout_seconds)
+            response = http_client.get(
+                url,
+                params=params,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error('Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s', concurso_uuid, processo_uuid, classificacao_max, classificacao_min, exc)
+            logger.error(
+                "Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s",
+                concurso_uuid,
+                processo_uuid,
+                classificacao_max,
+                classificacao_min,
+                exc,
+            )
             raise
-        logger.info('Eliminados encontrados', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'params': params, 'status_code': response.status_code, 'response': str(response.json())[:100]})
+        logger.info(
+            "Eliminados encontrados",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "GET",
+                "url": url,
+                "headers": self._default_headers,
+                "params": params,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
         return response  # type: ignore[no-any-return]

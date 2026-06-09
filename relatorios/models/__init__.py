@@ -1,4 +1,5 @@
 """Módulo models/__init__."""
+
 from .base import BaseModel
 from .configuracao_relatorio import ConfiguracaoRelatorio
 from .constants import TIPOS_RELATORIOS

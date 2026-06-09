@@ -1,22 +1,28 @@
 """Implementação concreta do relatório de Listagem de Escolhas por DREs."""
+
 from __future__ import annotations
-from typing import Any
+
 import logging
 import os
 import tempfile
 from io import BytesIO
+from typing import Any
+
 import requests
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
+
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.candidatos_api_service import CandidatosService
 from relatorios.services.escolhas_api_service import EscolhasService
 from relatorios.utils import convert_uuids_to_strings
+
 try:
     from openpyxl import Workbook
     from openpyxl.drawing.image import Image as XLImage
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
@@ -27,67 +33,101 @@ try:
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Cm, Inches, Pt, RGBColor
+
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
 logger = logging.getLogger(__name__)
 
+
 class ListagemEscolhasDres(RelatorioBase):
-    """Classe concreta responsável por gerar o relatório de Listagem de Escolhas."""
-    TEMPLATE_NAME = 'relatorios/listagem_escolhas_dres.html'
+    """Classe concreta responsável por gerar o relatório de Listagem de."""
+
+    TEMPLATE_NAME = "relatorios/listagem_escolhas_dres.html"
 
     def __init__(self, **kwargs: Any) -> None:
         """Inicializa o service com as dependências necessárias.
-        
+
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
-        self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
-        self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
+        self.escolhas_service = EscolhasService(
+            base_url=settings.ESCOLHAS_API_URL
+        )
+        self.candidatos_service = CandidatosService(
+            base_url=settings.CANDIDATOS_API_URL
+        )
 
-    def render_to_xls(self, context: Any=None, filename: Any='listagem_escolhas_dres.xlsx') -> Any:
+    def render_to_xls(
+        self,
+        context: Any = None,
+        filename: Any = "listagem_escolhas_dres.xlsx",
+    ) -> Any:
         """Gera um arquivo Excel (XLSX) com a listagem de escolhas.
-        
+
         Args:
             self: Instância do objeto.
             context: Contexto do relatório.
             filename: Nome do arquivo Excel gerado.
-        
+
         Returns:
             Resultado da operação.
-        
+
         Raises:
             ImportError: Se ocorrer erro nesta operação.
         """
         if context is None:
             context = {}
         if not OPENPYXL_AVAILABLE:
-            raise ImportError('openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0')
+            raise ImportError(
+                "openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0"  # noqa: E501
+            )
         try:
             wb = Workbook()
             ws = wb.active
-            ws.title = 'Listagem de Escolhas'
-            header_fill = PatternFill(start_color='4a5568', end_color='4a5568', fill_type='solid')
-            header_font = Font(bold=True, color='FFFFFF', size=10)
+            ws.title = "Listagem de Escolhas"
+            header_fill = PatternFill(
+                start_color="4a5568", end_color="4a5568", fill_type="solid"
+            )
+            header_font = Font(bold=True, color="FFFFFF", size=10)
             normal_font = Font(size=9)
             title_font = Font(bold=True, size=12)
-            border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-            center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
-            left_align = Alignment(horizontal='left', vertical='center', wrap_text=True)
-            center_wrap_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            border = Border(
+                left=Side(style="thin"),
+                right=Side(style="thin"),
+                top=Side(style="thin"),
+                bottom=Side(style="thin"),
+            )
+            center_align = Alignment(
+                horizontal="center", vertical="center", wrap_text=True
+            )
+            left_align = Alignment(
+                horizontal="left", vertical="center", wrap_text=True
+            )
+            center_wrap_align = Alignment(
+                horizontal="center", vertical="center", wrap_text=True
+            )
             row = 1
             temp_image_paths = []
-            logo_url = (context or self.context).get('logo_url') if context or self.context else ''
-            if context.get('usar_logotipo') and logo_url:
+            logo_url = (
+                (context or self.context).get("logo_url")
+                if context or self.context
+                else ""
+            )
+            if context.get("usar_logotipo") and logo_url:
                 image_path = None
                 try:
-                    if logo_url.startswith('http://') or logo_url.startswith('https://'):
-                        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmpf:
+                    if logo_url.startswith("http://") or logo_url.startswith(
+                        "https://"
+                    ):
+                        with tempfile.NamedTemporaryFile(
+                            suffix=".png", delete=False
+                        ) as tmpf:
                             resp = requests.get(logo_url, timeout=15)
                             resp.raise_for_status()
                             tmpf.write(resp.content)
@@ -102,63 +142,92 @@ class ListagemEscolhasDres(RelatorioBase):
                             img.height = 90
                         except Exception:
                             pass
-                        ws.add_image(img, 'B1')
+                        ws.add_image(img, "B1")
                         row = max(row, 8)
                 except Exception as exc:
-                    logger.warning('Não foi possível inserir o logotipo no XLS (listagem_escolhas_dres): %s', exc)
-            cabecalho_padrao = self.context.get('cabecalho_padrao', '')
+                    logger.warning(
+                        "Não foi possível inserir o logotipo no XLS (listagem_escolhas_dres): %s",  # noqa: E501
+                        exc,
+                    )
+            cabecalho_padrao = self.context.get("cabecalho_padrao", "")
             if cabecalho_padrao:
-                ws.merge_cells(f'A{row}:O{row}')
-                cell = ws[f'A{row}']
+                ws.merge_cells(f"A{row}:O{row}")
+                cell = ws[f"A{row}"]
                 cell.value = self.processar_cabecalho_html(cabecalho_padrao)
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-            if self.context.get('cabecalho'):
-                ws.merge_cells(f'A{row}:O{row}')
-                cell = ws[f'A{row}']
-                cell.value = self.processar_cabecalho_html(self.context['cabecalho'])
+            if self.context.get("cabecalho"):
+                ws.merge_cells(f"A{row}:O{row}")
+                cell = ws[f"A{row}"]
+                cell.value = self.processar_cabecalho_html(
+                    self.context["cabecalho"]
+                )
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-            ws.merge_cells(f'A{row}:O{row}')
-            cell = ws[f'A{row}']
-            cell.value = 'Listagem de Escolhas por DREs'
+            ws.merge_cells(f"A{row}:O{row}")
+            cell = ws[f"A{row}"]
+            cell.value = "Listagem de Escolhas por DREs"
             cell.font = title_font
             cell.alignment = center_align
             row += 2
-            headers = ['Cargo', 'Class', 'Def', 'NNA', 'RF', 'RG', 'CPF', 'Inscrição', 'Nome', 'Telefone', 'DRE', 'Código EOL', 'Tipo da unidade', 'Unidade', 'Tipo da vaga']
+            headers = [
+                "Cargo",
+                "Class",
+                "Def",
+                "NNA",
+                "RF",
+                "RG",
+                "CPF",
+                "Inscrição",
+                "Nome",
+                "Telefone",
+                "DRE",
+                "Código EOL",
+                "Tipo da unidade",
+                "Unidade",
+                "Tipo da vaga",
+            ]
             for col, header in enumerate(headers, start=1):
                 cell = ws.cell(row=row, column=col)
                 cell.value = header
                 cell.fill = header_fill
                 cell.font = header_font
-                cell.alignment = center_align if col in [2, 3, 4, 12, 15] else left_align
+                cell.alignment = (
+                    center_align if col in [2, 3, 4, 12, 15] else left_align
+                )
                 cell.border = border
             header_row = row
             row += 1
-            for item in context.get('escolhas', []):
-                ws.cell(row=row, column=1).value = item.get('cargo', '-')
-                ws.cell(row=row, column=2).value = item.get('classificacao', '-')
-                ws.cell(row=row, column=3).value = item.get('classificacao_deficiente', '-')
-                ws.cell(row=row, column=4).value = item.get('classificacao_nna', '-')
-                ws.cell(row=row, column=5).value = item.get('rf', '-')
-                ws.cell(row=row, column=6).value = item.get('rg', '-')
-                ws.cell(row=row, column=7).value = item.get('cpf', '-')
-                ws.cell(row=row, column=8).value = item.get('inscricao', '-')
-                ws.cell(row=row, column=9).value = item.get('nome', '-')
-                ws.cell(row=row, column=10).value = item.get('telefone', '-')
-                ws.cell(row=row, column=11).value = item.get('dre', '-')
-                ws.cell(row=row, column=12).value = item.get('codigo_eol', '-')
-                ws.cell(row=row, column=13).value = item.get('tipo_ue', '-')
-                ws.cell(row=row, column=14).value = item.get('unidade', '-')
-                tipo_vaga = item.get('tipo_vaga', '-')
+            for item in context.get("escolhas", []):
+                ws.cell(row=row, column=1).value = item.get("cargo", "-")
+                ws.cell(row=row, column=2).value = item.get(
+                    "classificacao", "-"
+                )
+                ws.cell(row=row, column=3).value = item.get(
+                    "classificacao_deficiente", "-"
+                )
+                ws.cell(row=row, column=4).value = item.get(
+                    "classificacao_nna", "-"
+                )
+                ws.cell(row=row, column=5).value = item.get("rf", "-")
+                ws.cell(row=row, column=6).value = item.get("rg", "-")
+                ws.cell(row=row, column=7).value = item.get("cpf", "-")
+                ws.cell(row=row, column=8).value = item.get("inscricao", "-")
+                ws.cell(row=row, column=9).value = item.get("nome", "-")
+                ws.cell(row=row, column=10).value = item.get("telefone", "-")
+                ws.cell(row=row, column=11).value = item.get("dre", "-")
+                ws.cell(row=row, column=12).value = item.get("codigo_eol", "-")
+                ws.cell(row=row, column=13).value = item.get("tipo_ue", "-")
+                ws.cell(row=row, column=14).value = item.get("unidade", "-")
+                tipo_vaga = item.get("tipo_vaga", "-")
                 cell_vaga = ws.cell(row=row, column=15)
                 cell_vaga.value = tipo_vaga
-                if tipo_vaga == 'D':
-                    cell_vaga.font = Font(bold=True, size=9, color='2d5016')
-                elif tipo_vaga == 'P':
-                    cell_vaga.font = Font(bold=True, size=9, color='d97706')
+                if tipo_vaga == "D":
+                    cell_vaga.font = Font(bold=True, size=9, color="2d5016")
+                elif tipo_vaga == "P":
+                    cell_vaga.font = Font(bold=True, size=9, color="d97706")
                 for col in range(1, 16):
                     cell = ws.cell(row=row, column=col)
                     cell.border = border
@@ -168,23 +237,45 @@ class ListagemEscolhasDres(RelatorioBase):
                     else:
                         cell.alignment = left_align
                 row += 1
-            ws.merge_cells(f'A{row}:O{row}')
-            cell = ws[f'A{row}']
-            cell.value = f'Total de escolhas: {len(context.get('escolhas', []))}'
+            ws.merge_cells(f"A{row}:O{row}")
+            cell = ws[f"A{row}"]
+            cell.value = (
+                f'Total de escolhas: {len(context.get('escolhas', []))}'
+            )
             cell.font = Font(bold=True, size=9)
-            cell.alignment = Alignment(horizontal='right', vertical='center')
+            cell.alignment = Alignment(horizontal="right", vertical="center")
             row += 1
-            column_widths = {'A': 25, 'B': 8, 'C': 8, 'D': 8, 'E': 12, 'F': 15, 'G': 15, 'H': 12, 'I': 30, 'J': 15, 'K': 35, 'L': 12, 'M': 15, 'N': 40, 'O': 10}
+            column_widths = {
+                "A": 25,
+                "B": 8,
+                "C": 8,
+                "D": 8,
+                "E": 12,
+                "F": 15,
+                "G": 15,
+                "H": 12,
+                "I": 30,
+                "J": 15,
+                "K": 35,
+                "L": 12,
+                "M": 15,
+                "N": 40,
+                "O": 10,
+            }
             for col_letter, width in column_widths.items():
                 ws.column_dimensions[col_letter].width = width
-            ws.freeze_panes = f'A{header_row + 1}'
-            if context.get('texto_final'):
+            ws.freeze_panes = f"A{header_row + 1}"
+            if context.get("texto_final"):
                 row += 1
-                ws.merge_cells(f'A{row}:O{row}')
-                cell = ws[f'A{row}']
-                cell.value = self.processar_cabecalho_html(context.get('texto_final'))
+                ws.merge_cells(f"A{row}:O{row}")
+                cell = ws[f"A{row}"]
+                cell.value = self.processar_cabecalho_html(
+                    context.get("texto_final")
+                )
                 cell.font = normal_font
-                cell.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+                cell.alignment = Alignment(
+                    horizontal="left", vertical="top", wrap_text=True
+                )
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
@@ -194,31 +285,44 @@ class ListagemEscolhasDres(RelatorioBase):
                         os.unlink(p)
                 except Exception:
                     pass
-            response = HttpResponse(buffer.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            response = HttpResponse(
+                buffer.read(),
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+            response["Content-Disposition"] = (
+                f'attachment; filename="{filename}"'
+            )
             return response
         except Exception as exc:
-            logger.error('Erro ao gerar Excel: %s', exc, exc_info=True)
+            logger.error("Erro ao gerar Excel: %s", exc, exc_info=True)
             raise
 
-    def render_to_docx(self, escolhas_list: Any, cabecalho: Any, texto_final: Any, filename: Any='listagem_escolhas_dres.docx') -> Any:
+    def render_to_docx(
+        self,
+        escolhas_list: Any,
+        cabecalho: Any,
+        texto_final: Any,
+        filename: Any = "listagem_escolhas_dres.docx",
+    ) -> Any:
         """Gera um arquivo Word (DOCX) com a listagem de escolhas.
-        
+
         Args:
             self: Instância do objeto.
             escolhas_list: Lista de escolhas com dados dos candidatos.
             cabecalho: Texto do cabeçalho do relatório.
             texto_final: Texto final do relatório.
             filename: Nome do arquivo Word gerado.
-        
+
         Returns:
             Resultado da operação.
-        
+
         Raises:
             ImportError: Se ocorrer erro nesta operação.
         """
         if not DOCX_AVAILABLE:
-            raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=1.1.0')
+            raise ImportError(
+                "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"  # noqa: E501
+            )
         try:
             doc = Document()
             section = doc.sections[0]
@@ -230,7 +334,10 @@ class ListagemEscolhasDres(RelatorioBase):
             section.left_margin = Inches(1)
             section.right_margin = Inches(1)
             RGBColor(74, 85, 104)
-            for cab in [self.context.get('cabecalho_padrao', ''), self.context.get('cabecalho', '')]:
+            for cab in [
+                self.context.get("cabecalho_padrao", ""),
+                self.context.get("cabecalho", ""),
+            ]:
                 if cab:
                     p = doc.add_paragraph()
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -240,63 +347,93 @@ class ListagemEscolhasDres(RelatorioBase):
                     doc.add_paragraph()
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = p.add_run('Listagem de Escolhas por DREs')
+            run = p.add_run("Listagem de Escolhas por DREs")
             run.font.size = Pt(14)
             run.font.bold = True
             doc.add_paragraph()
-            headers = ['Cargo', 'Class', 'Def', 'NNA', 'RF', 'RG', 'CPF', 'Inscrição', 'Nome', 'Telefone', 'DRE', 'Código EOL', 'Tipo da unidade', 'Unidade', 'Tipo da vaga']
+            headers = [
+                "Cargo",
+                "Class",
+                "Def",
+                "NNA",
+                "RF",
+                "RG",
+                "CPF",
+                "Inscrição",
+                "Nome",
+                "Telefone",
+                "DRE",
+                "Código EOL",
+                "Tipo da unidade",
+                "Unidade",
+                "Tipo da vaga",
+            ]
             table = doc.add_table(rows=1, cols=len(headers))
-            table.style = 'Light Grid Accent 1'
+            table.style = "Light Grid Accent 1"
             header_cells = table.rows[0].cells
             for i, header in enumerate(headers):
                 cell = header_cells[i]
                 cell.text = header
-                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER if i in [1, 2, 3, 11, 14] else WD_ALIGN_PARAGRAPH.LEFT
+                cell.paragraphs[0].alignment = (
+                    WD_ALIGN_PARAGRAPH.CENTER
+                    if i in [1, 2, 3, 11, 14]
+                    else WD_ALIGN_PARAGRAPH.LEFT
+                )
                 cell.paragraphs[0].runs[0].font.bold = True
                 cell.paragraphs[0].runs[0].font.size = Pt(7)
-                cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
+                cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(
+                    255, 255, 255
+                )
                 tc_pr = cell._element.get_or_add_tcPr()
-                existing_shd = tc_pr.find(qn('w:shd'))
+                existing_shd = tc_pr.find(qn("w:shd"))
                 if existing_shd is not None:
                     tc_pr.remove(existing_shd)
-                shading_elm = OxmlElement('w:shd')
-                shading_elm.set(qn('w:fill'), '4a5568')
-                shading_elm.set(qn('w:val'), 'clear')
+                shading_elm = OxmlElement("w:shd")
+                shading_elm.set(qn("w:fill"), "4a5568")
+                shading_elm.set(qn("w:val"), "clear")
                 tc_pr.append(shading_elm)
             for item in escolhas_list:
                 row_cells = table.add_row().cells
-                row_cells[0].text = str(item.get('cargo', '-'))
-                row_cells[1].text = str(item.get('classificacao', '-'))
-                row_cells[2].text = str(item.get('classificacao_deficiente', '-'))
-                row_cells[3].text = str(item.get('classificacao_nna', '-'))
-                row_cells[4].text = str(item.get('rf', '-'))
-                row_cells[5].text = str(item.get('rg', '-'))
-                row_cells[6].text = str(item.get('cpf', '-'))
-                row_cells[7].text = str(item.get('inscricao', '-'))
-                row_cells[8].text = str(item.get('nome', '-'))
-                row_cells[9].text = str(item.get('telefone', '-'))
-                row_cells[10].text = str(item.get('dre', '-'))
-                row_cells[11].text = str(item.get('codigo_eol', '-'))
-                row_cells[12].text = str(item.get('tipo_ue', '-'))
-                row_cells[13].text = str(item.get('unidade', '-'))
-                tipo_vaga = item.get('tipo_vaga', '-')
+                row_cells[0].text = str(item.get("cargo", "-"))
+                row_cells[1].text = str(item.get("classificacao", "-"))
+                row_cells[2].text = str(
+                    item.get("classificacao_deficiente", "-")
+                )
+                row_cells[3].text = str(item.get("classificacao_nna", "-"))
+                row_cells[4].text = str(item.get("rf", "-"))
+                row_cells[5].text = str(item.get("rg", "-"))
+                row_cells[6].text = str(item.get("cpf", "-"))
+                row_cells[7].text = str(item.get("inscricao", "-"))
+                row_cells[8].text = str(item.get("nome", "-"))
+                row_cells[9].text = str(item.get("telefone", "-"))
+                row_cells[10].text = str(item.get("dre", "-"))
+                row_cells[11].text = str(item.get("codigo_eol", "-"))
+                row_cells[12].text = str(item.get("tipo_ue", "-"))
+                row_cells[13].text = str(item.get("unidade", "-"))
+                tipo_vaga = item.get("tipo_vaga", "-")
                 row_cells[14].text = str(tipo_vaga)
-                if tipo_vaga == 'D':
+                if tipo_vaga == "D":
                     row_cells[14].paragraphs[0].runs[0].font.bold = True
-                    row_cells[14].paragraphs[0].runs[0].font.color.rgb = RGBColor(45, 80, 22)
-                elif tipo_vaga == 'P':
+                    row_cells[14].paragraphs[0].runs[
+                        0
+                    ].font.color.rgb = RGBColor(45, 80, 22)
+                elif tipo_vaga == "P":
                     row_cells[14].paragraphs[0].runs[0].font.bold = True
-                    row_cells[14].paragraphs[0].runs[0].font.color.rgb = RGBColor(217, 119, 6)
+                    row_cells[14].paragraphs[0].runs[
+                        0
+                    ].font.color.rgb = RGBColor(217, 119, 6)
                 for i, cell in enumerate(row_cells):
                     if i in [1, 2, 3, 11, 14]:
-                        cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        cell.paragraphs[
+                            0
+                        ].alignment = WD_ALIGN_PARAGRAPH.CENTER
                     else:
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                     cell.paragraphs[0].runs[0].font.size = Pt(7)
             doc.add_paragraph()
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-            run = p.add_run(f'Total de escolhas: {len(escolhas_list)}')
+            run = p.add_run(f"Total de escolhas: {len(escolhas_list)}")
             run.font.size = Pt(9)
             run.font.bold = True
             if texto_final:
@@ -308,16 +445,28 @@ class ListagemEscolhasDres(RelatorioBase):
             buffer = BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-            response = HttpResponse(buffer.read(), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            response = HttpResponse(
+                buffer.read(),
+                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+            response["Content-Disposition"] = (
+                f'attachment; filename="{filename}"'
+            )
             return response
         except Exception as exc:
-            logger.error('Erro ao gerar Word: %s', exc, exc_info=True)
+            logger.error("Erro ao gerar Word: %s", exc, exc_info=True)
             raise
 
-    def gerar(self, processo_uuid: str, request: Any, formato: str='html', cabecalho: str='', **kwargs: Any) -> Any:
+    def gerar(
+        self,
+        processo_uuid: str,
+        request: Any,
+        formato: str = "html",
+        cabecalho: str = "",
+        **kwargs: Any,
+    ) -> Any:
         """Gera o relatório de Listagem de Escolhas por DREs.
-        
+
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
@@ -325,111 +474,234 @@ class ListagemEscolhasDres(RelatorioBase):
             formato: Formato do relatório ('html', 'pdf' ou 'xls').
             cabecalho: Texto do cabeçalho do relatório (opcional).
             **kwargs: Argumentos nomeados variáveis.
-        
+
         Returns:
             Resultado da operação.
-        
+
         Raises:
             Nenhuma exceção específica documentada.
         """
         try:
-            logger.info('Buscando candidatos para processo_uuid=%s', processo_uuid)
-            candidatos_response = self.candidatos_service.buscar_concurso_candidatos_por_processo(processo_uuid=str(processo_uuid) if processo_uuid else '')
+            logger.info(
+                "Buscando candidatos para processo_uuid=%s", processo_uuid
+            )
+            candidatos_response = self.candidatos_service.buscar_concurso_candidatos_por_processo(  # noqa: E501
+                processo_uuid=str(processo_uuid) if processo_uuid else ""
+            )
             candidatos_data = candidatos_response.json()
-            candidatos = candidatos_data.get('results', []) if isinstance(candidatos_data, dict) else candidatos_data
-            logger.info('Total de candidatos encontrados: %d', len(candidatos))
+            candidatos = (
+                candidatos_data.get("results", [])
+                if isinstance(candidatos_data, dict)
+                else candidatos_data
+            )
+            logger.info("Total de candidatos encontrados: %d", len(candidatos))
         except Exception as exc:
-            logger.error('Falha ao buscar candidatos da API externa: %s', exc)
+            logger.error("Falha ao buscar candidatos da API externa: %s", exc)
             raise
         candidatos_map = {}
         for candidato in candidatos:
-            candidato_uuid = candidato.get('uuid')
+            candidato_uuid = candidato.get("uuid")
             if candidato_uuid:
                 candidatos_map[str(candidato_uuid)] = candidato
-        candidato_uuids = [candidato.get('uuid') for candidato in candidatos if candidato.get('uuid')]
+        candidato_uuids = [
+            candidato.get("uuid")
+            for candidato in candidatos
+            if candidato.get("uuid")
+        ]
         try:
-            logger.info('Buscando escolhas para %d candidatos com situação=escolha', len(candidato_uuids))
-            escolhas_data = self.escolhas_service.buscar_escolhas_por_candidatos(candidato_uuids=candidato_uuids, situacao='escolha')
-            logger.info('Total de escolhas encontradas: %d', len(escolhas_data))
+            logger.info(
+                "Buscando escolhas para %d candidatos com situação=escolha",
+                len(candidato_uuids),
+            )
+            escolhas_data = (
+                self.escolhas_service.buscar_escolhas_por_candidatos(
+                    candidato_uuids=candidato_uuids, situacao="escolha"
+                )
+            )
+            logger.info(
+                "Total de escolhas encontradas: %d", len(escolhas_data)
+            )
         except Exception as exc:
-            logger.error('Falha ao buscar escolhas da API externa: %s', exc)
+            logger.error("Falha ao buscar escolhas da API externa: %s", exc)
             raise
         escolhas_com_candidatos = []
         for escolha in escolhas_data:
-            candidato_uuid = escolha.get('candidato_uuid')
+            candidato_uuid = escolha.get("candidato_uuid")
             if not candidato_uuid:
                 continue
-            candidato = candidatos_map.get(str(candidato_uuid)) or candidatos_map.get(candidato_uuid)
+            candidato = candidatos_map.get(
+                str(candidato_uuid)
+            ) or candidatos_map.get(candidato_uuid)
             if not candidato:
-                logger.warning('Candidato UUID %s não encontrado no mapa', candidato_uuid)
+                logger.warning(
+                    "Candidato UUID %s não encontrado no mapa", candidato_uuid
+                )
                 continue
-            candidato_obj = candidato.get('candidato', {}) if isinstance(candidato.get('candidato'), dict) else {}
-            nome = candidato_obj.get('nome') or '-'
-            classificacao = candidato.get('classificacao') or '-'
-            classificacao_deficiente = candidato.get('classificacao_pcd') or '-'
-            classificacao_nna = candidato.get('classificacao_nna') or '-'
-            cpf = candidato_obj.get('cpf') or '-'
-            rg = candidato_obj.get('rg') or '-'
-            telefone = candidato_obj.get('telefone') or '-'
-            registro_funcional = candidato_obj.get('registro_funcional') or '-'
-            inscricao = candidato.get('inscricao') or candidato.get('numero_inscricao') or '-'
-            vaga_escola = escolha.get('vaga_escola', {})
-            escola = vaga_escola.get('escola', {}) if isinstance(vaga_escola, dict) else {}
-            dre = escola.get('dre', {}) if isinstance(escola, dict) else {}
-            cargo_descricao = vaga_escola.get('cargo_descricao', '-') if isinstance(vaga_escola, dict) else '-'
-            nome_oficial = escola.get('nome_oficial', '-') if isinstance(escola, dict) else '-'
-            dre_nome = dre.get('nome', '-') if isinstance(dre, dict) else '-'
-            codigo_eol = escola.get('codigo_eol', '-') if isinstance(escola, dict) else '-'
-            tipo_ue = escola.get('tipo_ue', '-') if isinstance(escola, dict) else '-'
-            tipo_vaga_raw = escolha.get('tipo_vaga', '')
-            if tipo_vaga_raw == 'precaria':
-                tipo_vaga = 'P'
-            elif tipo_vaga_raw == 'definitiva':
-                tipo_vaga = 'D'
+            candidato_obj = (
+                candidato.get("candidato", {})
+                if isinstance(candidato.get("candidato"), dict)
+                else {}
+            )
+            nome = candidato_obj.get("nome") or "-"
+            classificacao = candidato.get("classificacao") or "-"
+            classificacao_deficiente = (
+                candidato.get("classificacao_pcd") or "-"
+            )
+            classificacao_nna = candidato.get("classificacao_nna") or "-"
+            cpf = candidato_obj.get("cpf") or "-"
+            rg = candidato_obj.get("rg") or "-"
+            telefone = candidato_obj.get("telefone") or "-"
+            registro_funcional = candidato_obj.get("registro_funcional") or "-"
+            inscricao = (
+                candidato.get("inscricao")
+                or candidato.get("numero_inscricao")
+                or "-"
+            )
+            vaga_escola = escolha.get("vaga_escola", {})
+            escola = (
+                vaga_escola.get("escola", {})
+                if isinstance(vaga_escola, dict)
+                else {}
+            )
+            dre = escola.get("dre", {}) if isinstance(escola, dict) else {}
+            cargo_descricao = (
+                vaga_escola.get("cargo_descricao", "-")
+                if isinstance(vaga_escola, dict)
+                else "-"
+            )
+            nome_oficial = (
+                escola.get("nome_oficial", "-")
+                if isinstance(escola, dict)
+                else "-"
+            )
+            dre_nome = dre.get("nome", "-") if isinstance(dre, dict) else "-"
+            codigo_eol = (
+                escola.get("codigo_eol", "-")
+                if isinstance(escola, dict)
+                else "-"
+            )
+            tipo_ue = (
+                escola.get("tipo_ue", "-") if isinstance(escola, dict) else "-"
+            )
+            tipo_vaga_raw = escolha.get("tipo_vaga", "")
+            if tipo_vaga_raw == "precaria":
+                tipo_vaga = "P"
+            elif tipo_vaga_raw == "definitiva":
+                tipo_vaga = "D"
             else:
-                tipo_vaga = '-'
-            escolhas_com_candidatos.append({'cargo': cargo_descricao, 'classificacao': classificacao if classificacao != '-' else '', 'classificacao_deficiente': classificacao_deficiente if classificacao_deficiente != '-' else '', 'classificacao_nna': classificacao_nna if classificacao_nna != '-' else '', 'rf': registro_funcional if registro_funcional != '-' else '', 'rg': rg if rg != '-' else '', 'cpf': cpf if cpf != '-' else '', 'inscricao': inscricao if inscricao != '-' else '', 'nome': nome, 'telefone': telefone if telefone != '-' else '', 'dre': dre_nome, 'codigo_eol': codigo_eol, 'tipo_ue': tipo_ue, 'unidade': nome_oficial, 'tipo_vaga': tipo_vaga, 'escolha': escolha, 'candidato': candidato})
-        logger.info('Total de escolhas processadas: %d', len(escolhas_com_candidatos))
+                tipo_vaga = "-"
+            escolhas_com_candidatos.append(
+                {
+                    "cargo": cargo_descricao,
+                    "classificacao": classificacao
+                    if classificacao != "-"
+                    else "",
+                    "classificacao_deficiente": classificacao_deficiente
+                    if classificacao_deficiente != "-"
+                    else "",
+                    "classificacao_nna": classificacao_nna
+                    if classificacao_nna != "-"
+                    else "",
+                    "rf": registro_funcional
+                    if registro_funcional != "-"
+                    else "",
+                    "rg": rg if rg != "-" else "",
+                    "cpf": cpf if cpf != "-" else "",
+                    "inscricao": inscricao if inscricao != "-" else "",
+                    "nome": nome,
+                    "telefone": telefone if telefone != "-" else "",
+                    "dre": dre_nome,
+                    "codigo_eol": codigo_eol,
+                    "tipo_ue": tipo_ue,
+                    "unidade": nome_oficial,
+                    "tipo_vaga": tipo_vaga,
+                    "escolha": escolha,
+                    "candidato": candidato,
+                }
+            )
+        logger.info(
+            "Total de escolhas processadas: %d", len(escolhas_com_candidatos)
+        )
         cargos_dict = {}  # type: ignore[var-annotated]
         for item in escolhas_com_candidatos:
-            cargo = item.get('cargo', 'Cargo não informado')
+            cargo = item.get("cargo", "Cargo não informado")
             if cargo not in cargos_dict:
                 cargos_dict[cargo] = []
             cargos_dict[cargo].append(item)
         cargos_list = []
         for cargo, items in sorted(cargos_dict.items()):
-            items_ordenados = sorted(items, key=lambda x: (int(x.get('classificacao', 0)) if x.get('classificacao') and str(x.get('classificacao')).isdigit() else float('inf'), x.get('dre', ''), x.get('unidade', '')))
-            cargos_list.append({'descricao': cargo, 'escolhas': items_ordenados})
+            items_ordenados = sorted(
+                items,
+                key=lambda x: (
+                    int(x.get("classificacao", 0))
+                    if x.get("classificacao")
+                    and str(x.get("classificacao")).isdigit()
+                    else float("inf"),
+                    x.get("dre", ""),
+                    x.get("unidade", ""),
+                ),
+            )
+            cargos_list.append(
+                {"descricao": cargo, "escolhas": items_ordenados}
+            )
         if cabecalho is not None:
-            self.context['cabecalho'] = cabecalho
-        cabecalho_final = self.context.get('cabecalho_padrao', '') or self.context.get('cabecalho', '')
-        logo_url = request.build_absolute_uri(self.context.get('logo_url', '')) if self.context.get('logo_url') else ''
-        dados = {'processo_uuid': processo_uuid, 'total_escolhas': len(escolhas_com_candidatos), 'escolhas': escolhas_com_candidatos}
+            self.context["cabecalho"] = cabecalho
+        cabecalho_final = self.context.get(
+            "cabecalho_padrao", ""
+        ) or self.context.get("cabecalho", "")
+        logo_url = (
+            request.build_absolute_uri(self.context.get("logo_url", ""))
+            if self.context.get("logo_url")
+            else ""
+        )
+        dados = {
+            "processo_uuid": processo_uuid,
+            "total_escolhas": len(escolhas_com_candidatos),
+            "escolhas": escolhas_com_candidatos,
+        }
         dados = convert_uuids_to_strings(dados)
         escolhas_ordenadas_export = []
         for cargo_item in cargos_list:
-            escolhas_ordenadas_export.extend(cargo_item['escolhas'])
-        self.context.update({'cargos': cargos_list, 'total_escolhas': len(escolhas_com_candidatos), 'logo_url': logo_url, 'is_pdf': False, 'escolhas': escolhas_ordenadas_export})
-        if formato == 'xls' or formato == 'xlsx' or formato == 'csv':
-            filename = f'listagem_escolhas_dres_{processo_uuid}.xlsx'
-            logger.info('Gerando Excel: %s', filename)
-            response = self.render_to_xls(context=self.context, filename=filename)
+            escolhas_ordenadas_export.extend(cargo_item["escolhas"])
+        self.context.update(
+            {
+                "cargos": cargos_list,
+                "total_escolhas": len(escolhas_com_candidatos),
+                "logo_url": logo_url,
+                "is_pdf": False,
+                "escolhas": escolhas_ordenadas_export,
+            }
+        )
+        if formato == "xls" or formato == "xlsx" or formato == "csv":
+            filename = f"listagem_escolhas_dres_{processo_uuid}.xlsx"
+            logger.info("Gerando Excel: %s", filename)
+            response = self.render_to_xls(
+                context=self.context, filename=filename
+            )
             return (response, dados)
-        elif formato == 'docx' or formato == 'doc':
-            filename = f'listagem_escolhas_dres_{processo_uuid}.docx'
-            logger.info('Gerando Word: %s', filename)
-            response = self.render_to_docx(escolhas_ordenadas_export, cabecalho_final, self.context.get('texto_final', ''), filename=filename)
+        elif formato == "docx" or formato == "doc":
+            filename = f"listagem_escolhas_dres_{processo_uuid}.docx"
+            logger.info("Gerando Word: %s", filename)
+            response = self.render_to_docx(
+                escolhas_ordenadas_export,
+                cabecalho_final,
+                self.context.get("texto_final", ""),
+                filename=filename,
+            )
             return (response, dados)
-        elif formato == 'pdf':
-            filename = f'listagem_escolhas_dres_{processo_uuid}.pdf'
-            logger.info('Gerando PDF: %s', filename)
-            self.context.update({'is_pdf': True})
-            response = self.render_to_pdf(self.TEMPLATE_NAME, self.context, filename=filename)
+        elif formato == "pdf":
+            filename = f"listagem_escolhas_dres_{processo_uuid}.pdf"
+            logger.info("Gerando PDF: %s", filename)
+            self.context.update({"is_pdf": True})
+            response = self.render_to_pdf(
+                self.TEMPLATE_NAME, self.context, filename=filename
+            )
             return (response, dados)
-        elif formato == 'html':
+        elif formato == "html":
             response = render(request, self.TEMPLATE_NAME, self.context)
             return (response, dados)
         else:
             from django.http import JsonResponse
+
             response = JsonResponse(dados, safe=False)
             return (response, dados)

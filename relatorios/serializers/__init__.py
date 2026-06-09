@@ -1,4 +1,5 @@
 """Módulo serializers/__init__."""
+
 from .configuracao_relatorio import ConfiguracaoRelatorioSerializer
 from .parametrizacao import ParametrizacaoSerializer
 from .relatorio_create import RelatorioCreateSerializer
