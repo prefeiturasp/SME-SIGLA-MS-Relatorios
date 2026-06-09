@@ -30,21 +30,37 @@ except Exception:
     DOCX_AVAILABLE = False
 
 class ListaCandidatosSessao(RelatorioBase):
-    """Gera relatório de lista de candidatos por sessão, a partir de uma lista de.
-
-    UUIDs.
-    Suporta HTML, PDF, XLS e DOCX.
-    """
+    """Gera relatório de lista de candidatos por sessão, a partir de uma lista de."""
     TEMPLATE_NAME = 'relatorios/lista_candidatos_sessao.html'
 
     def __init__(self, **kwargs: Any) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         super().__init__(**kwargs)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
         self.agendas_service = AgendasService(base_url=settings.AGENDAS_API_URL)
 
     def _fetch_candidatos(self, candidatos_uuids: list[str], order_by: str='ranking_escolha') -> list[dict[str, Any]]:
-        """Executa  fetch candidatos."""
+        """Executa  fetch candidatos.
+        
+        Args:
+            self: Instância do objeto.
+            candidatos_uuids: Parâmetro candidatos uuids da operação.
+            order_by: Parâmetro order by da operação.
+        
+        Returns:
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         if not candidatos_uuids:
             return []
         resp = self.candidatos_service.buscar_por_uuids(uuids=candidatos_uuids, order_by=order_by)
@@ -57,17 +73,51 @@ class ListaCandidatosSessao(RelatorioBase):
 
     @staticmethod
     def _flatten_candidato(item: dict[str, Any]) -> dict[str, Any]:
-        """Executa  flatten candidato."""
+        """Executa  flatten candidato.
+        
+        Args:
+            item: Parâmetro item da operação.
+        
+        Returns:
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         cand = item.get('candidato') or {}
         return {'classificacao': item.get('classificacao'), 'classificacao_nna': item.get('classificacao_nna'), 'classificacao_pcd': item.get('classificacao_pcd'), 'inscricao': item.get('codigo_inscricao') or item.get('inscricao'), 'nome': cand.get('nome') or item.get('nome'), 'cpf': cand.get('cpf') or item.get('cpf')}
 
     def _build_context(self, candidatos: list[dict[str, Any]], agenda_data: dict[str, Any]) -> dict[str, Any]:
-        """Executa  build context."""
+        """Executa  build context.
+        
+        Args:
+            self: Instância do objeto.
+            candidatos: Parâmetro candidatos da operação.
+            agenda_data: Parâmetro agenda data da operação.
+        
+        Returns:
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         linhas = [self._flatten_candidato(c) for c in candidatos]
         return {'candidatos': linhas, 'agenda': agenda_data, 'agendas': [{'agenda': agenda_data, 'candidatos': linhas}]}
 
     def _render_xls(self, context: dict[str, Any], filename: str='lista_candidatos_sessao.xlsx') -> HttpResponse:
-        """Executa  render xls."""
+        """Executa  render xls.
+        
+        Args:
+            self: Instância do objeto.
+            context: Contexto de renderização ou serialização.
+            filename: Parâmetro filename da operação.
+        
+        Returns:
+            Resposta HTTP com o resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
+        """
         if not OPENPYXL_AVAILABLE:
             raise ImportError('openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0')
         wb = Workbook()
@@ -128,11 +178,31 @@ class ListaCandidatosSessao(RelatorioBase):
         row_idx += 2
 
         def _fmt_data(date_str: str) -> str:
-            """Executa  fmt data."""
+            """Executa  fmt data.
+            
+            Args:
+                date_str: Parâmetro date str da operação.
+            
+            Returns:
+                Texto resultante da operação.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             return f'{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}' if len(date_str) >= 10 else date_str
 
         def _fmt_hora(time_str: str) -> str:
-            """Executa  fmt hora."""
+            """Executa  fmt hora.
+            
+            Args:
+                time_str: Parâmetro time str da operação.
+            
+            Returns:
+                Texto resultante da operação.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             return time_str[:5] if len(time_str) >= 5 else time_str
         sections = context.get('agendas') or []
         if not sections:
@@ -221,7 +291,19 @@ class ListaCandidatosSessao(RelatorioBase):
         return resp  # type: ignore[return-value]
 
     def _render_docx(self, context: dict[str, Any], filename: str='lista_candidatos_sessao.docx') -> HttpResponse:
-        """Executa  render docx."""
+        """Executa  render docx.
+        
+        Args:
+            self: Instância do objeto.
+            context: Contexto de renderização ou serialização.
+            filename: Parâmetro filename da operação.
+        
+        Returns:
+            Resposta HTTP com o resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
+        """
         if not DOCX_AVAILABLE:
             raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=0.8.11')
         doc = Document()
@@ -241,11 +323,31 @@ class ListaCandidatosSessao(RelatorioBase):
                 doc.add_paragraph()
 
         def _fmt_data(date_str: str) -> str:
-            """Executa  fmt data."""
+            """Executa  fmt data.
+            
+            Args:
+                date_str: Parâmetro date str da operação.
+            
+            Returns:
+                Texto resultante da operação.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             return f'{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}' if len(date_str) >= 10 else date_str
 
         def _fmt_hora(time_str: str) -> str:
-            """Executa  fmt hora."""
+            """Executa  fmt hora.
+            
+            Args:
+                time_str: Parâmetro time str da operação.
+            
+            Returns:
+                Texto resultante da operação.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             return time_str[:5] if len(time_str) >= 5 else time_str
         sections_list = context.get('agendas') or []
         if not sections_list:
@@ -332,7 +434,23 @@ class ListaCandidatosSessao(RelatorioBase):
         return resp
 
     def gerar(self, processo_uuid: str, request: Any, formato: str='html', cabecalho: str='', agenda_uuid: str='', **kwargs: Any) -> tuple[HttpResponse, dict[str, Any]]:  # type: ignore[override]
-        """Gera a lista de candidatos por sessão a partir de UUIDs."""
+        """Gera a lista de candidatos por sessão a partir de UUIDs.
+        
+        Args:
+            self: Instância do objeto.
+            processo_uuid: Parâmetro processo uuid da operação.
+            request: Requisição HTTP recebida.
+            formato: Parâmetro formato da operação.
+            cabecalho: Parâmetro cabecalho da operação.
+            agenda_uuid: Parâmetro agenda uuid da operação.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         try:
             if agenda_uuid:
                 agenda_resp = self.agendas_service.buscar_agenda_por_uuid(str(agenda_uuid))

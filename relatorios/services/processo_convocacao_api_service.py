@@ -13,10 +13,14 @@ class ProcessoConvocacaoService:
 
     def __init__(self, base_url: str='https://example.com', timeout_seconds: int=30) -> None:
         """Inicializa o serviço de processos de convocação.
-
+        
         Args:
-            base_url: URL base da API de processos de convocação
-            timeout_seconds: Timeout em segundos para as requisições
+            self: Instância do objeto.
+            base_url: URL base da API de processos de convocação.
+            timeout_seconds: Timeout em segundos para as requisições.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         self.base_url = base_url.rstrip('/')
         self.timeout_seconds = timeout_seconds
@@ -24,13 +28,16 @@ class ProcessoConvocacaoService:
 
     def buscar_processo_convocacao(self, processo_uuid: str) -> requests.Response:
         """Busca um processo de convocação por UUID.
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+        
         Returns:
-            Response da API com os dados do processo de convocação
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição.
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/'
         logger.info('Buscando processo de convocação', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'processo_uuid': processo_uuid})
@@ -45,13 +52,16 @@ class ProcessoConvocacaoService:
 
     def buscar_processos_por_concurso(self, concurso_uuid: str) -> requests.Response:
         """Busca processos de convocação por concurso_uuid.
-
+        
         Args:
-            concurso_uuid: UUID do concurso
+            self: Instância do objeto.
+            concurso_uuid: UUID do concurso.
+        
         Returns:
-            Response da API com a lista de processos de convocação do concurso
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição.
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/processos-convocacao/'
         params = {'concurso_uuid': concurso_uuid}
@@ -67,21 +77,16 @@ class ProcessoConvocacaoService:
 
     def separar_processos_por_principal(self, processo_data: dict) -> tuple[str, list[str]]:
         """Busca o processo principal e outros processos do mesmo concurso,.
-
-        separando-os em duas variáveis.
-
+        
         Args:
-            processo_data: Dicionário com os dados do processo principal
+            self: Instância do objeto.
+            processo_data: Dicionário com os dados do processo principal.
+        
         Returns:
-            Tupla contendo:
-            - processo_data.get('uuid'): UUID do processo principal
-            - outros_processos_uuid: Lista de UUIDs dos outros processos
-            (excluindo o principal)
-
+            Resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro nas requisições
-            ValueError: Se o processo principal não for encontrado ou não tiver
-            concurso_uuid.
+            ValueError: Se o processo principal não for encontrado ou não tiver.
         """
         logger.info('Separando processos por principal', extra={'correlation_id': get_correlation_id(), 'processo_data': processo_data})
         concurso_uuid = processo_data.get('concurso_uuid')

@@ -10,15 +10,40 @@ class _Resp:
     """Define _Resp."""
 
     def __init__(self, payload: Any) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            payload: Parâmetro payload da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self._payload = payload
 
     def json(self) -> Any:
-        """Executa json."""
+        """Executa json.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return self._payload
 
 def _make_service_with_mocks() -> Any:
-    """Executa  make service with mocks."""
+    """Executa  make service with mocks.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = LaudaConvocacaoService(candidatos_base_url='http://candidatos', processo_base_url='http://processos', agendas_base_url='http://agendas', timeout_seconds=1)
     svc.candidatos_service = Mock()
     svc.processo_service = Mock()
@@ -28,14 +53,28 @@ def _make_service_with_mocks() -> Any:
     return svc
 
 def test_identificar_lacunas() -> None:
-    """Verifica identificar lacunas."""
+    """Verifica identificar lacunas.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     assert svc._identificar_lacunas([1, 2, 3, 6, 7]) == [4, 5]
     assert svc._identificar_lacunas([None, 2, 2, 5]) == [3, 4]
     assert svc._identificar_lacunas([]) == []
 
 def test_separar_por_tipo() -> None:
-    """Verifica separar por tipo."""
+    """Verifica separar por tipo.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     candidatos = [{'categoria_efetiva': 'GERAL', 'uuid': 'g1'}, {'categoria_efetiva': 'NNA', 'uuid': 'n1'}, {'categoria_efetiva': 'PCD', 'uuid': 'p1'}, {'uuid': 'outro'}]
     separados = svc._separar_por_tipo(candidatos)
@@ -44,13 +83,27 @@ def test_separar_por_tipo() -> None:
     assert len(separados['pcd']) == 1
 
 def test_extrair_classificacoes() -> None:
-    """Verifica extrair classificacoes."""
+    """Verifica extrair classificacoes.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     candidatos = [{'classificacao': 1}, {'classificacao': None}, {}]
     assert svc._extrair_classificacoes(candidatos, 'classificacao') == [1, None, None]
 
 def test_buscar_candidatos_faltantes_sucesso() -> None:
-    """Verifica buscar candidatos faltantes sucesso."""
+    """Verifica buscar candidatos faltantes sucesso.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     outros = ['proc-1', 'proc-2']
     lac_geral = [4, 5]
@@ -66,14 +119,28 @@ def test_buscar_candidatos_faltantes_sucesso() -> None:
     assert all(('status_especial' in c for c in res['pcd']))
 
 def test_buscar_candidatos_faltantes_request_exception() -> None:
-    """Verifica buscar candidatos faltantes request exception."""
+    """Verifica buscar candidatos faltantes request exception.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     svc.candidatos_service.buscar_habilitados_por_processos_e_classificacoes.side_effect = RequestException('err')
     res = svc._buscar_candidatos_faltantes(outros_processos_uuid=['x'], lacunas_geral=[1], lacunas_nna=[], lacunas_pcd=[])
     assert res == {'geral': [], 'nna': [], 'pcd': []}
 
 def test_processar_lauda_convocacao_fluxo_basico() -> None:
-    """Verifica processar lauda convocacao fluxo basico."""
+    """Verifica processar lauda convocacao fluxo basico.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     processo_uuid = 'proc-abc'
     agendas_payload = [{'cargo_nome': 'Professor', 'cargo_codigo': '123', 'candidatos_uuids': ['a'], 'hora_convocacao_inicio': '09:00', 'hora_convocacao_fim': '10:00'}, {'cargo_nome': 'Professor', 'cargo_codigo': '123', 'candidatos_uuids': ['b', 'c'], 'hora_convocacao_inicio': '10:00', 'hora_convocacao_fim': '11:00'}]
@@ -94,14 +161,28 @@ def test_processar_lauda_convocacao_fluxo_basico() -> None:
     assert all(('ordem_escolha' in c for c in candidatos_s1))
 
 def test_processar_lauda_convocacao_request_exception() -> None:
-    """Verifica processar lauda convocacao request exception."""
+    """Verifica processar lauda convocacao request exception.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     svc.agendas_service.buscar_agendas.side_effect = RequestException('falhou')
     with pytest.raises(RequestException):
         svc.processar_lauda_convocacao('proc-err')
 
 def test_processar_lauda_convocacao_dict_results_merges_geral_faltantes() -> None:
-    """Verifica processar lauda convocacao dict results merges geral faltantes."""
+    """Verifica processar lauda convocacao dict results merges geral faltantes.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     processo_uuid = 'proc-123'
     agendas_payload = [{'cargo_nome': 'Professor', 'cargo_codigo': '123', 'candidatos_uuids': ['x'], 'hora_convocacao_inicio': '09:00', 'hora_convocacao_fim': '10:00'}, {'cargo_nome': 'Professor', 'cargo_codigo': '123', 'candidatos_uuids': ['y'], 'hora_convocacao_inicio': '10:00', 'hora_convocacao_fim': '11:00'}]
@@ -122,7 +203,14 @@ def test_processar_lauda_convocacao_dict_results_merges_geral_faltantes() -> Non
     assert all_uuids.index('gy') < all_uuids.index('b')
 
 def test_processar_lauda_convocacao_sorts_and_merges_all_categories() -> None:
-    """Verifica processar lauda convocacao sorts and merges all categories."""
+    """Verifica processar lauda convocacao sorts and merges all categories.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _make_service_with_mocks()
     processo_uuid = 'proc-456'
     agendas_payload = [{'cargo_nome': 'Cargo', 'cargo_codigo': '999', 'candidatos_uuids': ['a']}, {'cargo_nome': 'Cargo', 'cargo_codigo': '999', 'candidatos_uuids': ['b', 'c']}]

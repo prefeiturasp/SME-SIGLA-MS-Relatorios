@@ -37,7 +37,15 @@ class SumulaNaoEscolhas(RelatorioBase):
     TEMPLATE_NAME = 'relatorios/nao_escolhas.html'
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias."""
+        """Inicializa o service com as dependências necessárias.
+        
+        Args:
+            self: Instância do objeto.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
@@ -47,6 +55,7 @@ class SumulaNaoEscolhas(RelatorioBase):
         """Gera o relatório de Não Escolhas.
         
         Args:
+            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Objeto request do Django.
             formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx').
@@ -54,11 +63,10 @@ class SumulaNaoEscolhas(RelatorioBase):
             **kwargs: Argumentos nomeados variáveis.
         
         Returns:
-        Tupla (HttpResponse, dados) onde:
-        - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou
-        DOCX)
-        - dados: estrutura de dados do relatório (cargos_list) para salvar
-        no banco
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_map = {}
         try:
@@ -144,12 +152,16 @@ class SumulaNaoEscolhas(RelatorioBase):
 
     def _agrupar_por_cargo(self, candidatos: list) -> list:
         """Agrupa candidatos por cargo.
-
+        
         Args:
-            candidatos: Lista de candidatos com suas informações
-
+            self: Instância do objeto.
+            candidatos: Lista de candidatos com suas informações.
+        
         Returns:
-            Lista de cargos com seus candidatos
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_dict = {}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -171,13 +183,17 @@ class SumulaNaoEscolhas(RelatorioBase):
 
     def render_to_xls(self, context: Any=None, filename: Any='relatorio_nao_escolhas.xlsx') -> Any:
         """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
-
+        
         Args:
-            context: Contexto do relatório
-            filename: Nome do arquivo Excel gerado
-
+            self: Instância do objeto.
+            context: Contexto do relatório.
+            filename: Nome do arquivo Excel gerado.
+        
         Returns:
-            HttpResponse com o arquivo Excel gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if context is None:
             context = {}
@@ -300,16 +316,19 @@ class SumulaNaoEscolhas(RelatorioBase):
 
     def render_to_docx(self, cargos_list: Any, cabecalho: Any, texto_final: Any, filename: Any='relatorio_nao_escolhas.docx') -> Any:
         """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
-
+        
         Args:
-            cargos_list: Lista de cargos com seus candidatos (estrutura
-            hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            texto_final: Texto final do relatório
-            filename: Nome do arquivo Word gerado
-
+            self: Instância do objeto.
+            cargos_list: Lista de cargos com seus candidatos (estrutura.
+            cabecalho: Texto do cabeçalho do relatório.
+            texto_final: Texto final do relatório.
+            filename: Nome do arquivo Word gerado.
+        
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if not DOCX_AVAILABLE:
             raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=1.1.0')

@@ -7,7 +7,14 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def configuracao() -> Any:
-    """Executa configuracao."""
+    """Executa configuracao.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_VAGAS')
     config.cabecalho = ''
     config.cabecalho_gabarito = ''
@@ -19,7 +26,14 @@ def configuracao() -> Any:
 
 @pytest.fixture
 def configuracao_completa() -> Any:
-    """Executa configuracao completa."""
+    """Executa configuracao completa.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_ESCOLHAS')
     config.usar_logotipo = True
     config.cabecalho = '<h1>Cabeçalho</h1>'
@@ -33,7 +47,18 @@ class TestConfiguracaoRelatorioModel:
     """Define TestConfiguracaoRelatorioModel."""
 
     def test_criacao_com_defaults(self, configuracao: Any) -> None:
-        """Verifica criacao com defaults."""
+        """Verifica criacao com defaults.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert configuracao.tipo == 'LAUDA_VAGAS'
         assert configuracao.usar_logotipo is False
         assert configuracao.cabecalho == ''
@@ -42,42 +67,127 @@ class TestConfiguracaoRelatorioModel:
         assert configuracao.cabecalho_capa_ata == ''
 
     def test_uuid_gerado_automaticamente(self, configuracao: Any) -> None:
-        """Verifica uuid gerado automaticamente."""
+        """Verifica uuid gerado automaticamente.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert configuracao.uuid is not None
 
     def test_timestamps_gerados(self, configuracao: Any) -> None:
-        """Verifica timestamps gerados."""
+        """Verifica timestamps gerados.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert configuracao.criado_em is not None
         assert configuracao.atualizado_em is not None
 
     def test_str(self, configuracao: Any) -> None:
-        """Verifica str."""
+        """Verifica str.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert 'Lauda de Vagas' in str(configuracao)
 
     def test_tipo_unico(self, configuracao: Any) -> None:
-        """Verifica tipo unico."""
+        """Verifica tipo unico.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         from django.db import IntegrityError
         with pytest.raises(IntegrityError):
             ConfiguracaoRelatorio.objects.create(tipo=configuracao.tipo)
 
     def test_ordering_por_tipo(self) -> None:
-        """Verifica ordering por tipo."""
+        """Verifica ordering por tipo.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         tipos = list(ConfiguracaoRelatorio.objects.values_list('tipo', flat=True))
         assert tipos == sorted(tipos)
 
     def test_db_table(self) -> None:
-        """Verifica db table."""
+        """Verifica db table.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert ConfiguracaoRelatorio._meta.db_table == 'relatorios_configuracao'
 
 class TestCabecalhoGabarito:
     """Define TestCabecalhoGabarito."""
 
     def test_cabecalho_gabarito_default_vazio(self, configuracao: Any) -> None:
-        """Verifica cabecalho gabarito default vazio."""
+        """Verifica cabecalho gabarito default vazio.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert configuracao.cabecalho_gabarito == ''
 
     def test_cabecalho_gabarito_salvo_e_recuperado(self) -> None:
-        """Verifica cabecalho gabarito salvo e recuperado."""
+        """Verifica cabecalho gabarito salvo e recuperado.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         html = '<h1>Cabeçalho Gabarito Teste</h1><p>Linha 2</p>'
         config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_CONVOCACAO')
         config.cabecalho_gabarito = html
@@ -86,14 +196,34 @@ class TestCabecalhoGabarito:
         assert config.cabecalho_gabarito == html
 
     def test_cabecalho_gabarito_permite_blank(self) -> None:
-        """Verifica cabecalho gabarito permite blank."""
+        """Verifica cabecalho gabarito permite blank.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_RECONVOCACAO')
         config.cabecalho_gabarito = ''
         config.save()
         assert config.cabecalho_gabarito == ''
 
     def test_cabecalho_gabarito_aceita_html_longo(self) -> None:
-        """Verifica cabecalho gabarito aceita html longo."""
+        """Verifica cabecalho gabarito aceita html longo.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         html_longo = '<div>' + '<p>Linha</p>' * 500 + '</div>'
         config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_NAO_ESCOLHAS')
         config.cabecalho_gabarito = html_longo
@@ -102,20 +232,52 @@ class TestCabecalhoGabarito:
         assert config.cabecalho_gabarito == html_longo
 
     def test_cabecalho_gabarito_atualizavel(self, configuracao: Any) -> None:
-        """Verifica cabecalho gabarito atualizavel."""
+        """Verifica cabecalho gabarito atualizavel.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         configuracao.cabecalho_gabarito = '<h2>Novo Gabarito</h2>'
         configuracao.save()
         configuracao.refresh_from_db()
         assert configuracao.cabecalho_gabarito == '<h2>Novo Gabarito</h2>'
 
     def test_todos_campos_coexistem(self, configuracao_completa: Any) -> None:
-        """Verifica todos campos coexistem."""
+        """Verifica todos campos coexistem.
+        
+        Args:
+            self: Instância do objeto.
+            configuracao_completa: Parâmetro configuracao completa da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         assert configuracao_completa.cabecalho == '<h1>Cabeçalho</h1>'
         assert configuracao_completa.cabecalho_gabarito == '<h1>Gabarito</h1>'
         assert configuracao_completa.cabecalho_capa_ata == '<h2>Capa</h2>'
         assert configuracao_completa.texto_final == '<p>Texto final</p>'
 
     def test_verbose_name_cabecalho_gabarito(self) -> None:
-        """Verifica verbose name cabecalho gabarito."""
+        """Verifica verbose name cabecalho gabarito.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         field = ConfiguracaoRelatorio._meta.get_field('cabecalho_gabarito')
         assert field.verbose_name == 'Cabeçalho Gabarito'

@@ -10,26 +10,76 @@ class _Resp:
     """Define _Resp."""
 
     def __init__(self, payload: Any=None, status_code: Any=200) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            payload: Parâmetro payload da operação.
+            status_code: Parâmetro status code da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self._payload = payload
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Executa json.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return self._payload
 
     def raise_for_status(self) -> None:
-        """Executa raise for status."""
+        """Executa raise for status.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            HTTPError: Se ocorrer erro nesta operação.
+        """
         if self.status_code and self.status_code >= 400:
             raise requests.HTTPError(f'status={self.status_code}')
 
 def _svc(base: Any='http://api.local', timeout: Any=15) -> Any:
-    """Executa  svc."""
+    """Executa  svc.
+    
+    Args:
+        base: Parâmetro base da operação.
+        timeout: Parâmetro timeout da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return EscolhasService(base_url=base, timeout_seconds=timeout)
 
 @patch('relatorios.services.escolhas_api_service.http_client.get')
 def test_buscar_vagas_escolas_success(mock_get: Any) -> None:
-    """Verifica buscar vagas escolas success."""
+    """Verifica buscar vagas escolas success.
+    
+    Args:
+        mock_get: Parâmetro mock get da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     mock_get.return_value = _Resp(payload={'results': []})
     svc = _svc(timeout=5)
     resp = svc.buscar_vagas_escolas(processo_uuid='PROC-123')
@@ -38,7 +88,17 @@ def test_buscar_vagas_escolas_success(mock_get: Any) -> None:
 
 @patch('relatorios.services.escolhas_api_service.http_client.get')
 def test_buscar_vagas_escolas_trailing_slash_base_url(mock_get: Any) -> None:
-    """Verifica buscar vagas escolas trailing slash base url."""
+    """Verifica buscar vagas escolas trailing slash base url.
+    
+    Args:
+        mock_get: Parâmetro mock get da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     mock_get.return_value = _Resp(payload=[])
     svc = _svc(base='http://api.local/')
     svc.buscar_vagas_escolas(processo_uuid='P1')
@@ -46,7 +106,17 @@ def test_buscar_vagas_escolas_trailing_slash_base_url(mock_get: Any) -> None:
 
 @patch('relatorios.services.escolhas_api_service.http_client.get')
 def test_buscar_vagas_escolas_http_error(mock_get: Any) -> None:
-    """Verifica buscar vagas escolas http error."""
+    """Verifica buscar vagas escolas http error.
+    
+    Args:
+        mock_get: Parâmetro mock get da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     mock_get.return_value = _Resp(None, status_code=500)
     svc = _svc()
     with pytest.raises(requests.HTTPError):
@@ -54,14 +124,34 @@ def test_buscar_vagas_escolas_http_error(mock_get: Any) -> None:
 
 @patch('relatorios.services.escolhas_api_service.http_client.get', side_effect=requests.RequestException('boom'))
 def test_buscar_vagas_escolas_request_exception(mock_get: Any) -> None:
-    """Verifica buscar vagas escolas request exception."""
+    """Verifica buscar vagas escolas request exception.
+    
+    Args:
+        mock_get: Parâmetro mock get da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _svc()
     with pytest.raises(requests.RequestException):
         svc.buscar_vagas_escolas(processo_uuid='PERR')
 
 @patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_success_list_default_filter(mock_post: Any) -> None:
-    """Verifica buscar escolhas por candidatos success list default filter."""
+    """Verifica buscar escolhas por candidatos success list default filter.
+    
+    Args:
+        mock_post: Parâmetro mock post da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     payload = [{'uuid': 'u1', 'situacao': 'nao-escolha'}, {'uuid': 'u2', 'situacao': 'reconvocacao'}]
     mock_post.return_value = _Resp(payload=payload)
     svc = _svc(timeout=3)
@@ -71,7 +161,17 @@ def test_buscar_escolhas_por_candidatos_success_list_default_filter(mock_post: A
 
 @patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(mock_post: Any) -> None:
-    """Verifica buscar escolhas por candidatos success dict results custom situacao."""
+    """Verifica buscar escolhas por candidatos success dict results custom situacao.
+    
+    Args:
+        mock_post: Parâmetro mock post da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     payload = {'results': [{'uuid': 'u1', 'situacao': 'reconvocacao'}, {'uuid': 'u2', 'situacao': 'nao-escolha'}]}
     mock_post.return_value = _Resp(payload=payload)
     svc = _svc()
@@ -80,7 +180,17 @@ def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(moc
 
 @patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(mock_post: Any) -> None:
-    """Verifica buscar escolhas por candidatos unexpected payload returns empty."""
+    """Verifica buscar escolhas por candidatos unexpected payload returns empty.
+    
+    Args:
+        mock_post: Parâmetro mock post da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     mock_post.return_value = _Resp(payload={'unexpected': True})
     svc = _svc()
     out = svc.buscar_escolhas_por_candidatos(candidato_uuids=['a'])
@@ -88,7 +198,17 @@ def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(mock_po
 
 @patch('relatorios.services.escolhas_api_service.http_client.post')
 def test_buscar_escolhas_por_candidatos_http_error(mock_post: Any) -> None:
-    """Verifica buscar escolhas por candidatos http error."""
+    """Verifica buscar escolhas por candidatos http error.
+    
+    Args:
+        mock_post: Parâmetro mock post da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     mock_post.return_value = _Resp(None, status_code=400)
     svc = _svc()
     with pytest.raises(requests.HTTPError):
@@ -96,7 +216,17 @@ def test_buscar_escolhas_por_candidatos_http_error(mock_post: Any) -> None:
 
 @patch('relatorios.services.escolhas_api_service.http_client.post', side_effect=requests.RequestException('boom'))
 def test_buscar_escolhas_por_candidatos_request_exception(mock_post: Any) -> None:
-    """Verifica buscar escolhas por candidatos request exception."""
+    """Verifica buscar escolhas por candidatos request exception.
+    
+    Args:
+        mock_post: Parâmetro mock post da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = _svc()
     with pytest.raises(requests.RequestException):
         svc.buscar_escolhas_por_candidatos(candidato_uuids=['a'])

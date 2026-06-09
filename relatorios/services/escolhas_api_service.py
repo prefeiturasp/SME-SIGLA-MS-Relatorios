@@ -12,23 +12,32 @@ class EscolhasService:
     """Define EscolhasService."""
 
     def __init__(self, base_url: str='https://example.com', timeout_seconds: int=30) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            base_url: Parâmetro base url da operação.
+            timeout_seconds: Parâmetro timeout seconds da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self.base_url = base_url.rstrip('/')
         self.timeout_seconds = timeout_seconds
         self._default_headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
 
     def buscar_vagas_escolas(self, processo_uuid: str) -> requests.Response:
         """Busca vagas de escolas por processo_uuid.
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
-            headers: Headers HTTP opcionais para a requisição
-
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+        
         Returns:
-            Response da API com as vagas das escolas
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/vagas-escolas/'
         params = {'processo_uuid': processo_uuid}
@@ -44,18 +53,17 @@ class EscolhasService:
 
     def buscar_escolhas_por_candidatos(self, candidato_uuids: list, situacao: str='nao-escolha') -> list:
         """Busca escolhas por lista de candidato_uuids filtrando por situação.
-
+        
         Args:
-            candidato_uuids: Lista de UUIDs dos candidatos
-            situacao: Situação da escolha (padrão: 'nao-escolha'). Se None,
-            retorna todas as escolhas.
-
+            self: Instância do objeto.
+            candidato_uuids: Lista de UUIDs dos candidatos.
+            situacao: Situação da escolha (padrão: 'nao-escolha'). Se None,.
+        
         Returns:
-            Lista de escolhas filtradas por situação (ou todas se
-            situacao=None)
-
+            Lista com os registros resultantes.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/escolhas/busca/'
         data = {'candidato_uuid': candidato_uuids}

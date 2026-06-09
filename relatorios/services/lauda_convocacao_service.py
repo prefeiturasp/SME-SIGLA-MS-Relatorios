@@ -11,23 +11,21 @@ from .processo_convocacao_api_service import ProcessoConvocacaoService
 logger = logging.getLogger(__name__)
 
 class LaudaConvocacaoService:
-    """Serviço para geração de lauda de convocação.
-
-    Processa por cargo (cargo_codigo) de forma independente: busca habilitados
-    filtrando por cargo,
-    organiza sessões conforme agendas do cargo e consolida o resultado por
-    cargo.
-    """
+    """Serviço para geração de lauda de convocação."""
 
     def __init__(self, candidatos_base_url: str='https://example.com', processo_base_url: str='https://example.com', agendas_base_url: str='https://example.com', escolhas_base_url: str='https://example.com', timeout_seconds: int=30) -> None:
         """Inicializa o serviço de lauda de convocação.
         
         Args:
+            self: Instância do objeto.
             candidatos_base_url: URL base da API de candidatos.
             processo_base_url: URL base da API de processos de convocação.
             agendas_base_url: URL base da API de agendas.
             escolhas_base_url: URL base da API de escolhas.
             timeout_seconds: Timeout em segundos para as requisições.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         self.candidatos_service = CandidatosService(base_url=candidatos_base_url, timeout_seconds=timeout_seconds)
         self.processo_service = ProcessoConvocacaoService(base_url=processo_base_url, timeout_seconds=timeout_seconds)
@@ -36,14 +34,16 @@ class LaudaConvocacaoService:
 
     def _identificar_lacunas(self, classificacoes: list[int]) -> list[int]:
         """Identifica lacunas em uma lista de classificações.
-
-        Exemplo: [1, 2, 3, 6, 7] -> retorna [4, 5].
-
+        
         Args:
+            self: Instância do objeto.
             classificacoes: Lista de classificações (pode conter None).
-
+        
         Returns:
-            Lista de classificações faltantes (lacunas)
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         classificacoes_validas = sorted(set((c for c in classificacoes if c is not None and isinstance(c, int))))
         if not classificacoes_validas:
@@ -56,19 +56,16 @@ class LaudaConvocacaoService:
 
     def _separar_por_tipo(self, candidatos: list[dict]) -> dict[str, list[dict]]:
         """Separa candidatos por tipo usando o campo categoria_efetiva: GERAL, NNA.
-
-        e PCD.
-
+        
         Args:
-            candidatos: Lista de candidatos retornados da API
-
+            self: Instância do objeto.
+            candidatos: Lista de candidatos retornados da API.
+        
         Returns:
-            Dicionário com candidatos separados por tipo:
-            {
-                'geral': [candidatos com categoria_efetiva='GERAL'],
-                'nna': [candidatos com categoria_efetiva='NNA'],
-                'pcd': [candidatos com categoria_efetiva='PCD']
-            }
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         separados = {'geral': [], 'nna': [], 'pcd': []}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -83,35 +80,37 @@ class LaudaConvocacaoService:
 
     def _extrair_classificacoes(self, candidatos: list[dict], campo: str) -> list[int]:
         """Extrai classificações de uma lista de candidatos.
-
+        
         Args:
-            candidatos: Lista de candidatos
-            campo: Nome do campo de classificação ('classificacao',
-            'classificacao_nna', 'classificacao_pcd')
-
+            self: Instância do objeto.
+            candidatos: Lista de candidatos.
+            campo: Nome do campo de classificação ('classificacao',.
+        
         Returns:
-            Lista de classificações (pode conter None)
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         return [candidato.get(campo) for candidato in candidatos]  # type: ignore[misc]
 
     def _buscar_candidatos_faltantes(self, outros_processos_uuid: list[str], lacunas_geral: list[int], lacunas_nna: list[int], lacunas_pcd: list[int], codigo_cargo: list[str] | str | None=None, ordering: str='ranking_escolha') -> dict[str, list[dict]]:
         """Busca candidatos faltantes nos outros processos do mesmo concurso,.
-
-        filtrando por cargo quando informado.
-
+        
         Args:
-            outros_processos_uuid: Lista de UUIDs dos outros processos
-            lacunas_geral: Lista de classificações faltantes (Geral)
-            lacunas_nna: Lista de classificações faltantes (NNA)
-            lacunas_pcd: Lista de classificações faltantes (PCD)
-            codigo_cargo: Código(s) do cargo para filtrar (opcional)
-            ordering: Campo para ordenação
-
+            self: Instância do objeto.
+            outros_processos_uuid: Lista de UUIDs dos outros processos.
+            lacunas_geral: Lista de classificações faltantes (Geral).
+            lacunas_nna: Lista de classificações faltantes (NNA).
+            lacunas_pcd: Lista de classificações faltantes (PCD).
+            codigo_cargo: Código(s) do cargo para filtrar (opcional).
+            ordering: Campo para ordenação.
+        
         Returns:
-            Dicionário com candidatos faltantes por tipo. Cada lista é uma
-            lista de dicts diretamente
-            e os itens são anotados com 'status_especial' para diferenciar já
-            classificados/convocados.
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         candidatos_faltantes = {'geral': [], 'nna': [], 'pcd': []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
@@ -190,14 +189,19 @@ class LaudaConvocacaoService:
 
     def _inserir_reclassificados_em_segmento(self, lista_segmento: list[dict], reclassificados: list[dict], cargo_codigo: Any, classificacao_attr: str) -> None:
         """Insere, dentro de lista_segmento, candidatos reclassificados (GERAL).
-
-        antes dos candidatos
-        do mesmo tipo (NNA/PCD) quando a classificação do reclassificado for
-        menor.
-        - Evita duplicar pelo uuid
-        - Mantém ordenação por classificação do respectivo atributo
-        (classificacao_nna/pcd)
-        - Anota 'status_especial' = 'Utilizar classificação GERAL'.
+        
+        Args:
+            self: Instância do objeto.
+            lista_segmento: Parâmetro lista segmento da operação.
+            reclassificados: Parâmetro reclassificados da operação.
+            cargo_codigo: Parâmetro cargo codigo da operação.
+            classificacao_attr: Parâmetro classificacao attr da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         try:
             if not isinstance(reclassificados, list) or not reclassificados or (not lista_segmento):
@@ -226,15 +230,19 @@ class LaudaConvocacaoService:
 
     def _inserir_eliminados_em_segmento(self, lista_segmento: list[dict], eliminados: list[dict], cargo_codigo: Any, classificacao_attr: str) -> None:
         """Insere, dentro de lista_segmento, candidatos ELIMINADOS antes dos.
-
-        candidatos do segmento,
-        considerando a classificação indicada por classificacao_attr
-        (classificacao, classificacao_nna, classificacao_pcd).
-        Para cada item da lista, insere eliminados cuja classificação (no
-        atributo indicado) seja menor que a do item atual.
-        - Evita duplicar pelo uuid
-        - Ordena inserções por valor crescente do atributo indicado
-        - Anota 'status_especial' = 'eliminado do certame'.
+        
+        Args:
+            self: Instância do objeto.
+            lista_segmento: Parâmetro lista segmento da operação.
+            eliminados: Parâmetro eliminados da operação.
+            cargo_codigo: Parâmetro cargo codigo da operação.
+            classificacao_attr: Parâmetro classificacao attr da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         try:
             if not isinstance(eliminados, list) or not eliminados or (not lista_segmento):
@@ -276,62 +284,17 @@ class LaudaConvocacaoService:
 
     def processar_lauda_convocacao(self, processo_uuid: str, ordering: str='ranking_escolha') -> dict:
         """Processa a lauda de convocação para um processo.
-
-        Passos (por cargo):
-        1. Busca candidatos habilitados do processo filtrando por cargo
-        (buscar_habilitados com codigo_cargo)
-        2. Separa candidatos por tipo (GERAL, NNA, PCD)
-        3. Identifica lacunas nas classificações de cada tipo no contexto do
-        cargo
-        4. Busca detalhes do processo para obter concurso_uuid (uma vez) e os
-        outros processos do concurso
-        5. Busca candidatos faltantes nos outros processos (do mesmo cargo) e
-        mescla na base do cargo
-           respeitando lacunas de classificação
-        6. Divide os candidatos do cargo em sessões com base nas agendas do
-        cargo
-        7. Gera campo 'ordem_escolha' por cargo e retorna a estrutura final
-        agregada por cargos
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
-
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+            ordering: Campo para ordenação (padrão: 'ranking_escolha').
+        
         Returns:
-            Dicionário com os dados processados:
-            {
-                'processo_uuid': str,
-                'concurso_uuid': str,
-                'todos_processos_uuid': List[str],
-                'outros_processos_uuid': List[str],
-                'total_cargos': int,
-                'cargos': [
-                    {
-                        'cargo_nome': str,
-                        'cargo_codigo': str,
-                        'numero_sessoes': int,
-                        'sessoes': [
-                            {
-                                'numero_sessao': int,
-                                'hora_convocacao_inicio': str,
-                                'hora_convocacao_fim': str,
-                                'horario_formatado': str,
-                                'total_candidatos': int,
-                                'candidatos': List[Dict]
-                            },
-                            ...
-                        ]
-                    },
-                    ...
-                ]
-            }
-
-            Nota: Candidatos faltantes (encontrados em outros processos) terão
-            o campo
-            'status_especial' = 'CANDIDATOS JÁ CLASSIFICADO.'
-
+            Dicionário com os dados processados.
+        
         Raises:
-            RequestException: Em caso de erro nas requisições
+            Nenhuma exceção específica documentada.
         """
         try:
             logger.info('Buscando agendas para processo_uuid=%s', processo_uuid)
@@ -438,12 +401,32 @@ class LaudaConvocacaoService:
                                 faltantes_todos.extend(candidatos_faltantes['pcd'])
 
                     def key_ranking_escolha(item: Any) -> Any:
-                        """Executa key ranking escolha."""
+                        """Executa key ranking escolha.
+                        
+                        Args:
+                            item: Parâmetro item da operação.
+                        
+                        Returns:
+                            Resultado da operação.
+                        
+                        Raises:
+                            Nenhuma exceção específica documentada.
+                        """
                         val = item.get('ranking_escolha')
                         return val if val is not None else float('inf')
 
                     def key_classificacao(item: Any) -> Any:
-                        """Executa key classificacao."""
+                        """Executa key classificacao.
+                        
+                        Args:
+                            item: Parâmetro item da operação.
+                        
+                        Returns:
+                            Resultado da operação.
+                        
+                        Raises:
+                            Nenhuma exceção específica documentada.
+                        """
                         val = item.get('classificacao')
                         return val if val is not None else float('inf')
                     candidatos_base_ordenados = sorted(candidatos_result, key=key_ranking_escolha)
@@ -451,8 +434,15 @@ class LaudaConvocacaoService:
 
                         def indices_lacunas_classificacao(classificacoes_ordenadas: Any) -> Any:
                             """Retorna mapa {valor_faltante: indice_insercao} sem.
-
-                            repetir índice para lacunas múltiplas.
+                            
+                            Args:
+                                classificacoes_ordenadas: Parâmetro classificacoes ordenadas da operação.
+                            
+                            Returns:
+                                Resultado da operação.
+                            
+                            Raises:
+                                Nenhuma exceção específica documentada.
                             """
                             gaps = {}  # type: ignore[var-annotated]
                             cont = 0
@@ -470,7 +460,17 @@ class LaudaConvocacaoService:
                             return gaps
 
                         def _classificacao_para_gap(item: Any) -> Any:
-                            """Executa  classificacao para gap."""
+                            """Executa  classificacao para gap.
+                            
+                            Args:
+                                item: Parâmetro item da operação.
+                            
+                            Returns:
+                                Resultado da operação.
+                            
+                            Raises:
+                                Nenhuma exceção específica documentada.
+                            """
                             return 9999999 if item.get('categoria_efetiva') != 'GERAL' else item.get('classificacao')
                         classifs_base = [_classificacao_para_gap(c) for c in candidatos_base_ordenados if _classificacao_para_gap(c) is not None]
                         mapa_lacunas = indices_lacunas_classificacao(classifs_base)

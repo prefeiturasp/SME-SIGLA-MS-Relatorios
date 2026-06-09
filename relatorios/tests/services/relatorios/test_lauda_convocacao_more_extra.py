@@ -13,16 +13,44 @@ class _Resp:
     """Define _Resp."""
 
     def __init__(self, content: Any=b'img') -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            content: Parâmetro content da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self.content = content
 
     def raise_for_status(self) -> Any:
-        """Executa raise for status."""
+        """Executa raise for status.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return None
 
 @pytest.fixture
 def svc(settings: Any) -> Any:
-    """Executa svc."""
+    """Executa svc.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://convocacao'
     settings.AGENDAS_API_URL = 'http://agendas'
@@ -31,11 +59,28 @@ def svc(settings: Any) -> Any:
     return LaudaConvocacao(configuracao=cfg, parametrizacao=par)
 
 def _cargos() -> Any:
-    """Executa  cargos."""
+    """Executa  cargos.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'cargo_nome': 'Professor', 'sessoes': [{'numero_sessao': 1, 'horario_formatado': '08:00 às 10:00', 'candidatos': [{'ordem_escolha': 1, 'codigo_inscricao': 'INS1', 'classificacao': 1, 'classificacao_pcd': None, 'classificacao_nna': 2, 'candidato': {'nome': 'Ana'}}]}]}]
 
 def test_renderers_xls_docx_with_logo_and_text(svc: Any) -> None:
-    """Verifica renderers xls docx with logo and text."""
+    """Verifica renderers xls docx with logo and text.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc.context.update({'usar_logotipo': True, 'logo_url': 'http://img/logo.png', 'texto_final': 'Rodape'})
     with patch('relatorios.services.relatorios.lauda_convocacao.requests.get', return_value=_Resp()):
         xls = svc._render_xls(_cargos(), context=svc.context, filename='conv-extra.xlsx')
@@ -46,14 +91,34 @@ def test_renderers_xls_docx_with_logo_and_text(svc: Any) -> None:
     assert 'conv-extra.docx' in docx['Content-Disposition']
 
 def test_render_xls_logo_error_path(svc: Any) -> None:
-    """Verifica render xls logo error path."""
+    """Verifica render xls logo error path.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc.context.update({'usar_logotipo': True, 'logo_url': 'http://img/logo.png'})
     with patch('relatorios.services.relatorios.lauda_convocacao.requests.get', side_effect=RuntimeError('img err')):
         xls = svc._render_xls(_cargos(), context=svc.context, filename='conv-logo-err.xlsx')
     assert isinstance(xls, HttpResponse)
 
 def test_gerar_doc_and_xls_routes(svc: Any) -> None:
-    """Verifica gerar doc and xls routes."""
+    """Verifica gerar doc and xls routes.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     req = RequestFactory().get('/x')
     svc.lauda_service = Mock()
     svc.lauda_service.processar_lauda_convocacao.return_value = {'cargos': _cargos()}

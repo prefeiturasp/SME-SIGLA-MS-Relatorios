@@ -10,23 +10,62 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def configuracao_relatorio() -> Any:
-    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    """Fixture que cria uma ConfiguracaoRelatorio para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_VAGAS', defaults={'usar_logotipo': False, 'cabecalho': '', 'texto_final': '', 'cabecalho_capa_ata': ''})[0]
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Fixture que cria uma Parametrizacao para testes."""
+    """Fixture que cria uma Parametrizacao para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.create(cabecalho='Cabeçalho Padrão Teste', logo=None)
 
 class DummyRelatorio(RelatorioBase):
     """Define DummyRelatorio."""
 
     def gerar(self, processo_uuid: str, request: Any, formato: str='html', cabecalho: str='') -> Any:  # type: ignore[override]
-        """Executa gerar."""
+        """Executa gerar.
+        
+        Args:
+            self: Instância do objeto.
+            processo_uuid: Parâmetro processo uuid da operação.
+            request: Requisição HTTP recebida.
+            formato: Parâmetro formato da operação.
+            cabecalho: Parâmetro cabecalho da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return (HttpResponse('ok'), {})
 
 def test_context_cabecalho_usa_gabarito_quando_cabecalho_vazio(configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica context cabecalho usa gabarito quando cabecalho vazio."""
+    """Verifica context cabecalho usa gabarito quando cabecalho vazio.
+    
+    Args:
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     configuracao_relatorio.cabecalho = ''
     configuracao_relatorio.cabecalho_gabarito = 'Gabarito Teste'
     configuracao_relatorio.save()
@@ -34,7 +73,18 @@ def test_context_cabecalho_usa_gabarito_quando_cabecalho_vazio(configuracao_rela
     assert rel.context['cabecalho'] == 'Gabarito Teste'
 
 def test_context_cabecalho_prefere_cabecalho_sobre_gabarito(configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica context cabecalho prefere cabecalho sobre gabarito."""
+    """Verifica context cabecalho prefere cabecalho sobre gabarito.
+    
+    Args:
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     configuracao_relatorio.cabecalho = 'Cabeçalho Customizado'
     configuracao_relatorio.cabecalho_gabarito = 'Gabarito Teste'
     configuracao_relatorio.save()
@@ -42,7 +92,18 @@ def test_context_cabecalho_prefere_cabecalho_sobre_gabarito(configuracao_relator
     assert rel.context['cabecalho'] == 'Cabeçalho Customizado'
 
 def test_context_cabecalho_vazio_quando_ambos_vazios(configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica context cabecalho vazio quando ambos vazios."""
+    """Verifica context cabecalho vazio quando ambos vazios.
+    
+    Args:
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     configuracao_relatorio.cabecalho = ''
     configuracao_relatorio.cabecalho_gabarito = ''
     configuracao_relatorio.save()
@@ -50,7 +111,19 @@ def test_context_cabecalho_vazio_quando_ambos_vazios(configuracao_relatorio: Any
     assert rel.context['cabecalho'] == '' or rel.context['cabecalho'] is None
 
 def test_render_to_pdf_success(monkeypatch: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica render to pdf success."""
+    """Verifica render to pdf success.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     rel = DummyRelatorio(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
     with patch('relatorios.services.base.relatorio_base.render_to_string', return_value='<html><body>PDF</body></html>') as m_render, patch('relatorios.services.base.relatorio_base.HTML') as m_html_cls:
         m_html = Mock()
@@ -64,7 +137,19 @@ def test_render_to_pdf_success(monkeypatch: Any, configuracao_relatorio: Any, pa
     assert 'attachment; filename="file.pdf"' in response['Content-Disposition']
 
 def test_render_to_pdf_error_propagates(monkeypatch: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica render to pdf error propagates."""
+    """Verifica render to pdf error propagates.
+    
+    Args:
+        monkeypatch: Fixture do pytest para substituir objetos.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     rel = DummyRelatorio(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
     with patch('relatorios.services.base.relatorio_base.render_to_string', return_value='<html/>'), patch('relatorios.services.base.relatorio_base.HTML') as m_html_cls:
         m_html = Mock()
@@ -75,6 +160,17 @@ def test_render_to_pdf_error_propagates(monkeypatch: Any, configuracao_relatorio
 
 @pytest.mark.parametrize('html,expected', [('', ''), (None, ''), ('<p>Oi&nbsp;Mundo</p><br><p>Segunda&nbsp;&amp; Linha</p>', 'Oi Mundo\n\nSegunda & Linha'), ('Texto sem tags', 'Texto sem tags'), ('<p>Um</p><p>Dois</p><p>Três</p>', 'Um\nDois\nTrês'), ('A&nbsp;&lt;B&gt; &quot;C&quot; &#39;D&#39;', 'A <B> "C" \'D\''), ('Linha1<br/><br />\n<br> Linha2', 'Linha1\n\n Linha2')])
 def test_processar_cabecalho_html(html: Any, expected: Any) -> None:
-    """Verifica processar cabecalho html."""
+    """Verifica processar cabecalho html.
+    
+    Args:
+        html: Parâmetro html da operação.
+        expected: Parâmetro expected da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     result = RelatorioBase.processar_cabecalho_html(html)
     assert result == expected.strip()

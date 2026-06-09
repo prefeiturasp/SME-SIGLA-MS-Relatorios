@@ -10,13 +10,19 @@ from requests import RequestException
 from .candidatos_api_service import CandidatosService
 
 class CargoObrigatorioError(Exception):
-    """Exceção levantada quando o processo tem mais de um cargo e o cargo não foi.
-
-    informado.
-    """
+    """Exceção levantada quando o processo tem mais de um cargo e o cargo não foi."""
 
     def __init__(self, cargos: list[dict], message: str='Selecione um cargo para emitir a Ata de Escolha.') -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            cargos: Parâmetro cargos da operação.
+            message: Parâmetro message da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self.cargos = cargos
         self.message = message
         super().__init__(message)
@@ -26,23 +32,21 @@ from .processo_convocacao_api_service import ProcessoConvocacaoService
 logger = logging.getLogger(__name__)
 
 class AtaEscolhaService:
-    """Serviço para geração de Ata de Escolha.
-
-    Processa por cargo (cargo_codigo) de forma independente: busca habilitados
-    filtrando por cargo,
-    organiza sessões conforme agendas do cargo, busca escolhas e consolida o
-    resultado por cargo.
-    """
+    """Serviço para geração de Ata de Escolha."""
 
     def __init__(self, candidatos_base_url: str='https://example.com', processo_base_url: str='https://example.com', agendas_base_url: str='https://example.com', escolhas_base_url: str='https://example.com', timeout_seconds: int=30) -> None:
         """Inicializa o serviço de ata de escolha.
-
+        
         Args:
-            candidatos_base_url: URL base da API de candidatos
-            processo_base_url: URL base da API de processos de convocação
-            agendas_base_url: URL base da API de agendas
-            escolhas_base_url: URL base da API de escolhas
-            timeout_seconds: Timeout em segundos para as requisições
+            self: Instância do objeto.
+            candidatos_base_url: URL base da API de candidatos.
+            processo_base_url: URL base da API de processos de convocação.
+            agendas_base_url: URL base da API de agendas.
+            escolhas_base_url: URL base da API de escolhas.
+            timeout_seconds: Timeout em segundos para as requisições.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         self.candidatos_service = CandidatosService(base_url=candidatos_base_url, timeout_seconds=timeout_seconds)
         self.processo_service = ProcessoConvocacaoService(base_url=processo_base_url, timeout_seconds=timeout_seconds)
@@ -51,14 +55,16 @@ class AtaEscolhaService:
 
     def _identificar_lacunas(self, classificacoes: list[int]) -> list[int]:
         """Identifica lacunas em uma lista de classificações.
-
-        Exemplo: [1, 2, 3, 6, 7] -> retorna [4, 5].
-
+        
         Args:
+            self: Instância do objeto.
             classificacoes: Lista de classificações (pode conter None).
-
+        
         Returns:
-            Lista de classificações faltantes (lacunas)
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         classificacoes_validas = sorted(set((c for c in classificacoes if c is not None and isinstance(c, int))))
         if not classificacoes_validas:
@@ -71,20 +77,16 @@ class AtaEscolhaService:
 
     def _separar_por_tipo(self, candidatos: list[dict]) -> dict[str, list[dict]]:
         """Separa candidatos por tipo usando o campo categoria_efetiva: GERAL, NNA.
-
-        e PCD.
-        PCD deve aparecer primeiro.
-
+        
         Args:
-            candidatos: Lista de candidatos retornados da API
-
+            self: Instância do objeto.
+            candidatos: Lista de candidatos retornados da API.
+        
         Returns:
-            Dicionário com candidatos separados por tipo:
-            {
-                'pcd': [candidatos com categoria_efetiva='PCD'],
-                'geral': [candidatos com categoria_efetiva='GERAL'],
-                'nna': [candidatos com categoria_efetiva='NNA']
-            }
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         separados = {'pcd': [], 'geral': [], 'nna': []}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -99,35 +101,37 @@ class AtaEscolhaService:
 
     def _extrair_classificacoes(self, candidatos: list[dict], campo: str) -> list[int]:
         """Extrai classificações de uma lista de candidatos.
-
+        
         Args:
-            candidatos: Lista de candidatos
-            campo: Nome do campo de classificação ('classificacao',
-            'classificacao_nna', 'classificacao_pcd')
-
+            self: Instância do objeto.
+            candidatos: Lista de candidatos.
+            campo: Nome do campo de classificação ('classificacao',.
+        
         Returns:
-            Lista de classificações (pode conter None)
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         return [candidato.get(campo) for candidato in candidatos]  # type: ignore[misc]
 
     def _buscar_candidatos_faltantes(self, outros_processos_uuid: list[str], lacunas_geral: list[int], lacunas_nna: list[int], lacunas_pcd: list[int], codigo_cargo: list[str] | str | None=None, ordering: str='ranking_escolha') -> dict[str, list[dict]]:
         """Busca candidatos faltantes nos outros processos do mesmo concurso,.
-
-        filtrando por cargo quando informado.
-
+        
         Args:
-            outros_processos_uuid: Lista de UUIDs dos outros processos
-            lacunas_geral: Lista de classificações faltantes (Geral)
-            lacunas_nna: Lista de classificações faltantes (NNA)
-            lacunas_pcd: Lista de classificações faltantes (PCD)
-            codigo_cargo: Código(s) do cargo para filtrar (opcional)
-            ordering: Campo para ordenação
-
+            self: Instância do objeto.
+            outros_processos_uuid: Lista de UUIDs dos outros processos.
+            lacunas_geral: Lista de classificações faltantes (Geral).
+            lacunas_nna: Lista de classificações faltantes (NNA).
+            lacunas_pcd: Lista de classificações faltantes (PCD).
+            codigo_cargo: Código(s) do cargo para filtrar (opcional).
+            ordering: Campo para ordenação.
+        
         Returns:
-            Dicionário com candidatos faltantes por tipo. Cada lista é uma
-            lista de dicts diretamente
-            e os itens são anotados com 'status_especial' para diferenciar já
-            classificados/convocados.
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         candidatos_faltantes = {'geral': [], 'nna': [], 'pcd': []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
@@ -176,15 +180,16 @@ class AtaEscolhaService:
 
     def _buscar_escolhas_por_candidatos(self, candidato_uuids: list[str]) -> dict[str, dict]:
         """Busca escolhas por lista de candidato_uuids e retorna um mapa.
-
-        candidato_uuid -> escolha.
-
+        
         Args:
-            candidato_uuids: Lista de UUIDs dos candidatos
-
+            self: Instância do objeto.
+            candidato_uuids: Lista de UUIDs dos candidatos.
+        
         Returns:
-            Dicionário mapeando candidato_uuid -> escolha (ou vazio se não
-            houver escolha)
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         escolhas_map = {}  # type: ignore[var-annotated]
         if not candidato_uuids:
@@ -202,20 +207,16 @@ class AtaEscolhaService:
 
     def _extrair_dados_escola_escolhida(self, escolha: dict) -> dict:
         """Extrai dados da escola escolhida de uma escolha.
-
+        
         Args:
-            escolha: Dicionário com dados da escolha
-
+            self: Instância do objeto.
+            escolha: Dicionário com dados da escolha.
+        
         Returns:
-            Dicionário com dados da escola escolhida:
-            {
-                'codigo_eol': str,
-                'dre_codigo': str,
-                'dre_nome': str,
-                'tipo_unidade': str,
-                'nome_escola': str,
-                'tipo_vaga': str  # 'P' para precária, 'D' para definitiva
-            }
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         vaga_escola = escolha.get('vaga_escola', {})
         escola = vaga_escola.get('escola', {}) if isinstance(vaga_escola, dict) else {}
@@ -236,11 +237,16 @@ class AtaEscolhaService:
 
     def _contar_escolhas_por_situacao(self, escolhas: list[dict]) -> dict[str, int]:
         """Conta quantas escolhas existem por situação.
-
-        A situação pode ser: 'escolha', 'nao-escolha' ou 'reconvocacao'.
-        Retorna um dicionário com as chaves 'escolha', 'nao_escolha' e
-        'reconvocacao'.
-        Também inclui alias 'nao-escolha' para compatibilidade de acesso.
+        
+        Args:
+            self: Instância do objeto.
+            escolhas: Parâmetro escolhas da operação.
+        
+        Returns:
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         contadores = {'escolha': 0, 'nao_escolha': 0, 'reconvocacao': 0}
         normalizar = {'escolha': 'escolha', 'nao-escolha': 'nao_escolha', 'nao_escolha': 'nao_escolha', 'reconvocacao': 'reconvocacao'}
@@ -257,11 +263,17 @@ class AtaEscolhaService:
 
     def _contar_escolhas_por_situacao_por_tipo(self, candidatos_sep_cargo: dict[str, list[dict]], escolhas_map: dict[str, dict]) -> dict[str, dict[str, int]]:
         """Conta as escolhas por situação separadas por tipo de candidato (pcd,.
-
-        geral, nna).
-        - candidatos_sep_cargo: {'pcd': [...], 'geral': [...], 'nna': [...]}
-        - escolhas_map: {candidato_uuid: { 'situacao':
-        'escolha'|'nao-escolha'|'reconvocacao', ...}}.
+        
+        Args:
+            self: Instância do objeto.
+            candidatos_sep_cargo: Parâmetro candidatos sep cargo da operação.
+            escolhas_map: Parâmetro escolhas map da operação.
+        
+        Returns:
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         resultado: dict[str, dict[str, int]] = {}
         normalizar = {'escolha': 'escolha', 'nao-escolha': 'nao_escolha', 'nao_escolha': 'nao_escolha', 'reconvocacao': 'reconvocacao'}
@@ -286,73 +298,19 @@ class AtaEscolhaService:
 
     def processar_ata_escolha(self, processo_uuid: str, cargo_codigo: str | None=None, ordering: str='ranking_escolha') -> dict:
         """Processa a ata de escolha para um processo.
-
-        Passos (por cargo):
-        1. Busca candidatos habilitados do processo filtrando por cargo
-        2. Separa candidatos por tipo (PCD primeiro, depois GERAL, depois NNA)
-        3. Identifica lacunas nas classificações de cada tipo no contexto do
-        cargo
-        4. Busca detalhes do processo para obter concurso_uuid e os outros
-        processos do concurso
-        5. Busca candidatos faltantes nos outros processos (do mesmo cargo) e
-        mescla na base do cargo
-           respeitando lacunas de classificação
-        6. Busca escolhas dos candidatos
-        7. Divide os candidatos do cargo em sessões com base nas agendas do
-        cargo
-        8. Gera campo 'ordem_escolha' por cargo e retorna a estrutura final
-        agregada por cargos
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
-            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais
-            de um cargo)
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
-
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais.
+            ordering: Campo para ordenação (padrão: 'ranking_escolha').
+        
         Returns:
-            Dicionário com os dados processados:
-            {
-                'processo_uuid': str,
-                'concurso_uuid': str,
-                'todos_processos_uuid': List[str],
-                'outros_processos_uuid': List[str],
-                'total_cargos': int,
-                'cargos': [
-                    {
-                        'cargo_nome': str,
-                        'cargo_codigo': str,
-                        'numero_sessoes': int,
-                        'sessoes': [
-                            {
-                                'numero_sessao': int,
-                                'hora_convocacao_inicio': str,
-                                'hora_convocacao_fim': str,
-                                'horario_formatado': str,
-                                'total_candidatos': int,
-                                'candidatos': List[Dict]  # Cada candidato com
-                                dados da escolha se houver
-                            },
-                            ...
-                        ]
-                    },
-                    ...
-                ]
-            }
-
-            Cada candidato na lista terá os seguintes campos adicionais:
-            - 'escolha': Dict com dados da escola escolhida (se houver escolha)
-            - 'assinatura': str ('Escolha' ou 'Não Escolha')
-            - 'codigo_eol': str
-            - 'dre_codigo': str
-            - 'dre_nome': str
-            - 'tipo_unidade': str
-            - 'nome_escola_escolhida': str
-            - 'tipo_vaga': str ('P' ou 'D')
-
+            Dicionário com os dados processados.
+        
         Raises:
-            RequestException: Em caso de erro nas requisições
-            CargoObrigatorioError: Quando o processo tem mais de um cargo e
-            cargo_codigo não foi informado
+            CargoObrigatorioError: Quando o processo tem mais de um cargo e.
+            ValueError: Se ocorrer erro nesta operação.
         """
         try:
             logger.info('Buscando agendas para processo_uuid=%s', processo_uuid)
@@ -463,12 +421,32 @@ class AtaEscolhaService:
                             faltantes_todos.extend(candidatos_faltantes['nna'])
 
                 def key_ranking_escolha(item: Any) -> Any:
-                    """Executa key ranking escolha."""
+                    """Executa key ranking escolha.
+                    
+                    Args:
+                        item: Parâmetro item da operação.
+                    
+                    Returns:
+                        Resultado da operação.
+                    
+                    Raises:
+                        Nenhuma exceção específica documentada.
+                    """
                     val = item.get('ranking_escolha')
                     return val if val is not None else float('inf')
 
                 def key_categoria_efetiva(item: Any) -> Any:
-                    """Executa key categoria efetiva."""
+                    """Executa key categoria efetiva.
+                    
+                    Args:
+                        item: Parâmetro item da operação.
+                    
+                    Returns:
+                        Resultado da operação.
+                    
+                    Raises:
+                        Nenhuma exceção específica documentada.
+                    """
                     categoria = item.get('categoria_efetiva', '')
                     if categoria == 'PCD':
                         return 0
@@ -479,7 +457,17 @@ class AtaEscolhaService:
                     return 3
 
                 def key_classificacao(item: Any) -> Any:
-                    """Executa key classificacao."""
+                    """Executa key classificacao.
+                    
+                    Args:
+                        item: Parâmetro item da operação.
+                    
+                    Returns:
+                        Resultado da operação.
+                    
+                    Raises:
+                        Nenhuma exceção específica documentada.
+                    """
                     val = item.get('classificacao')
                     return val if val is not None else float('inf')
                 candidatos_base_ordenados = sorted(candidatos_cargo, key=lambda x: (key_categoria_efetiva(x), key_ranking_escolha(x)))
@@ -487,8 +475,15 @@ class AtaEscolhaService:
 
                     def indices_lacunas_classificacao(classificacoes_ordenadas: Any) -> Any:
                         """Retorna mapa {valor_faltante: indice_insercao} sem.
-
-                        repetir índice para lacunas múltiplas.
+                        
+                        Args:
+                            classificacoes_ordenadas: Parâmetro classificacoes ordenadas da operação.
+                        
+                        Returns:
+                            Resultado da operação.
+                        
+                        Raises:
+                            Nenhuma exceção específica documentada.
                         """
                         gaps = {}  # type: ignore[var-annotated]
                         cont = 0
@@ -506,7 +501,17 @@ class AtaEscolhaService:
                         return gaps
 
                     def _classificacao_para_gap(item: Any) -> Any:
-                        """Executa  classificacao para gap."""
+                        """Executa  classificacao para gap.
+                        
+                        Args:
+                            item: Parâmetro item da operação.
+                        
+                        Returns:
+                            Resultado da operação.
+                        
+                        Raises:
+                            Nenhuma exceção específica documentada.
+                        """
                         return 9999999 if item.get('categoria_efetiva') != 'GERAL' else item.get('classificacao')
                     classifs_base = [_classificacao_para_gap(c) for c in candidatos_base_ordenados if _classificacao_para_gap(c) is not None]
                     mapa_lacunas = indices_lacunas_classificacao(classifs_base)

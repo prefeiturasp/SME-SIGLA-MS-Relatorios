@@ -13,10 +13,14 @@ class CandidatosService:
 
     def __init__(self, base_url: str='https://example.com', timeout_seconds: int=30) -> None:
         """Inicializa o serviço de candidatos.
-
+        
         Args:
-            base_url: URL base da API de candidatos
-            timeout_seconds: Timeout em segundos para as requisições
+            self: Instância do objeto.
+            base_url: URL base da API de candidatos.
+            timeout_seconds: Timeout em segundos para as requisições.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         self.base_url = base_url.rstrip('/')
         self.timeout_seconds = timeout_seconds
@@ -24,19 +28,18 @@ class CandidatosService:
 
     def buscar_habilitados(self, processo_uuid: str, codigo_cargo: list[str] | str | None=None, ordering: str='ranking_escolha') -> requests.Response:
         """Busca candidatos habilitados por processo_uuid, ordenados por.
-
-        ranking_escolha.
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
-            codigo_cargo: Código(s) de cargo para filtragem (opcional)
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
-
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+            codigo_cargo: Código(s) de cargo para filtragem (opcional).
+            ordering: Campo para ordenação (padrão: 'ranking_escolha').
+        
         Returns:
-            Response da API com os candidatos habilitados
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/habilitados/'
         params = {'processo_uuid': processo_uuid, 'ordering': ordering}
@@ -64,27 +67,20 @@ class CandidatosService:
 
     def buscar_habilitados_por_processos_e_classificacoes(self, processo_uuids: list[str] | str, classificacao: list[int] | list[str] | str | None=None, classificacao_nna: list[int] | list[str] | str | None=None, codigo_cargo: list[str] | str | None=None, ordering: str='ranking_escolha') -> requests.Response:
         """Busca candidatos habilitados em múltiplos processos com classificações.
-
-        específicas.
-        Suporta filtros por classificacao e/ou classificacao_nna de forma
-        flexível.
-
+        
         Args:
-            processo_uuids: Lista de UUIDs dos processos ou string com UUIDs
-            separados por vírgula
-            classificacao: Lista de classificações ou string com classificações
-            separadas por vírgula (opcional)
-            classificacao_nna: Lista de classificações NNA ou string com
-            classificações separadas por vírgula (opcional)
-            codigo_cargo: Lista de códigos de cargo ou string com códigos
-            separados por vírgula (opcional)
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
-
+            self: Instância do objeto.
+            processo_uuids: Lista de UUIDs dos processos ou string com UUIDs.
+            classificacao: Lista de classificações ou string com classificações.
+            classificacao_nna: Lista de classificações NNA ou string com.
+            codigo_cargo: Lista de códigos de cargo ou string com códigos.
+            ordering: Campo para ordenação (padrão: 'ranking_escolha').
+        
         Returns:
-            Response da API com os candidatos habilitados
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/habilitados/'
         if isinstance(processo_uuids, list):
@@ -152,16 +148,17 @@ class CandidatosService:
 
     def buscar_por_uuids(self, uuids: list[str], order_by: str='ranking_escolha') -> requests.Response:
         """Busca candidatos habilitados por uma lista de UUIDs usando método POST.
-
+        
         Args:
-            uuids: Lista de UUIDs dos candidatos
-            order_by: Campo para ordenação (padrão: 'ranking_escolha')
-
+            self: Instância do objeto.
+            uuids: Lista de UUIDs dos candidatos.
+            order_by: Campo para ordenação (padrão: 'ranking_escolha').
+        
         Returns:
-            Response da API com os candidatos habilitados
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/habilitados/buscar-por-uuids/'
         params = {'order_by': order_by}
@@ -178,28 +175,17 @@ class CandidatosService:
 
     def buscar_candidatos_por_agendas(self, agendas_response: requests.Response, order_by: str='ranking_escolha') -> dict:
         """Itera sobre as agendas retornadas e busca candidatos para cada agenda.
-
-        usando os candidatos_uuids de cada uma.
-
+        
         Args:
-            agendas_response: Response da API de agendas (deve conter 'results'
-            com lista de agendas)
-            order_by: Campo para ordenação (padrão: 'ranking_escolha')
-
+            self: Instância do objeto.
+            agendas_response: Response da API de agendas (deve conter 'results'.
+            order_by: Campo para ordenação (padrão: 'ranking_escolha').
+        
         Returns:
-            Dicionário com agendas e seus respectivos candidatos:
-            {
-                'agendas': [
-                    {
-                        'agenda': {...},  # Dados da agenda original
-                        'candidatos': [...]  # Lista de candidatos encontrados
-                    },
-                    ...
-                ]
-            }
-
+            Dicionário com os dados processados.
+        
         Raises:
-            RequestException: Em caso de erro nas requisições
+            Nenhuma exceção específica documentada.
         """
         try:
             agendas_data = agendas_response.json()
@@ -239,20 +225,16 @@ class CandidatosService:
 
     def buscar_concurso_candidatos_por_processo(self, processo_uuid: str) -> requests.Response:
         """Busca ConcursoCandidato por processo_uuid.
-
-        Tenta usar o endpoint /api/v1/candidatos/ que pode retornar
-        ConcursoCandidato
-        através do relacionamento 'concursos'.
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
-
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+        
         Returns:
-            Response da API com os dados (pode ser Candidato ou
-            ConcursoCandidato)
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/habilitados/'
         params = {'processo_uuid': processo_uuid, 'page_size': 10000}
@@ -268,11 +250,17 @@ class CandidatosService:
 
     def buscar_reclassificados_por_concurso(self, concurso_uuid: str, processo_uuid: str) -> requests.Response:
         """Busca candidatos reclassificados (de NNA/PCD -> GERAL) por.
-
-        concurso_uuid.
-        Endpoint esperado do ms-candidatos:
-            GET /api/v1/reclassificados/?concurso_uuid=<uuid>
-        Retorna um dicionário com duas chaves: 'nna' e 'pcd'.
+        
+        Args:
+            self: Instância do objeto.
+            concurso_uuid: Parâmetro concurso uuid da operação.
+            processo_uuid: Parâmetro processo uuid da operação.
+        
+        Returns:
+            Resposta HTTP com o resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/reclassificados/'
         params = {'concurso_uuid': concurso_uuid, 'processo_uuid': processo_uuid}
@@ -288,17 +276,19 @@ class CandidatosService:
 
     def buscar_eliminados_por_concurso(self, concurso_uuid: str, processo_uuid: str, classificacao_max: int, classificacao_min: int) -> requests.Response:
         """Busca candidatos eliminados por concurso_uuid e classificacao_max e.
-
-        classificacao_min.
-        Endpoint esperado do ms-candidatos:
-            GET
-            /api/v1/eliminados/?concurso_uuid=<uuid>&classificacao_max=<int>&classificacao_min=<int>
-        Retorna um dicionário separado por tipo de classificação:
-        {
-          "geral": [...],
-          "nna": [...],
-          "pcd": [...]
-        }.
+        
+        Args:
+            self: Instância do objeto.
+            concurso_uuid: Parâmetro concurso uuid da operação.
+            processo_uuid: Parâmetro processo uuid da operação.
+            classificacao_max: Parâmetro classificacao max da operação.
+            classificacao_min: Parâmetro classificacao min da operação.
+        
+        Returns:
+            Resposta HTTP com o resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/eliminados/'
         params = {'concurso_uuid': concurso_uuid, 'processo_uuid': processo_uuid, 'classificacao_max': classificacao_max, 'classificacao_min': classificacao_min}

@@ -35,15 +35,20 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 class ResultadoEscolha(RelatorioBase):
-    """Classe concreta responsável por gerar o relatório de Resultado de Escolha.
-
-    de Vagas.
-    Estrutura: Cargo > Tipo de Escolha > Agenda > Candidatos e escolha.
-    """
+    """Classe concreta responsável por gerar o relatório de Resultado de Escolha."""
     TEMPLATE_NAME = 'relatorios/resultado_escolha.html'
 
     def __init__(self, tipo: str, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias."""
+        """Inicializa o service com as dependências necessárias.
+        
+        Args:
+            self: Instância do objeto.
+            tipo: Parâmetro tipo da operação.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
         self.candidatos_service = CandidatosService(base_url=settings.CANDIDATOS_API_URL)
@@ -55,6 +60,7 @@ class ResultadoEscolha(RelatorioBase):
         """Gera o relatório de Resultado da Escolha SIM.
         
         Args:
+            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Objeto request do Django.
             formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx').
@@ -63,11 +69,10 @@ class ResultadoEscolha(RelatorioBase):
             **kwargs: Argumentos nomeados variáveis.
         
         Returns:
-        Tupla (HttpResponse, dados) onde:
-        - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou
-        DOCX)
-        - dados: estrutura de dados do relatório (cargos_list) para salvar
-        no banco
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_map = {}
         try:
@@ -248,14 +253,16 @@ class ResultadoEscolha(RelatorioBase):
 
     def _extrair_numero_sessao(self, sessao: str) -> str:
         """Extrai apenas o número da sessão, removendo a palavra "Sessão" se.
-
-        presente.
-
+        
         Args:
-            sessao: String com a sessão (ex: "Sessão 4", "4", etc.)
-
+            self: Instância do objeto.
+            sessao: String com a sessão (ex: "Sessão 4", "4", etc.).
+        
         Returns:
-            String com apenas o número da sessão ou '-' se não encontrar
+            Texto resultante da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         if not sessao or sessao == '-':
             return '-'
@@ -269,12 +276,16 @@ class ResultadoEscolha(RelatorioBase):
 
     def _agrupar_por_cargo_e_agenda(self, escolhas: list) -> list:
         """Agrupa escolhas por cargo da agenda e depois por agenda.
-
+        
         Args:
-            escolhas: Lista de escolhas com suas informações
-
+            self: Instância do objeto.
+            escolhas: Lista de escolhas com suas informações.
+        
         Returns:
-            Lista de cargos (da agenda) com suas agendas e candidatos
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
@@ -312,15 +323,16 @@ class ResultadoEscolha(RelatorioBase):
 
     def _agrupar_por_cargo_tipo_escolha_e_agenda(self, escolhas: list) -> list:
         """Agrupa escolhas por cargo da agenda, depois por tipo de escolha, e.
-
-        depois por agenda.
-
+        
         Args:
-            escolhas: Lista de escolhas com suas informações
-
+            self: Instância do objeto.
+            escolhas: Lista de escolhas com suas informações.
+        
         Returns:
-            Lista de cargos (da agenda) com tipos de escolha, agendas e
-            candidatos
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
@@ -366,10 +378,18 @@ class ResultadoEscolha(RelatorioBase):
 
     def _adicionar_resumo_dre_escola(self, cargos_list: list, escolhas_com_candidatos: list, processo_uuid: str) -> list:
         """Adiciona ao cargos_list o resumo DRE > ESCOLA com qtd de vagas e qtd de.
-
-        escolhas.
-        Inclui apenas DREs e escolas que tiveram escolhas realizadas (situacao
-        'escolha').
+        
+        Args:
+            self: Instância do objeto.
+            cargos_list: Parâmetro cargos list da operação.
+            escolhas_com_candidatos: Parâmetro escolhas com candidatos da operação.
+            processo_uuid: Parâmetro processo uuid da operação.
+        
+        Returns:
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         escolhas_realizadas = [e for e in escolhas_com_candidatos if e.get('tipo_escolha') == 'Escolha' and (e.get('dre_nome') or e.get('escola_codigo_eol') or e.get('escola_nome'))]
         if not escolhas_realizadas:
@@ -433,13 +453,17 @@ class ResultadoEscolha(RelatorioBase):
         """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
         
         Args:
+            self: Instância do objeto.
             cargos_list: Lista de cargos com suas agendas e candidatos.
             cabecalho_padrao: Cabeçalho padrão do relatório.
             cabecalho: Texto do cabeçalho do relatório.
             filename: Nome do arquivo Excel gerado.
         
         Returns:
-        HttpResponse com o arquivo Excel gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if not OPENPYXL_AVAILABLE:
             raise ImportError('openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0')
@@ -685,16 +709,19 @@ class ResultadoEscolha(RelatorioBase):
 
     def render_to_docx(self, cargos_list: Any, cabecalho: Any, texto_final: Any=None, filename: Any='resultado_escolha.docx') -> Any:
         """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
-
+        
         Args:
-            cargos_list: Lista de cargos com suas agendas e candidatos
-            (estrutura hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            texto_final: Texto final do relatório (opcional)
-            filename: Nome do arquivo Word gerado
-
+            self: Instância do objeto.
+            cargos_list: Lista de cargos com suas agendas e candidatos.
+            cabecalho: Texto do cabeçalho do relatório.
+            texto_final: Texto final do relatório (opcional).
+            filename: Nome do arquivo Word gerado.
+        
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if not DOCX_AVAILABLE:
             raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=1.1.0')

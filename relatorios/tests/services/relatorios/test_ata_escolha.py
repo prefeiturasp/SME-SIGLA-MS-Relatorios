@@ -11,17 +11,41 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def configuracao_relatorio() -> Any:
-    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    """Fixture que cria uma ConfiguracaoRelatorio para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='ATA_ESCOLHA', defaults={'usar_logotipo': False, 'cabecalho': '', 'texto_final': '', 'cabecalho_capa_ata': ''})[0]
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Fixture que cria uma Parametrizacao para testes."""
+    """Fixture que cria uma Parametrizacao para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.create(cabecalho='Cabeçalho Padrão Teste', logo=None)
 
 @pytest.fixture
 def settings_config(settings: Any) -> Any:
-    """Configuração padrão de settings para os testes."""
+    """Configuração padrão de settings para os testes.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
@@ -31,39 +55,115 @@ def settings_config(settings: Any) -> Any:
 
 @pytest.fixture
 def service(settings_config: Any, configuracao_relatorio: Any, parametrizacao: Any) -> Any:
-    """Fixture para criar instância de AtaEscolha."""
+    """Fixture para criar instância de AtaEscolha.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return AtaEscolha(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
 
 @pytest.fixture
 def service_mocked(service: Any) -> Any:
-    """Fixture para criar serviço com mock do ata_service."""
+    """Fixture para criar serviço com mock do ata_service.
+    
+    Args:
+        service: Parâmetro service da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     service.ata_service = Mock()
     return service
 
 @pytest.fixture
 def dados_ata() -> Any:
-    """Dados de exemplo para a ata de escolha."""
+    """Dados de exemplo para a ata de escolha.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return {'processo_uuid': 'proc-123', 'concurso_uuid': 'conc-456', 'total_cargos': 1, 'cargos': [{'cargo_nome': 'Professor', 'cargo_codigo': '123', 'numero_sessoes': 1, 'sessoes': [{'numero_sessao': 1, 'hora_convocacao_inicio': '09:00', 'hora_convocacao_fim': '10:00', 'horario_formatado': '09:00 às 10:00', 'total_candidatos': 2, 'candidatos': [{'uuid': 'cand-1', 'classificacao': 1, 'classificacao_pcd': None, 'classificacao_nna': None, 'nome': 'Candidato Um', 'rg': '1234567', 'cpf': '11111111111', 'rf': 'RF001', 'codigo_eol': '12345', 'dre_codigo': 'DRE-A', 'dre_nome': 'DRE A', 'tipo_unidade': 'EMEF', 'nome_escola_escolhida': 'Escola Teste', 'tipo_vaga': 'P', 'assinatura': 'Escolha', 'candidato': {'nome': 'Candidato Um', 'rg': '1234567', 'cpf': '11111111111', 'registro_funcional': 'RF001'}}, {'uuid': 'cand-2', 'classificacao': 2, 'classificacao_pcd': None, 'classificacao_nna': None, 'nome': 'Candidato Dois', 'rg': '7654321', 'cpf': '22222222222', 'rf': 'RF002', 'codigo_eol': '', 'dre_codigo': '', 'dre_nome': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {'nome': 'Candidato Dois', 'rg': '7654321', 'cpf': '22222222222', 'registro_funcional': 'RF002'}}]}]}]}
 
 @pytest.fixture
 def request_obj() -> Any:
-    """Fixture para criar objeto de request."""
+    """Fixture para criar objeto de request.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return RequestFactory().get('/relatorios/ata-escolha/')
 
 def _make_cargo_list(**kwargs: Any) -> Any:
-    """Helper para criar lista de cargos com diferentes variações."""
+    """Helper para criar lista de cargos com diferentes variações.
+    
+    Args:
+        **kwargs: Argumentos nomeados variáveis.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     cargo_base = {'cargo_nome': kwargs.get('cargo_nome', 'Professor'), 'cargo_codigo': kwargs.get('cargo_codigo', '123'), 'sessoes': kwargs.get('sessoes', [{'numero_sessao': 1, 'horario_formatado': kwargs.get('horario_formatado', '09:00 às 10:00'), 'candidatos': kwargs.get('candidatos', [])}])}
     return [cargo_base] if not kwargs.get('multiplos_cargos') else [cargo_base, {'cargo_nome': 'Coordenador', 'cargo_codigo': '456', 'sessoes': [{'numero_sessao': 1, 'horario_formatado': '11:00 às 12:00', 'candidatos': kwargs.get('candidatos', [])}]}]
 
 def test_init(settings_config: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Testa inicialização da classe AtaEscolha."""
+    """Testa inicialização da classe AtaEscolha.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = AtaEscolha(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
     assert svc.ata_service is not None
     assert svc.TEMPLATE_NAME == 'relatorios/ata_escolha.html'
 
 @pytest.mark.parametrize('formato,cabecalho,expected_method,expected_content_type,expected_filename', [('html', 'CABECALHO_TESTE', 'render', None, None), ('pdf', 'CABECALHO', 'render_to_pdf', 'application/pdf', 'ata_escolha_proc-123.pdf'), ('docx', 'CABECALHO', 'render_to_docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'ata_escolha_proc-123.docx'), ('doc', 'CABECALHO', 'render_to_docx', None, None), ('xlsx', 'CABECALHO', '_render_xls', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'ata_escolha_proc-123.xlsx'), ('xls', 'CABECALHO', '_render_xls', None, None), ('json', 'CABECALHO', None, None, None)])
 def test_gerar_formatos(settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any, formato: Any, cabecalho: Any, expected_method: Any, expected_content_type: Any, expected_filename: Any) -> None:
-    """Testa geração de relatório em diferentes formatos."""
+    """Testa geração de relatório em diferentes formatos.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service_mocked: Parâmetro service mocked da operação.
+        dados_ata: Parâmetro dados ata da operação.
+        request_obj: Parâmetro request obj da operação.
+        formato: Parâmetro formato da operação.
+        cabecalho: Parâmetro cabecalho da operação.
+        expected_method: Parâmetro expected method da operação.
+        expected_content_type: Parâmetro expected content type da operação.
+        expected_filename: Parâmetro expected filename da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     if formato == 'html':
         with patch('relatorios.services.relatorios.ata_escolha.render', return_value=HttpResponse('OK')) as m_render:
@@ -110,8 +210,18 @@ def test_gerar_formatos(settings_config: Any, service_mocked: Any, dados_ata: An
 
 def test_gerar_html_uses_cabecalho_padrao_quando_vazio(settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any) -> None:
     """Testa que usa cabecalho_padrao da Parametrizacao quando cabecalho está.
-
-    vazio.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service_mocked: Parâmetro service mocked da operação.
+        dados_ata: Parâmetro dados ata da operação.
+        request_obj: Parâmetro request obj da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
     """
     service_mocked.context['cabecalho_padrao'] = 'CABECALHO_PADRAO'
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
@@ -123,8 +233,20 @@ def test_gerar_html_uses_cabecalho_padrao_quando_vazio(settings_config: Any, ser
 @pytest.mark.parametrize('cabecalho,esperado', [('  CABECALHO  ', 'CABECALHO'), (None, 'Cabeçalho Padrão Teste')])
 def test_gerar_cabecalho_tratamento(settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any, cabecalho: Any, esperado: Any) -> None:
     """Testa tratamento de cabeçalho (stripped) e uso de cabecalho_padrao quando.
-
-    vazio.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service_mocked: Parâmetro service mocked da operação.
+        dados_ata: Parâmetro dados ata da operação.
+        request_obj: Parâmetro request obj da operação.
+        cabecalho: Parâmetro cabecalho da operação.
+        esperado: Parâmetro esperado da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
     """
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch('relatorios.services.relatorios.ata_escolha.render', return_value=HttpResponse('OK')) as m_render:
@@ -136,13 +258,38 @@ def test_gerar_cabecalho_tratamento(settings_config: Any, service_mocked: Any, d
         assert context['cabecalho_padrao'] == esperado
 
 def test_gerar_raises_exception_on_service_failure(settings_config: Any, service_mocked: Any, request_obj: Any) -> None:
-    """Testa que exceção é levantada quando o serviço falha."""
+    """Testa que exceção é levantada quando o serviço falha.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service_mocked: Parâmetro service mocked da operação.
+        request_obj: Parâmetro request obj da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     service_mocked.ata_service.processar_ata_escolha.side_effect = Exception('Falha no serviço')
     with pytest.raises(Exception, match='Falha no serviço'):
         service_mocked.gerar(processo_uuid='proc-123', request=request_obj, formato='html', cabecalho='')
 
 def test_gerar_processo_uuid_none(settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any) -> None:
-    """Testa geração com processo_uuid None."""
+    """Testa geração com processo_uuid None.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service_mocked: Parâmetro service mocked da operação.
+        dados_ata: Parâmetro dados ata da operação.
+        request_obj: Parâmetro request obj da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch('relatorios.services.relatorios.ata_escolha.render', return_value=HttpResponse('OK')):
         service_mocked.gerar(processo_uuid=None, request=request_obj, formato='html')
@@ -151,7 +298,21 @@ def test_gerar_processo_uuid_none(settings_config: Any, service_mocked: Any, dad
 @pytest.mark.skipif(not DOCX_AVAILABLE, reason='python-docx não está instalado')
 @pytest.mark.parametrize('cabecalho,cargos_list', [('CABECALHO TESTE', None), ('', None), ('CABECALHO', {'candidatos': [{'classificacao': 1, 'status_especial': 'CANDIDATOS JÁ CLASSIFICADO.', 'codigo_eol': '', 'dre_codigo': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {}}]}), ('CABECALHO', {'candidatos': [{'classificacao': 1, 'nome': 'Nome Direto', 'rf': 'RF001', 'rg': '123456', 'cpf': '11111111111', 'codigo_eol': '12345', 'dre_codigo': 'DRE-A', 'tipo_unidade': 'EMEF', 'nome_escola_escolhida': 'Escola', 'tipo_vaga': 'P', 'assinatura': 'Escolha'}]}), ('CABECALHO', {'candidatos': [{'classificacao': None, 'classificacao_pcd': None, 'classificacao_nna': None, 'nome': 'Candidato', 'rf': 'RF001', 'rg': '123456', 'cpf': '11111111111', 'codigo_eol': '', 'dre_codigo': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {}}]}), ('CABECALHO', {'multiplos_cargos': True, 'candidatos': [{'classificacao': 1, 'nome': 'Candidato 1', 'rf': 'RF001', 'rg': '123456', 'cpf': '11111111111', 'codigo_eol': '', 'dre_codigo': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {}}]}), ('CABECALHO', {'horario_formatado': '', 'candidatos': []}), ('CABECALHO', {'candidatos': []})])
 def test_render_to_docx_variacoes(settings_config: Any, service: Any, dados_ata: Any, cabecalho: Any, cargos_list: Any) -> None:
-    """Testa geração de DOCX com diferentes variações de dados."""
+    """Testa geração de DOCX com diferentes variações de dados.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service: Parâmetro service da operação.
+        dados_ata: Parâmetro dados ata da operação.
+        cabecalho: Parâmetro cabecalho da operação.
+        cargos_list: Parâmetro cargos list da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     cargos = _make_cargo_list(**cargos_list or {}) if cargos_list else dados_ata['cargos']
     response = service.render_to_docx(cargos, {'cabecalho': cabecalho}, filename='test.docx')
     assert isinstance(response, HttpResponse)
@@ -162,7 +323,18 @@ def test_render_to_docx_variacoes(settings_config: Any, service: Any, dados_ata:
 
 @pytest.mark.skipif(DOCX_AVAILABLE, reason='python-docx está instalado')
 def test_render_to_docx_raises_import_error_when_not_available(configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Testa que ImportError é levantado quando python-docx não está disponível."""
+    """Testa que ImportError é levantado quando python-docx não está disponível.
+    
+    Args:
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     with patch('relatorios.services.relatorios.ata_escolha.DOCX_AVAILABLE', False):
         svc = AtaEscolha(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
         with pytest.raises(ImportError, match='python-docx não está instalado'):
@@ -171,7 +343,22 @@ def test_render_to_docx_raises_import_error_when_not_available(configuracao_rela
 @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
 @pytest.mark.parametrize('cabecalho,cargos_list,check_content_type', [('CABECALHO TESTE', None, True), ('', None, False), ('CABECALHO', {'candidatos': [{'classificacao': 1, 'status_especial': 'CANDIDATOS JÁ CLASSIFICADO.', 'codigo_eol': '', 'dre_codigo': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {}}]}, False), ('CABECALHO', {'candidatos': [{'classificacao': 1, 'nome': 'Nome Direto', 'rf': 'RF001', 'rg': '123456', 'cpf': '11111111111', 'codigo_eol': '12345', 'dre_codigo': 'DRE-A', 'tipo_unidade': 'EMEF', 'nome_escola_escolhida': 'Escola', 'tipo_vaga': 'P', 'assinatura': 'Escolha'}]}, False), ('CABECALHO', {'candidatos': [{'classificacao': None, 'classificacao_pcd': None, 'classificacao_nna': None, 'nome': 'Candidato', 'rf': 'RF001', 'rg': '123456', 'cpf': '11111111111', 'codigo_eol': '', 'dre_codigo': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {}}]}, False), ('CABECALHO', {'multiplos_cargos': True, 'candidatos': [{'classificacao': 1, 'nome': 'Candidato 1', 'rf': 'RF001', 'rg': '123456', 'cpf': '11111111111', 'codigo_eol': '', 'dre_codigo': '', 'tipo_unidade': '', 'nome_escola_escolhida': '', 'tipo_vaga': '', 'assinatura': 'Não Escolha', 'candidato': {}}]}, False), ('CABECALHO', {'horario_formatado': '', 'candidatos': []}, False), ('CABECALHO', {'candidatos': []}, False), ('CABECALHO', {'sessoes': []}, False), ('CABECALHO', 'empty_list', False)])
 def test_render_xls_variacoes(settings_config: Any, service: Any, dados_ata: Any, cabecalho: Any, cargos_list: Any, check_content_type: Any) -> None:
-    """Testa geração de XLSX com diferentes variações de dados."""
+    """Testa geração de XLSX com diferentes variações de dados.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service: Parâmetro service da operação.
+        dados_ata: Parâmetro dados ata da operação.
+        cabecalho: Parâmetro cabecalho da operação.
+        cargos_list: Parâmetro cargos list da operação.
+        check_content_type: Parâmetro check content type da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     if cargos_list == 'empty_list':
         cargos = []
     elif cargos_list == {'sessoes': []}:
@@ -192,7 +379,18 @@ def test_render_xls_variacoes(settings_config: Any, service: Any, dados_ata: Any
 
 @pytest.mark.skipif(OPENPYXL_AVAILABLE, reason='openpyxl está instalado')
 def test_render_xls_raises_import_error_when_not_available(configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Testa que ImportError é levantado quando openpyxl não está disponível."""
+    """Testa que ImportError é levantado quando openpyxl não está disponível.
+    
+    Args:
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     with patch('relatorios.services.relatorios.ata_escolha.OPENPYXL_AVAILABLE', False):
         svc = AtaEscolha(configuracao=configuracao_relatorio, parametrizacao=parametrizacao)
         context_data = svc.context.copy()
@@ -203,14 +401,38 @@ def test_render_xls_raises_import_error_when_not_available(configuracao_relatori
 
 @pytest.mark.skipif(not DOCX_AVAILABLE, reason='python-docx não está instalado')
 def test_render_to_docx_exception_handling(settings_config: Any, service: Any, dados_ata: Any) -> None:
-    """Testa tratamento de exceção em render_to_docx."""
+    """Testa tratamento de exceção em render_to_docx.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service: Parâmetro service da operação.
+        dados_ata: Parâmetro dados ata da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     with patch('relatorios.services.relatorios.ata_escolha.Document', side_effect=Exception('Erro ao criar documento')):
         with pytest.raises(Exception, match='Erro ao criar documento'):
             service.render_to_docx(dados_ata['cargos'], 'CABECALHO', filename='test.docx')
 
 @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
 def test_render_xls_exception_handling(settings_config: Any, service: Any, dados_ata: Any) -> None:
-    """Testa tratamento de exceção em _render_xls."""
+    """Testa tratamento de exceção em _render_xls.
+    
+    Args:
+        settings_config: Parâmetro settings config da operação.
+        service: Parâmetro service da operação.
+        dados_ata: Parâmetro dados ata da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     context_data = service.context.copy()
     context_data['cargos'] = dados_ata['cargos']
     context_data['cabecalho'] = 'CABECALHO'

@@ -11,43 +11,109 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def configuracao_relatorio() -> Any:
-    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    """Fixture que cria uma ConfiguracaoRelatorio para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='LISTAGEM_ESCOLHAS_DRES', defaults={'usar_logotipo': False, 'cabecalho': '', 'texto_final': '', 'cabecalho_capa_ata': ''})[0]
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Fixture que cria uma Parametrizacao para testes."""
+    """Fixture que cria uma Parametrizacao para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.create(cabecalho='Cabeçalho Padrão Teste', logo=None)
 
 def _make_request() -> Any:
-    """Cria um request mock para os testes."""
+    """Cria um request mock para os testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return RequestFactory().get('/relatorios/listagem-escolhas-dres/')
 
 class _MockResponse:
     """Classe auxiliar para mockar respostas HTTP."""
 
     def __init__(self, json_data: Any, status_code: Any=200) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            json_data: Parâmetro json data da operação.
+            status_code: Parâmetro status code da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self._json_data = json_data
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Executa json.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return self._json_data
 
 @pytest.fixture
 def mock_candidatos_response() -> Any:
-    """Fixture com dados mockados de candidatos."""
+    """Fixture com dados mockados de candidatos.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return _MockResponse({'results': [{'uuid': 'candidato-uuid-1', 'classificacao': 1, 'classificacao_pcd': None, 'classificacao_nna': 5, 'inscricao': '12345', 'candidato': {'nome': 'João Silva', 'rg': '123456789', 'cpf': '12345678901', 'telefone': '11999999999', 'registro_funcional': 'RF123'}}, {'uuid': 'candidato-uuid-2', 'classificacao': 2, 'classificacao_pcd': 1, 'classificacao_nna': None, 'inscricao': '12346', 'candidato': {'nome': 'Maria Santos', 'rg': '987654321', 'cpf': '98765432109', 'telefone': '11888888888', 'registro_funcional': 'RF456'}}]})
 
 @pytest.fixture
 def mock_escolhas_response() -> Any:
-    """Fixture com dados mockados de escolhas."""
+    """Fixture com dados mockados de escolhas.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'candidato_uuid': 'candidato-uuid-1', 'tipo_vaga': 'definitiva', 'vaga_escola': {'cargo_descricao': 'Professor de Educação Infantil', 'escola': {'nome_oficial': 'EMEF Teste', 'codigo_eol': '12345', 'tipo_ue': 'EMEF', 'dre': {'nome': 'DRE Butantã'}}}}, {'candidato_uuid': 'candidato-uuid-2', 'tipo_vaga': 'precaria', 'vaga_escola': {'cargo_descricao': 'Professor de Matemática', 'escola': {'nome_oficial': 'EMEF Teste 2', 'codigo_eol': '12346', 'tipo_ue': 'EMEF', 'dre': {'nome': 'DRE Butantã'}}}}]
 
 @pytest.fixture
 def listagem_escolhas_dres_service(settings: Any, configuracao_relatorio: Any, parametrizacao: Any) -> Any:
-    """Fixture que cria uma instância do serviço com mocks."""
+    """Fixture que cria uma instância do serviço com mocks.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.ESCOLHAS_API_URL = 'http://escolhas'
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.RELATORIO_CABECALHO_PADRAO = 'Cabeçalho Padrão'
@@ -60,7 +126,20 @@ class TestInit:
     """Testes para o método __init__."""
 
     def test_init(self, settings: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-        """Testa inicialização."""
+        """Testa inicialização.
+        
+        Args:
+            self: Instância do objeto.
+            settings: Parâmetro settings da operação.
+            configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         settings.ESCOLHAS_API_URL = 'http://escolhas'
         settings.CANDIDATOS_API_URL = 'http://candidatos'
         service = ListagemEscolhasDres(configuracao=configuracao_relatorio, parametrizacao=parametrizacao, extra_param='value')
@@ -71,7 +150,20 @@ class TestGerar:
     """Testes para o método gerar."""
 
     def test_gerar_html_success(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração de relatório HTML com sucesso."""
+        """Testa geração de relatório HTML com sucesso.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         with patch('relatorios.services.relatorios.listagem_escolhas_dres.render', return_value=HttpResponse('OK')) as m_render:
@@ -82,7 +174,20 @@ class TestGerar:
         assert dados['total_escolhas'] == 2
 
     def test_gerar_pdf_success(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração de relatório PDF com sucesso."""
+        """Testa geração de relatório PDF com sucesso.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         with patch.object(listagem_escolhas_dres_service, 'render_to_pdf', return_value=HttpResponse(b'%PDF-1.4', content_type='application/pdf')) as m_pdf:
@@ -92,7 +197,20 @@ class TestGerar:
         m_pdf.assert_called_once()
 
     def test_gerar_xls_success(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração de relatório XLS com sucesso."""
+        """Testa geração de relatório XLS com sucesso.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         with patch.object(listagem_escolhas_dres_service, 'render_to_xls', return_value=HttpResponse(b'xlsx', content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) as m_xls:
@@ -101,7 +219,20 @@ class TestGerar:
         m_xls.assert_called_once()
 
     def test_gerar_docx_success(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração de relatório DOCX com sucesso."""
+        """Testa geração de relatório DOCX com sucesso.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         mock_response = HttpResponse(b'DOCX', content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -112,7 +243,20 @@ class TestGerar:
         assert 'docx' in response.get('Content-Disposition', '') or 'listagem' in response.get('Content-Disposition', '')
 
     def test_gerar_com_cabecalho_padrao(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
+        """Testa que usa cabeçalho padrão automaticamente quando preenchido.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         listagem_escolhas_dres_service.context['cabecalho_padrao'] = 'Cabeçalho Padrão'
@@ -123,20 +267,55 @@ class TestGerar:
         assert context['cabecalho_padrao'] == 'Cabeçalho Padrão'
 
     def test_gerar_erro_buscar_candidatos(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa que erro ao buscar candidatos é propagado."""
+        """Testa que erro ao buscar candidatos é propagado.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception('Erro API')
         with pytest.raises(Exception, match='Erro API'):
             listagem_escolhas_dres_service.gerar(processo_uuid='proc-123', request=_make_request(), formato='html')
 
     def test_gerar_erro_buscar_escolhas(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any) -> None:
-        """Testa que erro ao buscar escolhas é propagado."""
+        """Testa que erro ao buscar escolhas é propagado.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = Exception('Erro Escolhas')
         with pytest.raises(Exception, match='Erro Escolhas'):
             listagem_escolhas_dres_service.gerar(processo_uuid='proc-123', request=_make_request(), formato='html')
 
     def test_gerar_escolha_sem_candidato_uuid(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any) -> None:
-        """Testa que escolhas sem candidato_uuid são ignoradas."""
+        """Testa que escolhas sem candidato_uuid são ignoradas.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [{'candidato_uuid': None}, {'candidato_uuid': 'candidato-uuid-1'}]
         with patch('relatorios.services.relatorios.listagem_escolhas_dres.render', return_value=HttpResponse('OK')):
@@ -144,7 +323,19 @@ class TestGerar:
         assert dados['total_escolhas'] == 1
 
     def test_gerar_candidato_nao_encontrado(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any) -> None:
-        """Testa que escolhas com candidato não encontrado são ignoradas."""
+        """Testa que escolhas com candidato não encontrado são ignoradas.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [{'candidato_uuid': 'candidato-inexistente', 'tipo_vaga': 'definitiva', 'vaga_escola': {}}]
         with patch('relatorios.services.relatorios.listagem_escolhas_dres.render', return_value=HttpResponse('OK')):
@@ -152,7 +343,19 @@ class TestGerar:
         assert dados['total_escolhas'] == 0
 
     def test_gerar_candidatos_lista_direta(self, listagem_escolhas_dres_service: Any, mock_escolhas_response: Any) -> None:
-        """Testa quando candidatos vem como lista direta (não dict com results)."""
+        """Testa quando candidatos vem como lista direta (não dict com results).
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         candidatos_lista = [{'uuid': 'candidato-uuid-1', 'classificacao': 1, 'candidato': {'nome': 'João', 'rg': '123', 'cpf': '123'}}]
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = _MockResponse(candidatos_lista)
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
@@ -161,7 +364,20 @@ class TestGerar:
         assert isinstance(response, HttpResponse)
 
     def test_gerar_formato_csv(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração com formato CSV (tratado como XLS)."""
+        """Testa geração com formato CSV (tratado como XLS).
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         with patch.object(listagem_escolhas_dres_service, 'render_to_xls', return_value=HttpResponse(b'xlsx', content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) as m_xls:
@@ -170,7 +386,20 @@ class TestGerar:
         m_xls.assert_called_once()
 
     def test_gerar_formato_xlsx(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração com formato XLSX."""
+        """Testa geração com formato XLSX.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         with patch.object(listagem_escolhas_dres_service, 'render_to_xls', return_value=HttpResponse(b'xlsx', content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) as m_xls:
@@ -179,7 +408,20 @@ class TestGerar:
         m_xls.assert_called_once()
 
     def test_gerar_formato_doc(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração com formato DOC (tratado como DOCX)."""
+        """Testa geração com formato DOC (tratado como DOCX).
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         mock_response = HttpResponse(b'DOCX', content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
@@ -189,7 +431,20 @@ class TestGerar:
         assert isinstance(response, HttpResponse)
 
     def test_gerar_formato_json(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa geração com formato JSON."""
+        """Testa geração com formato JSON.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         response, dados = listagem_escolhas_dres_service.gerar(processo_uuid='proc-123', request=_make_request(), formato='json')
@@ -197,7 +452,19 @@ class TestGerar:
         assert dados['total_escolhas'] == 2
 
     def test_gerar_ordenacao_por_cargo(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any) -> None:
-        """Testa ordenação por cargo."""
+        """Testa ordenação por cargo.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas = [{'candidato_uuid': 'candidato-uuid-1', 'tipo_vaga': 'definitiva', 'vaga_escola': {'cargo_descricao': 'Professor B', 'escola': {'nome_oficial': 'EMEF 1', 'codigo_eol': '1', 'tipo_ue': 'EMEF', 'dre': {'nome': 'DRE 1'}}}}, {'candidato_uuid': 'candidato-uuid-1', 'tipo_vaga': 'definitiva', 'vaga_escola': {'cargo_descricao': 'Professor A', 'escola': {'nome_oficial': 'EMEF 2', 'codigo_eol': '2', 'tipo_ue': 'EMEF', 'dre': {'nome': 'DRE 1'}}}}]
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas
@@ -210,7 +477,19 @@ class TestGerar:
         assert cargos[1]['descricao'] == 'Professor B'
 
     def test_gerar_dados_vaga_escola_vazios(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any) -> None:
-        """Testa quando vaga_escola está vazio ou None."""
+        """Testa quando vaga_escola está vazio ou None.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas = [{'candidato_uuid': 'candidato-uuid-1', 'tipo_vaga': 'definitiva', 'vaga_escola': None}]
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas
@@ -220,7 +499,19 @@ class TestGerar:
         assert dados['total_escolhas'] == 1
 
     def test_gerar_tipo_vaga_invalido(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any) -> None:
-        """Testa quando tipo_vaga é inválido."""
+        """Testa quando tipo_vaga é inválido.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas = [{'candidato_uuid': 'candidato-uuid-1', 'tipo_vaga': 'invalido', 'vaga_escola': {'cargo_descricao': 'Professor', 'escola': {'nome_oficial': 'EMEF', 'codigo_eol': '1', 'tipo_ue': 'EMEF', 'dre': {'nome': 'DRE'}}}}]
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas
@@ -234,7 +525,18 @@ class TestRenderToXls:
 
     @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
     def test_render_to_xls_success(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa geração de Excel com sucesso."""
+        """Testa geração de Excel com sucesso.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = [{'cargo': 'Professor', 'classificacao': 1, 'classificacao_deficiente': '-', 'classificacao_nna': 5, 'rf': 'RF123', 'rg': '123', 'cpf': '123', 'inscricao': '12345', 'nome': 'João', 'telefone': '11999999999', 'dre': 'DRE Butantã', 'codigo_eol': '12345', 'tipo_ue': 'EMEF', 'unidade': 'EMEF Teste', 'tipo_vaga': 'D'}]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -247,7 +549,18 @@ class TestRenderToXls:
 
     @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
     def test_render_to_xls_sem_cabecalho(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa geração de Excel sem cabeçalho."""
+        """Testa geração de Excel sem cabeçalho.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = []  # type: ignore[var-annotated]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -257,7 +570,18 @@ class TestRenderToXls:
 
     @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
     def test_render_to_xls_tipo_vaga_d(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa formatação especial para tipo_vaga 'D'."""
+        """Testa formatação especial para tipo_vaga 'D'.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = [{'cargo': 'Professor', 'classificacao': 1, 'classificacao_deficiente': '-', 'classificacao_nna': '-', 'rf': '-', 'rg': '-', 'cpf': '-', 'inscricao': '-', 'nome': 'João', 'telefone': '-', 'dre': '-', 'codigo_eol': '-', 'tipo_ue': '-', 'unidade': '-', 'tipo_vaga': 'D'}]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -267,7 +591,18 @@ class TestRenderToXls:
 
     @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
     def test_render_to_xls_tipo_vaga_p(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa formatação especial para tipo_vaga 'P'."""
+        """Testa formatação especial para tipo_vaga 'P'.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = [{'cargo': 'Professor', 'classificacao': 1, 'classificacao_deficiente': '-', 'classificacao_nna': '-', 'rf': '-', 'rg': '-', 'cpf': '-', 'inscricao': '-', 'nome': 'João', 'telefone': '-', 'dre': '-', 'codigo_eol': '-', 'tipo_ue': '-', 'unidade': '-', 'tipo_vaga': 'P'}]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -277,7 +612,18 @@ class TestRenderToXls:
 
     @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
     def test_render_to_xls_multiplas_escolhas(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa geração de Excel com múltiplas escolhas."""
+        """Testa geração de Excel com múltiplas escolhas.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = [{'cargo': 'Professor A', 'classificacao': 1, 'classificacao_deficiente': '-', 'classificacao_nna': '-', 'rf': '-', 'rg': '-', 'cpf': '-', 'inscricao': '-', 'nome': 'João', 'telefone': '-', 'dre': '-', 'codigo_eol': '-', 'tipo_ue': '-', 'unidade': '-', 'tipo_vaga': 'D'}, {'cargo': 'Professor B', 'classificacao': 2, 'classificacao_deficiente': '-', 'classificacao_nna': '-', 'rf': '-', 'rg': '-', 'cpf': '-', 'inscricao': '-', 'nome': 'Maria', 'telefone': '-', 'dre': '-', 'codigo_eol': '-', 'tipo_ue': '-', 'unidade': '-', 'tipo_vaga': 'P'}]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -287,7 +633,18 @@ class TestRenderToXls:
 
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.OPENPYXL_AVAILABLE', False)
     def test_render_to_xls_openpyxl_nao_disponivel(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa erro quando openpyxl não está disponível."""
+        """Testa erro quando openpyxl não está disponível.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = []  # type: ignore[var-annotated]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -297,7 +654,18 @@ class TestRenderToXls:
 
     @pytest.mark.skipif(not OPENPYXL_AVAILABLE, reason='openpyxl não está instalado')
     def test_render_to_xls_exception(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa tratamento de exceção no render_to_xls."""
+        """Testa tratamento de exceção no render_to_xls.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = []  # type: ignore[var-annotated]
         context = listagem_escolhas_dres_service.context.copy()
         context['escolhas'] = escolhas_list
@@ -311,7 +679,18 @@ class TestRenderToDocx:
 
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.DOCX_AVAILABLE', False)
     def test_render_to_docx_python_docx_nao_disponivel(self, listagem_escolhas_dres_service: Any) -> None:
-        """Testa erro quando python-docx não está disponível."""
+        """Testa erro quando python-docx não está disponível.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         escolhas_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match='python-docx'):
             listagem_escolhas_dres_service.render_to_docx(escolhas_list, 'Cabeçalho', 'test.docx')
@@ -326,7 +705,26 @@ class TestRenderToDocx:
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.OxmlElement', create=True)
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.BytesIO')
     def test_render_to_docx_completo_com_cabecalho(self, mock_bytesio: Any, mock_oxml_element: Any, mock_qn: Any, mock_wd_align: Any, mock_rgb_color: Any, mock_pt: Any, mock_inches: Any, mock_document: Any, listagem_escolhas_dres_service: Any) -> None:
-        """Testa geração completa de Word com cabeçalho e dados."""
+        """Testa geração completa de Word com cabeçalho e dados.
+        
+        Args:
+            self: Instância do objeto.
+            mock_bytesio: Parâmetro mock bytesio da operação.
+            mock_oxml_element: Parâmetro mock oxml element da operação.
+            mock_qn: Parâmetro mock qn da operação.
+            mock_wd_align: Parâmetro mock wd align da operação.
+            mock_rgb_color: Parâmetro mock rgb color da operação.
+            mock_pt: Parâmetro mock pt da operação.
+            mock_inches: Parâmetro mock inches da operação.
+            mock_document: Parâmetro mock document da operação.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -388,7 +786,26 @@ class TestRenderToDocx:
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.OxmlElement', create=True)
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.BytesIO')
     def test_render_to_docx_sem_cabecalho(self, mock_bytesio: Any, mock_oxml_element: Any, mock_qn: Any, mock_wd_align: Any, mock_rgb_color: Any, mock_pt: Any, mock_inches: Any, mock_document: Any, listagem_escolhas_dres_service: Any) -> None:
-        """Testa geração de Word sem cabeçalho."""
+        """Testa geração de Word sem cabeçalho.
+        
+        Args:
+            self: Instância do objeto.
+            mock_bytesio: Parâmetro mock bytesio da operação.
+            mock_oxml_element: Parâmetro mock oxml element da operação.
+            mock_qn: Parâmetro mock qn da operação.
+            mock_wd_align: Parâmetro mock wd align da operação.
+            mock_rgb_color: Parâmetro mock rgb color da operação.
+            mock_pt: Parâmetro mock pt da operação.
+            mock_inches: Parâmetro mock inches da operação.
+            mock_document: Parâmetro mock document da operação.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -437,7 +854,26 @@ class TestRenderToDocx:
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.OxmlElement', create=True)
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.BytesIO')
     def test_render_to_docx_tipo_vaga_d(self, mock_bytesio: Any, mock_oxml_element: Any, mock_qn: Any, mock_wd_align: Any, mock_rgb_color: Any, mock_pt: Any, mock_inches: Any, mock_document: Any, listagem_escolhas_dres_service: Any) -> None:
-        """Testa formatação especial para tipo_vaga 'D'."""
+        """Testa formatação especial para tipo_vaga 'D'.
+        
+        Args:
+            self: Instância do objeto.
+            mock_bytesio: Parâmetro mock bytesio da operação.
+            mock_oxml_element: Parâmetro mock oxml element da operação.
+            mock_qn: Parâmetro mock qn da operação.
+            mock_wd_align: Parâmetro mock wd align da operação.
+            mock_rgb_color: Parâmetro mock rgb color da operação.
+            mock_pt: Parâmetro mock pt da operação.
+            mock_inches: Parâmetro mock inches da operação.
+            mock_document: Parâmetro mock document da operação.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -490,7 +926,26 @@ class TestRenderToDocx:
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.OxmlElement', create=True)
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.BytesIO')
     def test_render_to_docx_tipo_vaga_p(self, mock_bytesio: Any, mock_oxml_element: Any, mock_qn: Any, mock_wd_align: Any, mock_rgb_color: Any, mock_pt: Any, mock_inches: Any, mock_document: Any, listagem_escolhas_dres_service: Any) -> None:
-        """Testa formatação especial para tipo_vaga 'P'."""
+        """Testa formatação especial para tipo_vaga 'P'.
+        
+        Args:
+            self: Instância do objeto.
+            mock_bytesio: Parâmetro mock bytesio da operação.
+            mock_oxml_element: Parâmetro mock oxml element da operação.
+            mock_qn: Parâmetro mock qn da operação.
+            mock_wd_align: Parâmetro mock wd align da operação.
+            mock_rgb_color: Parâmetro mock rgb color da operação.
+            mock_pt: Parâmetro mock pt da operação.
+            mock_inches: Parâmetro mock inches da operação.
+            mock_document: Parâmetro mock document da operação.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -543,7 +998,26 @@ class TestRenderToDocx:
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.OxmlElement', create=True)
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.BytesIO')
     def test_render_to_docx_com_existing_shd(self, mock_bytesio: Any, mock_oxml_element: Any, mock_qn: Any, mock_wd_align: Any, mock_rgb_color: Any, mock_pt: Any, mock_inches: Any, mock_document: Any, listagem_escolhas_dres_service: Any) -> None:
-        """Testa quando já existe shading element (existing_shd)."""
+        """Testa quando já existe shading element (existing_shd).
+        
+        Args:
+            self: Instância do objeto.
+            mock_bytesio: Parâmetro mock bytesio da operação.
+            mock_oxml_element: Parâmetro mock oxml element da operação.
+            mock_qn: Parâmetro mock qn da operação.
+            mock_wd_align: Parâmetro mock wd align da operação.
+            mock_rgb_color: Parâmetro mock rgb color da operação.
+            mock_pt: Parâmetro mock pt da operação.
+            mock_inches: Parâmetro mock inches da operação.
+            mock_document: Parâmetro mock document da operação.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -594,7 +1068,19 @@ class TestRenderToDocx:
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.DOCX_AVAILABLE', True)
     @patch('relatorios.services.relatorios.listagem_escolhas_dres.Document')
     def test_render_to_docx_exception(self, mock_document: Any, listagem_escolhas_dres_service: Any) -> None:
-        """Testa tratamento de exceção no render_to_docx."""
+        """Testa tratamento de exceção no render_to_docx.
+        
+        Args:
+            self: Instância do objeto.
+            mock_document: Parâmetro mock document da operação.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         mock_document.side_effect = Exception('Erro ao criar documento')
         escolhas_list = []  # type: ignore[var-annotated]
         with pytest.raises(Exception, match='Erro ao criar documento'):
@@ -604,7 +1090,20 @@ class TestIntegracaoCompleta:
     """Testes de integração completos."""
 
     def test_fluxo_completo_html(self, listagem_escolhas_dres_service: Any, mock_candidatos_response: Any, mock_escolhas_response: Any) -> None:
-        """Testa fluxo completo de geração HTML."""
+        """Testa fluxo completo de geração HTML.
+        
+        Args:
+            self: Instância do objeto.
+            listagem_escolhas_dres_service: Parâmetro listagem escolhas dres service da operação.
+            mock_candidatos_response: Parâmetro mock candidatos response da operação.
+            mock_escolhas_response: Parâmetro mock escolhas response da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response
         with patch('relatorios.services.relatorios.listagem_escolhas_dres.render', return_value=HttpResponse('OK')) as m_render:

@@ -27,6 +27,16 @@ class Relatorio(BaseModel):
         db_table = 'relatorios'
 
     def __str__(self) -> Any:
-        """Executa   str  ."""
+        """Executa   str  .
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return f'{self.tipo} - {self.criado_em}'
 auditlog.register(Relatorio)

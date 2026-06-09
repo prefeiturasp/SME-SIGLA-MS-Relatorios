@@ -11,12 +11,26 @@ CAMPOS_ESPERADOS = ['uuid', 'tipo', 'usar_logotipo', 'cabecalho', 'cabecalho_gab
 
 @pytest.fixture
 def client() -> Any:
-    """Executa client."""
+    """Executa client.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return APIClient()
 
 @pytest.fixture
 def configuracao_lauda_vagas() -> Any:
-    """Executa configuracao lauda vagas."""
+    """Executa configuracao lauda vagas.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_VAGAS')
     config.cabecalho = '<h1>Cabeçalho</h1>'
     config.cabecalho_gabarito = '<h1>Gabarito Lauda</h1>'
@@ -26,7 +40,14 @@ def configuracao_lauda_vagas() -> Any:
 
 @pytest.fixture
 def configuracao_ata_escolha() -> Any:
-    """Executa configuracao ata escolha."""
+    """Executa configuracao ata escolha.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo='ATA_ESCOLHA')
     config.cabecalho_gabarito = '<h1>Gabarito Ata</h1>'
     config.cabecalho_capa_ata = '<h2>Capa da Ata</h2>'
@@ -37,33 +58,92 @@ class TestPersonalizacaoListagem:
     """Define TestPersonalizacaoListagem."""
 
     def test_list_retorna_200(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica list retorna 200."""
+        """Verifica list retorna 200.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url, {'tipo': 'LAUDA_VAGAS'})
         assert response.status_code == status.HTTP_200_OK
 
     def test_list_retorna_cabecalho_gabarito(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica list retorna cabecalho gabarito."""
+        """Verifica list retorna cabecalho gabarito.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url, {'tipo': 'LAUDA_VAGAS'})
         assert response.data['cabecalho_gabarito'] == '<h1>Gabarito Lauda</h1>'
 
     def test_list_retorna_todos_campos_esperados(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica list retorna todos campos esperados."""
+        """Verifica list retorna todos campos esperados.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url, {'tipo': 'LAUDA_VAGAS'})
         for campo in CAMPOS_ESPERADOS:
             assert campo in response.data, f"Campo '{campo}' ausente na resposta"
 
     def test_list_sem_filtro_retorna_primeira_configuracao(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica list sem filtro retorna primeira configuracao."""
+        """Verifica list sem filtro retorna primeira configuracao.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert 'cabecalho_gabarito' in response.data
 
     def test_list_tipo_invalido_retorna_400(self, client: Any) -> None:
-        """Verifica list tipo invalido retorna 400."""
+        """Verifica list tipo invalido retorna 400.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url, {'tipo': 'TIPO_INEXISTENTE'})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -72,7 +152,19 @@ class TestPersonalizacaoAtualizacao:
     """Define TestPersonalizacaoAtualizacao."""
 
     def test_patch_atualiza_cabecalho_gabarito(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica patch atualiza cabecalho gabarito."""
+        """Verifica patch atualiza cabecalho gabarito.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_lauda_vagas.uuid)})
         novo_gabarito = '<h2>Gabarito Atualizado</h2>'
         response = client.patch(url, {'cabecalho_gabarito': novo_gabarito}, format='json')
@@ -81,14 +173,38 @@ class TestPersonalizacaoAtualizacao:
         assert configuracao_lauda_vagas.cabecalho_gabarito == novo_gabarito
 
     def test_patch_retorna_cabecalho_gabarito_atualizado(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica patch retorna cabecalho gabarito atualizado."""
+        """Verifica patch retorna cabecalho gabarito atualizado.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_lauda_vagas.uuid)})
         novo_gabarito = '<h2>Retorno Gabarito</h2>'
         response = client.patch(url, {'cabecalho_gabarito': novo_gabarito}, format='json')
         assert response.data['cabecalho_gabarito'] == novo_gabarito
 
     def test_patch_limpa_cabecalho_gabarito(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica patch limpa cabecalho gabarito."""
+        """Verifica patch limpa cabecalho gabarito.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_lauda_vagas.uuid)})
         response = client.patch(url, {'cabecalho_gabarito': ''}, format='json')
         assert response.status_code == status.HTTP_200_OK
@@ -96,7 +212,19 @@ class TestPersonalizacaoAtualizacao:
         assert configuracao_lauda_vagas.cabecalho_gabarito == ''
 
     def test_patch_cabecalho_gabarito_nao_afeta_outros_campos(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica patch cabecalho gabarito nao afeta outros campos."""
+        """Verifica patch cabecalho gabarito nao afeta outros campos.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_lauda_vagas.uuid)})
         response = client.patch(url, {'cabecalho_gabarito': '<h2>Só gabarito</h2>'}, format='json')
         assert response.status_code == status.HTTP_200_OK
@@ -105,7 +233,19 @@ class TestPersonalizacaoAtualizacao:
         assert configuracao_lauda_vagas.texto_final == '<p>Rodapé</p>'
 
     def test_patch_multiples_campos_com_gabarito(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica patch multiples campos com gabarito."""
+        """Verifica patch multiples campos com gabarito.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_lauda_vagas.uuid)})
         payload = {'cabecalho': '<h1>Cabeçalho Novo</h1>', 'cabecalho_gabarito': '<h1>Gabarito Novo</h1>', 'usar_logotipo': True}
         response = client.patch(url, payload, format='json')
@@ -116,7 +256,19 @@ class TestPersonalizacaoAtualizacao:
         assert configuracao_lauda_vagas.usar_logotipo is True
 
     def test_patch_ata_escolha_com_cabecalho_gabarito_e_capa(self, client: Any, configuracao_ata_escolha: Any) -> None:
-        """Verifica patch ata escolha com cabecalho gabarito e capa."""
+        """Verifica patch ata escolha com cabecalho gabarito e capa.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_ata_escolha: Parâmetro configuracao ata escolha da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_ata_escolha.uuid)})
         payload = {'cabecalho_gabarito': '<h1>Gabarito Ata Atualizado</h1>', 'cabecalho_capa_ata': '<h2>Nova Capa</h2>'}
         response = client.patch(url, payload, format='json')
@@ -126,7 +278,19 @@ class TestPersonalizacaoAtualizacao:
         assert configuracao_ata_escolha.cabecalho_capa_ata == '<h2>Nova Capa</h2>'
 
     def test_patch_uuid_nao_alteravel(self, client: Any, configuracao_lauda_vagas: Any) -> None:
-        """Verifica patch uuid nao alteravel."""
+        """Verifica patch uuid nao alteravel.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-detail', kwargs={'uuid': str(configuracao_lauda_vagas.uuid)})
         uuid_original = str(configuracao_lauda_vagas.uuid)
         response = client.patch(url, {'uuid': 'outro-uuid'}, format='json')
@@ -134,7 +298,18 @@ class TestPersonalizacaoAtualizacao:
         assert str(response.data['uuid']) == uuid_original
 
     def test_patch_uuid_inexistente_retorna_404(self, client: Any) -> None:
-        """Verifica patch uuid inexistente retorna 404."""
+        """Verifica patch uuid inexistente retorna 404.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         import uuid
         url = reverse('personalizacao-detail', kwargs={'uuid': str(uuid.uuid4())})
         response = client.patch(url, {'cabecalho_gabarito': '<h1>x</h1>'}, format='json')
@@ -144,13 +319,39 @@ class TestPersonalizacaoFiltragemPorTipo:
     """Define TestPersonalizacaoFiltragemPorTipo."""
 
     def test_filtro_tipo_retorna_configuracao_correta(self, client: Any, configuracao_lauda_vagas: Any, configuracao_ata_escolha: Any) -> None:
-        """Verifica filtro tipo retorna configuracao correta."""
+        """Verifica filtro tipo retorna configuracao correta.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+            configuracao_ata_escolha: Parâmetro configuracao ata escolha da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url, {'tipo': 'ATA_ESCOLHA'})
         assert response.data['cabecalho_gabarito'] == '<h1>Gabarito Ata</h1>'
 
     def test_filtro_tipo_lauda_vagas(self, client: Any, configuracao_lauda_vagas: Any, configuracao_ata_escolha: Any) -> None:
-        """Verifica filtro tipo lauda vagas."""
+        """Verifica filtro tipo lauda vagas.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            configuracao_lauda_vagas: Parâmetro configuracao lauda vagas da operação.
+            configuracao_ata_escolha: Parâmetro configuracao ata escolha da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('personalizacao-list')
         response = client.get(url, {'tipo': 'LAUDA_VAGAS'})
         assert response.data['cabecalho_gabarito'] == '<h1>Gabarito Lauda</h1>'

@@ -13,18 +13,45 @@ class _ImgResp:
     content = b'fake-png'
 
     def raise_for_status(self) -> Any:
-        """Executa raise for status."""
+        """Executa raise for status.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return None
 
 @pytest.fixture
 def svc() -> Any:
-    """Executa svc."""
+    """Executa svc.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     cfg = ConfiguracaoRelatorio.objects.get_or_create(tipo='LISTAGEM_ESCOLHAS_DRES')[0]
     par = Parametrizacao.objects.get_or_create(cabecalho='Cabecalho Padrao')[0]
     return ListagemEscolhasDres(configuracao=cfg, parametrizacao=par)
 
 def test_render_to_xls_with_logo_headers_and_footer(svc: Any) -> None:
-    """Verifica render to xls with logo headers and footer."""
+    """Verifica render to xls with logo headers and footer.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc.context['cabecalho'] = 'CAB'
     escolhas = [{'cargo': 'Professor', 'classificacao': 1, 'classificacao_deficiente': '-', 'classificacao_nna': 2, 'rf': '123', 'rg': '999', 'cpf': '111', 'inscricao': 'I1', 'nome': 'Ana', 'telefone': '9999', 'dre': 'DRE 1', 'codigo_eol': '100', 'tipo_ue': 'EMEF', 'unidade': 'UE 1', 'tipo_vaga': 'D'}, {'cargo': 'Professor', 'classificacao': 2, 'classificacao_deficiente': '-', 'classificacao_nna': 3, 'rf': '124', 'rg': '998', 'cpf': '222', 'inscricao': 'I2', 'nome': 'Beto', 'telefone': '8888', 'dre': 'DRE 2', 'codigo_eol': '200', 'tipo_ue': 'CEI', 'unidade': 'UE 2', 'tipo_vaga': 'P'}]
     context = {'escolhas': escolhas, 'usar_logotipo': True, 'logo_url': 'http://example/logo.png', 'texto_final': 'Rodape final'}

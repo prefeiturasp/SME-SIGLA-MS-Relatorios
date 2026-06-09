@@ -5,27 +5,21 @@ from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
 from relatorios.services.relatorios import AtaEscolha, LaudaConvocacao, LaudaVagas, ListaCandidatosSessao, ListagemEscolhasDres, RelacaoVagas, ResultadoEscolha, SumulaEscolhas, SumulaNaoEscolhas, SumulaReconvocacao
 
 class RelatorioFactory:
-    """Factory responsável por criar instâncias dos diferentes tipos de.
-
-    relatórios.
-    O mapeamento fica "escondido" dentro da Factory.
-    """
+    """Factory responsável por criar instâncias dos diferentes tipos de."""
     _MAPA = {'LAUDA_VAGAS': LaudaVagas, 'RELACAO_VAGAS': RelacaoVagas, 'SUMULA_NAO_ESCOLHAS': SumulaNaoEscolhas, 'LISTAGEM_ESCOLHAS_DRES': ListagemEscolhasDres, 'SUMULA_RECONVOCACAO': SumulaReconvocacao, 'SUMULA_ESCOLHAS': SumulaEscolhas, 'LAUDA_CONVOCACAO': LaudaConvocacao, 'RESULTADO_ESCOLHA': ResultadoEscolha, 'LISTA_CANDIDATOS_SESSAO': ListaCandidatosSessao, 'ATA_ESCOLHA': AtaEscolha}
 
     @staticmethod
     def obter_relatorio(tipo_slug: str) -> Any:
         """Esta é a 'central de inteligência'.
-
-        Ela decide qual classe instanciar baseado no tipo fornecido.
-
+        
         Args:
-            tipo_slug: String com o tipo do relatório (ex: 'LAUDA_VAGAS')
-
+            tipo_slug: String com o tipo do relatório (ex: 'LAUDA_VAGAS').
+        
         Returns:
-            Instância da classe de relatório correspondente
-
+            Resultado da operação.
+        
         Raises:
-            ValueError: Se o tipo fornecido não for um relatório válido
+            ValueError: Se o tipo fornecido não for um relatório válido.
         """
         classe = RelatorioFactory._MAPA.get(tipo_slug.upper())
         configuracao = ConfiguracaoRelatorio.objects.get(tipo=tipo_slug.upper())

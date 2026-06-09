@@ -35,7 +35,15 @@ class RelacaoVagas(RelatorioBase):
     TEMPLATE_NAME = 'relatorios/relacao_vagas.html'
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias."""
+        """Inicializa o service com as dependências necessárias.
+        
+        Args:
+            self: Instância do objeto.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
 
@@ -43,6 +51,7 @@ class RelacaoVagas(RelatorioBase):
         """Gera o relatório de Relação de Vagas.
         
         Args:
+            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Objeto request do Django.
             formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx').
@@ -50,11 +59,10 @@ class RelacaoVagas(RelatorioBase):
             **kwargs: Argumentos nomeados variáveis.
         
         Returns:
-        Tupla (HttpResponse, dados) onde:
-        - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou
-        DOCX)
-        - dados: estrutura de dados do relatório (cargos_list) para salvar
-        no banco
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(processo_uuid=str(processo_uuid) if processo_uuid else '')
@@ -92,12 +100,16 @@ class RelacaoVagas(RelatorioBase):
 
     def _agrupar_vagas(self, vagas: list) -> dict:
         """Agrupa vagas por cargo_codigo e depois por DRE codigo.
-
+        
         Args:
-            vagas: Lista de vagas
-
+            self: Instância do objeto.
+            vagas: Lista de vagas.
+        
         Returns:
-            Dicionário agrupado por cargo e DRE
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
@@ -112,12 +124,16 @@ class RelacaoVagas(RelatorioBase):
 
     def _preparar_dados_template(self, vagas_agrupadas: dict) -> list:
         """Prepara a estrutura de dados para o template.
-
+        
         Args:
-            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE
-
+            self: Instância do objeto.
+            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE.
+        
         Returns:
-            Lista de cargos com suas DREs e vagas
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_list = []
         for cargo_codigo, dres in vagas_agrupadas.items():
@@ -149,16 +165,17 @@ class RelacaoVagas(RelatorioBase):
 
     def render_to_xls(self, context: Any=None, filename: Any='relacao_vagas.xlsx') -> Any:
         """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
-
-        Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL
-        AO LAUDA DE VAGAS.
-
+        
         Args:
-            context: Contexto do relatório
-            filename: Nome do arquivo Excel gerado
-
+            self: Instância do objeto.
+            context: Contexto do relatório.
+            filename: Nome do arquivo Excel gerado.
+        
         Returns:
-            HttpResponse com o arquivo Excel gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if context is None:
             context = {}
@@ -296,19 +313,19 @@ class RelacaoVagas(RelatorioBase):
 
     def render_to_docx(self, cargos_list: Any, cabecalho: Any, texto_final: Any, filename: Any='relacao_vagas.docx') -> Any:
         """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
-
-        Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL
-        AO XLS.
-
+        
         Args:
-            cargos_list: Lista de cargos com suas DREs e vagas (estrutura
-            hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            texto_final: Texto final do relatório
-            filename: Nome do arquivo Word gerado
-
+            self: Instância do objeto.
+            cargos_list: Lista de cargos com suas DREs e vagas (estrutura.
+            cabecalho: Texto do cabeçalho do relatório.
+            texto_final: Texto final do relatório.
+            filename: Nome do arquivo Word gerado.
+        
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if not DOCX_AVAILABLE:
             raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=1.1.0')

@@ -34,7 +34,15 @@ class LaudaConvocacao(RelatorioBase):
     TEMPLATE_NAME = 'relatorios/lauda_convocacao.html'
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias."""
+        """Inicializa o service com as dependências necessárias.
+        
+        Args:
+            self: Instância do objeto.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         super().__init__(**kwargs)
         self.lauda_service = LaudaConvocacaoService(candidatos_base_url=settings.CANDIDATOS_API_URL, processo_base_url=settings.CONVOCACAO_API_URL, agendas_base_url=settings.AGENDAS_API_URL, escolhas_base_url=settings.ESCOLHAS_API_URL)
 
@@ -42,6 +50,7 @@ class LaudaConvocacao(RelatorioBase):
         """Gera o relatório de Lauda de Convocação.
         
         Args:
+            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Objeto request do Django.
             formato: Formato do relatório ('html', 'pdf' ou 'xls').
@@ -49,9 +58,10 @@ class LaudaConvocacao(RelatorioBase):
             **kwargs: Argumentos nomeados variáveis.
         
         Returns:
-        Tupla (HttpResponse, dados) onde:
-        - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
-        - dados: estrutura de dados do relatório para salvar no banco
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         try:
             dados_lauda = self.lauda_service.processar_lauda_convocacao(processo_uuid=str(processo_uuid) if processo_uuid else '')
@@ -90,15 +100,19 @@ class LaudaConvocacao(RelatorioBase):
 
     def render_to_docx(self, cargos_list: Any, context: Any, texto_final: Any, filename: Any='lauda_convocacao.docx') -> Any:
         """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
-
+        
         Args:
-            cargos_list: Lista de cargos com suas sessões e candidatos
-            context: Contexto com os dados do relatório
-            texto_final: Texto final do relatório
-            filename: Nome do arquivo Word gerado
-
+            self: Instância do objeto.
+            cargos_list: Lista de cargos com suas sessões e candidatos.
+            context: Contexto com os dados do relatório.
+            texto_final: Texto final do relatório.
+            filename: Nome do arquivo Word gerado.
+        
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if not DOCX_AVAILABLE:
             raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=1.1.0')
@@ -228,7 +242,20 @@ class LaudaConvocacao(RelatorioBase):
             raise
 
     def _render_xls(self, cargos_list: Any, context: Any=None, filename: Any='lauda_convocacao.xlsx') -> Any:
-        """Gera um arquivo Excel (XLSX) com a estrutura da Lauda de Convocação."""
+        """Gera um arquivo Excel (XLSX) com a estrutura da Lauda de Convocação.
+        
+        Args:
+            self: Instância do objeto.
+            cargos_list: Parâmetro cargos list da operação.
+            context: Contexto de renderização ou serialização.
+            filename: Parâmetro filename da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
+        """
         if context is None:
             context = {}
         if not OPENPYXL_AVAILABLE:

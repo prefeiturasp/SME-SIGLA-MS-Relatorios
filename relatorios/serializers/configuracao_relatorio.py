@@ -8,7 +8,17 @@ from rest_framework import serializers
 from relatorios.models import ConfiguracaoRelatorio
 
 def _sanitizar_html(value: Any) -> Any:
-    """Executa  sanitizar html."""
+    """Executa  sanitizar html.
+    
+    Args:
+        value: Valor recebido para validação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     if not value:
         return ''
     sem_atributos = re.sub('[\\w-]+=([\'\\"])[^\'\\"]*\\1>', '', value)
@@ -25,13 +35,46 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
         read_only_fields = ['uuid']
 
     def validate_cabecalho(self, value: Any) -> Any:
-        """Executa validate cabecalho."""
+        """Executa validate cabecalho.
+        
+        Args:
+            self: Instância do objeto.
+            value: Valor recebido para validação.
+        
+        Returns:
+            Valor validado do campo cabecalho.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return _sanitizar_html(value)
 
     def validate_cabecalho_gabarito(self, value: Any) -> Any:
-        """Executa validate cabecalho gabarito."""
+        """Executa validate cabecalho gabarito.
+        
+        Args:
+            self: Instância do objeto.
+            value: Valor recebido para validação.
+        
+        Returns:
+            Valor validado do campo cabecalho gabarito.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return _sanitizar_html(value)
 
     def validate_texto_final(self, value: Any) -> Any:
-        """Executa validate texto final."""
+        """Executa validate texto final.
+        
+        Args:
+            self: Instância do objeto.
+            value: Valor recebido para validação.
+        
+        Returns:
+            Valor validado do campo texto final.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return _sanitizar_html(value)

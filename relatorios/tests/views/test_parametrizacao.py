@@ -10,17 +10,38 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def client() -> Any:
-    """Fixture para APIClient."""
+    """Fixture para APIClient.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return APIClient()
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Cria uma Parametrizacao de teste."""
+    """Cria uma Parametrizacao de teste.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.create(cabecalho='<h1>Cabeçalho Teste</h1>')
 
 @pytest.fixture
 def parametrizacoes_multiplas() -> Any:
-    """Cria múltiplas Parametrizacoes de teste (mais recente primeiro)."""
+    """Cria múltiplas Parametrizacoes de teste (mais recente primeiro).
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     itens = []
     import time
     for i in range(3):
@@ -33,7 +54,19 @@ class TestParametrizacaoViewSet:
     """Testes para o ViewSet ParametrizacaoViewSet."""
 
     def test_list_parametrizacao(self, client: Any, parametrizacao: Any) -> None:
-        """Testa listagem de Parametrizacao."""
+        """Testa listagem de Parametrizacao.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-list')
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -43,7 +76,19 @@ class TestParametrizacaoViewSet:
         assert str(parametrizacao.uuid) in uuids
 
     def test_list_parametrizacao_multiple(self, client: Any, parametrizacoes_multiplas: Any) -> None:
-        """Testa listagem com múltiplas Parametrizacoes."""
+        """Testa listagem com múltiplas Parametrizacoes.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacoes_multiplas: Parâmetro parametrizacoes multiplas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-list')
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -52,14 +97,37 @@ class TestParametrizacaoViewSet:
         assert timestamps == sorted(timestamps, reverse=True)
 
     def test_list_parametrizacao_empty(self, client: Any) -> None:
-        """Testa listagem quando não há Parametrizacoes criadas pelo teste."""
+        """Testa listagem quando não há Parametrizacoes criadas pelo teste.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-list')
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, list)
 
     def test_retrieve_parametrizacao(self, client: Any, parametrizacao: Any) -> None:
-        """Testa recuperação de Parametrizacao específica."""
+        """Testa recuperação de Parametrizacao específica.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-detail', args=[parametrizacao.uuid])
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -69,7 +137,19 @@ class TestParametrizacaoViewSet:
         assert 'atualizado_em' in response.data
 
     def test_retrieve_most_recent(self, client: Any, parametrizacoes_multiplas: Any) -> None:
-        """Testa que get_object sempre retorna o mais recente."""
+        """Testa que get_object sempre retorna o mais recente.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacoes_multiplas: Parâmetro parametrizacoes multiplas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         most_recent = parametrizacoes_multiplas[-1]
         url = reverse('parametrizacao-detail', args=[parametrizacoes_multiplas[0].uuid])
         response = client.get(url)
@@ -78,7 +158,19 @@ class TestParametrizacaoViewSet:
         assert response.data['cabecalho'] == most_recent.cabecalho
 
     def test_update_parametrizacao(self, client: Any, parametrizacao: Any) -> None:
-        """Testa atualização de Parametrizacao."""
+        """Testa atualização de Parametrizacao.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-detail', args=[parametrizacao.uuid])
         data = {'cabecalho': '<h1>Cabeçalho Atualizado</h1>'}
         response = client.patch(url, data, format='json')
@@ -88,7 +180,19 @@ class TestParametrizacaoViewSet:
         assert parametrizacao.cabecalho == '<h1>Cabeçalho Atualizado</h1>'
 
     def test_update_most_recent(self, client: Any, parametrizacoes_multiplas: Any) -> None:
-        """Testa que update sempre atualiza o mais recente."""
+        """Testa que update sempre atualiza o mais recente.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacoes_multiplas: Parâmetro parametrizacoes multiplas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         most_recent = parametrizacoes_multiplas[-1]
         old_cabecalho_first = parametrizacoes_multiplas[0].cabecalho
         url = reverse('parametrizacao-detail', args=[parametrizacoes_multiplas[0].uuid])
@@ -101,7 +205,19 @@ class TestParametrizacaoViewSet:
         assert parametrizacoes_multiplas[0].cabecalho == old_cabecalho_first
 
     def test_update_put_method(self, client: Any, parametrizacao: Any) -> None:
-        """Testa atualização usando PUT."""
+        """Testa atualização usando PUT.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-detail', args=[parametrizacao.uuid])
         data = {'cabecalho': '<h1>PUT Update</h1>'}
         response = client.put(url, data, format='json')
@@ -110,7 +226,18 @@ class TestParametrizacaoViewSet:
         assert parametrizacao.cabecalho == '<h1>PUT Update</h1>'
 
     def test_create_not_allowed(self, client: Any) -> None:
-        """Testa que criação (POST) não é permitida."""
+        """Testa que criação (POST) não é permitida.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         initial_count = Parametrizacao.objects.count()
         url = reverse('parametrizacao-list')
         data = {'cabecalho': '<h1>Novo</h1>'}
@@ -120,7 +247,19 @@ class TestParametrizacaoViewSet:
         assert Parametrizacao.objects.count() == initial_count
 
     def test_delete_not_allowed(self, client: Any, parametrizacao: Any) -> None:
-        """Testa que deleção não é permitida (ViewSet não tem DestroyModelMixin)."""
+        """Testa que deleção não é permitida (ViewSet não tem DestroyModelMixin).
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         initial_count = Parametrizacao.objects.count()
         url = reverse('parametrizacao-detail', args=[parametrizacao.uuid])
         response = client.delete(url)
@@ -128,13 +267,37 @@ class TestParametrizacaoViewSet:
         assert Parametrizacao.objects.count() == initial_count
 
     def test_permission_allow_any(self, client: Any, parametrizacao: Any) -> None:
-        """Testa que permissões AllowAny estão configuradas."""
+        """Testa que permissões AllowAny estão configuradas.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-list')
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
 
     def test_pagination_none(self, client: Any, parametrizacoes_multiplas: Any) -> None:
-        """Testa que paginação está desabilitada."""
+        """Testa que paginação está desabilitada.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacoes_multiplas: Parâmetro parametrizacoes multiplas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-list')
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -143,7 +306,19 @@ class TestParametrizacaoViewSet:
         assert len(response.data) >= 3
 
     def test_response_fields(self, client: Any, parametrizacao: Any) -> None:
-        """Testa que resposta contém todos os campos esperados."""
+        """Testa que resposta contém todos os campos esperados.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-detail', args=[parametrizacao.uuid])
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -151,7 +326,19 @@ class TestParametrizacaoViewSet:
         assert set(response.data.keys()) == expected_fields
 
     def test_update_partial_fields(self, client: Any, parametrizacao: Any) -> None:
-        """Testa atualização parcial de campos."""
+        """Testa atualização parcial de campos.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         url = reverse('parametrizacao-detail', args=[parametrizacao.uuid])
         data = {'cabecalho': '<h1>Parcial</h1>'}
         response = client.patch(url, data, format='json')
@@ -161,7 +348,19 @@ class TestParametrizacaoViewSet:
         assert parametrizacao.uuid == parametrizacao.uuid
 
     def test_get_object_returns_first(self, client: Any, parametrizacoes_multiplas: Any) -> None:
-        """Testa que get_object retorna o primeiro do queryset ordenado."""
+        """Testa que get_object retorna o primeiro do queryset ordenado.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+            parametrizacoes_multiplas: Parâmetro parametrizacoes multiplas da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         most_recent = Parametrizacao.objects.all().order_by('-criado_em').first()
         url = reverse('parametrizacao-detail', args=[parametrizacoes_multiplas[0].uuid])
         response = client.get(url)
@@ -169,7 +368,18 @@ class TestParametrizacaoViewSet:
         assert response.data['uuid'] == str(most_recent.uuid)  # type: ignore[union-attr]
 
     def test_retrieve_when_no_records(self, client: Any) -> None:
-        """Testa retrieve quando não há registros correspondentes ao UUID."""
+        """Testa retrieve quando não há registros correspondentes ao UUID.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         import uuid
         fake_uuid = uuid.uuid4()
         url = reverse('parametrizacao-detail', args=[fake_uuid])
@@ -178,7 +388,18 @@ class TestParametrizacaoViewSet:
         assert 'uuid' in response.data
 
     def test_update_when_no_records(self, client: Any) -> None:
-        """Testa update quando não há registros correspondentes ao UUID."""
+        """Testa update quando não há registros correspondentes ao UUID.
+        
+        Args:
+            self: Instância do objeto.
+            client: Parâmetro client da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         import uuid
         fake_uuid = uuid.uuid4()
         url = reverse('parametrizacao-detail', args=[fake_uuid])

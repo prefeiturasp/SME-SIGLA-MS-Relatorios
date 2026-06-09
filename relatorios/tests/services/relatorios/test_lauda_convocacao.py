@@ -11,20 +11,53 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def configuracao_relatorio() -> Any:
-    """Fixture que cria uma ConfiguracaoRelatorio para testes."""
+    """Fixture que cria uma ConfiguracaoRelatorio para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_CONVOCACAO', defaults={'usar_logotipo': False, 'cabecalho': '', 'texto_final': '', 'cabecalho_capa_ata': ''})[0]
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Fixture que cria uma Parametrizacao para testes."""
+    """Fixture que cria uma Parametrizacao para testes.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.create(cabecalho='Cabeçalho Padrão Teste', logo=None)
 
 def _make_request() -> Any:
-    """Executa  make request."""
+    """Executa  make request.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return RequestFactory().get('/relatorios/lauda-convocacao/')
 
 def test_gerar_pdf_success(settings: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica gerar pdf success."""
+    """Verifica gerar pdf success.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
@@ -40,7 +73,19 @@ def test_gerar_pdf_success(settings: Any, configuracao_relatorio: Any, parametri
     assert dados == {'cargos': [{'cargo_nome': 'Professor'}]}
 
 def test_gerar_html_calls_render_with_context_and_default_header(settings: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica gerar html calls render with context and default header."""
+    """Verifica gerar html calls render with context and default header.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
@@ -56,7 +101,19 @@ def test_gerar_html_calls_render_with_context_and_default_header(settings: Any, 
     assert dados == {'cargos': []}
 
 def test_gerar_default_json_success(settings: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica gerar default json success."""
+    """Verifica gerar default json success.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'
@@ -70,7 +127,19 @@ def test_gerar_default_json_success(settings: Any, configuracao_relatorio: Any, 
     assert dados == payload
 
 def test_gerar_raises_exception_on_service_failure(settings: Any, configuracao_relatorio: Any, parametrizacao: Any) -> None:
-    """Verifica gerar raises exception on service failure."""
+    """Verifica gerar raises exception on service failure.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+        configuracao_relatorio: Parâmetro configuracao relatorio da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.CONVOCACAO_API_URL = 'http://processos'
     settings.AGENDAS_API_URL = 'http://agendas'

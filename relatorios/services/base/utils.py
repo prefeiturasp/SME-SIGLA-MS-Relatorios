@@ -4,7 +4,17 @@ from typing import Any
 from django.conf import settings
 
 def ajustar_logo_caminho(logo: Any) -> Any:
-    """Executa ajustar logo caminho."""
+    """Executa ajustar logo caminho.
+    
+    Args:
+        logo: Parâmetro logo da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     if logo and isinstance(logo, str):
         if settings.DJANGO_ENVIRONMENT != 'local':
             base_prefix = settings.MS_PATH.rstrip('/')

@@ -12,18 +12,29 @@ class LaudaVagasService:
     TEMPLATE_NAME = 'relatorios/vagas_escolas.html'
 
     def __init__(self) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self.escolhas_service = EscolhasService(base_url=settings.ESCOLHAS_API_URL)
 
     def gerar_relatorio(self, processo_uuid: str, request: Any) -> Any:
         """Gera o relatório de Lauda de Vagas.
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
-            request: Objeto request do Django
-
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+            request: Objeto request do Django.
+        
         Returns:
-            HttpResponse com o relatório gerado (HTML)
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(processo_uuid=str(processo_uuid) if processo_uuid else '')
@@ -38,12 +49,16 @@ class LaudaVagasService:
 
     def _agrupar_vagas(self, vagas: list) -> dict:
         """Agrupa vagas por cargo_codigo e depois por DRE codigo.
-
+        
         Args:
-            vagas: Lista de vagas
-
+            self: Instância do objeto.
+            vagas: Lista de vagas.
+        
         Returns:
-            Dicionário agrupado por cargo e DRE
+            Dicionário com os dados processados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
@@ -58,12 +73,16 @@ class LaudaVagasService:
 
     def _preparar_dados_template(self, vagas_agrupadas: dict) -> list:
         """Prepara a estrutura de dados para o template.
-
+        
         Args:
-            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE
-
+            self: Instância do objeto.
+            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE.
+        
         Returns:
-            Lista de cargos com suas DREs e vagas
+            Lista com os registros resultantes.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         cargos_list = []
         for cargo_codigo, dres in vagas_agrupadas.items():

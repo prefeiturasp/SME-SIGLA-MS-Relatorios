@@ -28,7 +28,20 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def create(self, request: Any, *args: Any, **kwargs: Any) -> Any:
-        """Executa create."""
+        """Executa create.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+            *args: Argumentos posicionais variáveis.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Returns:
+            Resposta HTTP com os dados serializados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         logger.info('Criando relatório', extra={'correlation_id': get_correlation_id(), 'method': request.method, 'path': request.path, 'tipo_relatorio': request.data.get('tipo'), 'processo_uuid': request.data.get('processo_uuid'), 'agenda_uuid': request.data.get('agenda_uuid'), 'cargo_codigo': request.data.get('cargo_codigo'), 'parametros': request.query_params, 'headers': request.headers, 'user': request.user})
         serializer = RelatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

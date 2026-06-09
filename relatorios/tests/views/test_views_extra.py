@@ -13,16 +13,44 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def client() -> Any:
-    """Executa client."""
+    """Executa client.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return APIClient()
 
 def _payload(tipo: Any='LISTA_CANDIDATOS_SESSAO') -> Any:
-    """Executa  payload."""
+    """Executa  payload.
+    
+    Args:
+        tipo: Parâmetro tipo da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return {'tipo': tipo, 'usuario': 'u1', 'processo_uuid': str(uuid.uuid4()), 'cabecalho': '<p>x</p>'}
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
 def test_create_returns_xls_when_query_param_is_xls(mock_factory: Any, client: Any) -> None:
-    """Verifica create returns xls when query param is xls."""
+    """Verifica create returns xls when query param is xls.
+    
+    Args:
+        mock_factory: Parâmetro mock factory da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = Mock()
     svc.gerar.return_value = (HttpResponse('ok'), {'ok': True})
     mock_factory.return_value = svc
@@ -33,7 +61,18 @@ def test_create_returns_xls_when_query_param_is_xls(mock_factory: Any, client: A
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
 def test_create_returns_pdf_when_query_param_pdf(mock_factory: Any, client: Any) -> None:
-    """Verifica create returns pdf when query param pdf."""
+    """Verifica create returns pdf when query param pdf.
+    
+    Args:
+        mock_factory: Parâmetro mock factory da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = Mock()
     svc.gerar.return_value = (HttpResponse('ok'), {'ok': True})
     mock_factory.return_value = svc
@@ -44,7 +83,18 @@ def test_create_returns_pdf_when_query_param_pdf(mock_factory: Any, client: Any)
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
 def test_create_returns_docx_when_query_param_docx(mock_factory: Any, client: Any) -> None:
-    """Verifica create returns docx when query param docx."""
+    """Verifica create returns docx when query param docx.
+    
+    Args:
+        mock_factory: Parâmetro mock factory da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = Mock()
     svc.gerar.return_value = (HttpResponse('ok'), {'ok': True})
     mock_factory.return_value = svc
@@ -55,7 +105,18 @@ def test_create_returns_docx_when_query_param_docx(mock_factory: Any, client: An
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
 def test_create_handles_cargo_obrigatorio_error(mock_factory: Any, client: Any) -> None:
-    """Verifica create handles cargo obrigatorio error."""
+    """Verifica create handles cargo obrigatorio error.
+    
+    Args:
+        mock_factory: Parâmetro mock factory da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = Mock()
     svc.gerar.side_effect = CargoObrigatorioError(cargos=[{'codigo': '1'}], message='Selecione cargo')
     mock_factory.return_value = svc
@@ -66,14 +127,36 @@ def test_create_handles_cargo_obrigatorio_error(mock_factory: Any, client: Any) 
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio', side_effect=ValueError('tipo inválido'))
 def test_create_handles_value_error(mock_factory: Any, client: Any) -> None:
-    """Verifica create handles value error."""
+    """Verifica create handles value error.
+    
+    Args:
+        mock_factory: Parâmetro mock factory da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     response = client.post(reverse('relatorio-list'), _payload(), format='json')
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert 'tipo inválido' in response.data['error']
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
 def test_create_handles_generic_exception(mock_factory: Any, client: Any) -> None:
-    """Verifica create handles generic exception."""
+    """Verifica create handles generic exception.
+    
+    Args:
+        mock_factory: Parâmetro mock factory da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = Mock()
     svc.gerar.side_effect = RuntimeError('falha inesperada')
     mock_factory.return_value = svc

@@ -12,10 +12,7 @@ from relatorios.serializers import ConfiguracaoRelatorioSerializer
 logger = logging.getLogger(__name__)
 
 class PersonalizacaoViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
-    """ViewSet para gerenciar personalização de relatórios.
-
-    Trabalha com ConfiguracaoRelatorio baseado no tipo de relatório.
-    """
+    """ViewSet para gerenciar personalização de relatórios."""
     queryset = ConfiguracaoRelatorio.objects.all()
     serializer_class = ConfiguracaoRelatorioSerializer
     permission_classes = [AllowAny]
@@ -29,9 +26,18 @@ class PersonalizacaoViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mi
 
     def list(self, request: Any, *args: Any, **kwargs: Any) -> Any:
         """GET /personalizacao/?processo_uuid=...&tipo=...
-
-        Retorna a configuração do tipo de relatório especificado.
-        Se não existir, retorna valores padrão.
+        
+        Args:
+            self: Instância do objeto.
+            request: Requisição HTTP recebida.
+            *args: Argumentos posicionais variáveis.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Returns:
+            Resposta HTTP com os dados serializados.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         resultado = self.filter_queryset(self.get_queryset())[0] if self.filter_queryset(self.get_queryset()) else None
         serializer = self.get_serializer(resultado)

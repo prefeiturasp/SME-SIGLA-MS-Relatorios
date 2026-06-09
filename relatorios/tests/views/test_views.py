@@ -13,24 +13,56 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def client() -> Any:
-    """Executa client."""
+    """Executa client.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return APIClient()
 
 @pytest.fixture
 def relatorio() -> Any:
-    """Executa relatorio."""
+    """Executa relatorio.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Relatorio.objects.create(tipo='agenda', usuario='tester', dados={'foo': 'bar'}, processo_uuid=uuid.uuid4(), cabecalho='<b>Cabeçalho</b>')
 
 @pytest.fixture
 def relatorios() -> Any:
-    """Executa relatorios."""
+    """Executa relatorios.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     itens = []
     for i in range(2):
         itens.append(Relatorio.objects.create(tipo='agenda', usuario=f'user{i + 1}', dados={'idx': i + 1}, processo_uuid=uuid.uuid4(), cabecalho=None))
     return itens
 
 def test_relatorio_list(client: Any, relatorio: Any) -> None:
-    """Verifica relatorio list."""
+    """Verifica relatorio list.
+    
+    Args:
+        client: Parâmetro client da operação.
+        relatorio: Parâmetro relatorio da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     url = reverse('relatorio-list')
     response = client.get(url)
     assert response.status_code == status.HTTP_200_OK
@@ -44,7 +76,18 @@ def test_relatorio_list(client: Any, relatorio: Any) -> None:
 
 @patch('relatorios.views.relatorios.RelatorioFactory.obter_relatorio')
 def test_relatorio_create(mock_obter_relatorio: Any, client: Any) -> None:
-    """Cria relatório com chamadas externas mockadas."""
+    """Cria relatório com chamadas externas mockadas.
+    
+    Args:
+        mock_obter_relatorio: Parâmetro mock obter relatorio da operação.
+        client: Parâmetro client da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     mock_service = Mock()
     mock_service.gerar.return_value = (HttpResponse('<html></html>', content_type='text/html'), {'k': 'v'})
     mock_obter_relatorio.return_value = mock_service
@@ -63,7 +106,18 @@ def test_relatorio_create(mock_obter_relatorio: Any, client: Any) -> None:
     mock_service.gerar.assert_called_once()
 
 def test_relatorio_get(client: Any, relatorio: Any) -> None:
-    """Verifica relatorio get."""
+    """Verifica relatorio get.
+    
+    Args:
+        client: Parâmetro client da operação.
+        relatorio: Parâmetro relatorio da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     url = reverse('relatorio-detail', args=[relatorio.pk])
     response = client.get(url)
     assert response.status_code == status.HTTP_200_OK
@@ -75,7 +129,18 @@ def test_relatorio_get(client: Any, relatorio: Any) -> None:
     assert 'cabecalho' in response.data
 
 def test_relatorio_delete(client: Any, relatorio: Any) -> None:
-    """Verifica relatorio delete."""
+    """Verifica relatorio delete.
+    
+    Args:
+        client: Parâmetro client da operação.
+        relatorio: Parâmetro relatorio da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     url = reverse('relatorio-detail', args=[relatorio.pk])
     response = client.delete(url)
     assert response.status_code == status.HTTP_204_NO_CONTENT

@@ -7,10 +7,7 @@ from .base import BaseModel
 from .constants import TIPOS_RELATORIOS
 
 class ConfiguracaoRelatorio(BaseModel):
-    """Modelo para representar configurações específicas de cada tipo de.
-
-    relatório.
-    """
+    """Modelo para representar configurações específicas de cada tipo de."""
     tipo = models.CharField(max_length=200, verbose_name='Tipo de Relatório', choices=TIPOS_RELATORIOS, unique=True)
     usar_logotipo = models.BooleanField(verbose_name='Usar Logotipo', default=False)
     cabecalho = models.TextField(verbose_name='Cabeçalho', default='', blank=True)
@@ -26,6 +23,16 @@ class ConfiguracaoRelatorio(BaseModel):
         db_table = 'relatorios_configuracao'
 
     def __str__(self) -> Any:
-        """Executa   str  ."""
+        """Executa   str  .
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return f'Configuração - {self.get_tipo_display()}'
 auditlog.register(ConfiguracaoRelatorio)

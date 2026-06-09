@@ -16,60 +16,162 @@ class _Resp:
     """Define _Resp."""
 
     def __init__(self, payload: Any) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            payload: Parâmetro payload da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self._payload = payload
 
     def json(self) -> Any:
-        """Executa json."""
+        """Executa json.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return self._payload
 
 def _req() -> Any:
-    """Executa  req."""
+    """Executa  req.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return RequestFactory().get('/api/v1/relatorios/')
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Executa parametrizacao."""
+    """Executa parametrizacao.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.get_or_create(cabecalho='CAB PADRAO')[0]
 
 @pytest.fixture
 def cfg_nao_escolhas() -> Any:
-    """Executa cfg nao escolhas."""
+    """Executa cfg nao escolhas.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_NAO_ESCOLHAS')[0]
 
 @pytest.fixture
 def cfg_reconvocacao() -> Any:
-    """Executa cfg reconvocacao."""
+    """Executa cfg reconvocacao.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_RECONVOCACAO')[0]
 
 @pytest.fixture
 def cfg_relacao_vagas() -> Any:
-    """Executa cfg relacao vagas."""
+    """Executa cfg relacao vagas.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='RELACAO_VAGAS')[0]
 
 @pytest.fixture
 def cfg_lauda_vagas() -> Any:
-    """Executa cfg lauda vagas."""
+    """Executa cfg lauda vagas.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_VAGAS')[0]
 
 def _candidato_payload() -> Any:
-    """Executa  candidato payload."""
+    """Executa  candidato payload.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return {'results': [{'uuid': 'cand-1', 'codigo_cargo': '101', 'descricao_cargo': '', 'classificacao': 1, 'classificacao_pcd': None, 'classificacao_nna': 3, 'candidato': {'nome': 'Maria', 'cpf': '111'}}]}
 
 def _cargos_payload() -> Any:
-    """Executa  cargos payload."""
+    """Executa  cargos payload.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'cargo_codigo': '101', 'cargo_nome': 'Professor'}]
 
 def _escolhas_payload(situacao: Any) -> Any:
-    """Executa  escolhas payload."""
+    """Executa  escolhas payload.
+    
+    Args:
+        situacao: Parâmetro situacao da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'candidato_uuid': 'cand-1', 'situacao': situacao}]
 
 def _vagas_payload() -> Any:
-    """Executa  vagas payload."""
+    """Executa  vagas payload.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return {'vagas': [{'cargo_codigo': '101', 'cargo_descricao': 'Professor', 'vagas_definitivas': 2, 'vagas_precarias': 1, 'vagas_definitivas_restantes': 1, 'vagas_precarias_restantes': 1, 'vagas_definitivas_utilizadas': 2, 'vagas_precarias_utilizadas': 1, 'escola': {'tipo_ue': 'EMEF', 'nome_oficial': 'Escola A', 'codigo_eol': '999', 'dre': {'codigo': 'D1', 'nome': 'DRE 1'}}}]}
 
 def test_sumula_nao_escolhas_gerar_html_and_json(cfg_nao_escolhas: Any, parametrizacao: Any) -> None:
-    """Verifica sumula nao escolhas gerar html and json."""
+    """Verifica sumula nao escolhas gerar html and json.
+    
+    Args:
+        cfg_nao_escolhas: Parâmetro cfg nao escolhas da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = SumulaNaoEscolhas(configuracao=cfg_nao_escolhas, parametrizacao=parametrizacao)
     svc.processos_service = Mock()
     svc.candidatos_service = Mock()
@@ -86,7 +188,18 @@ def test_sumula_nao_escolhas_gerar_html_and_json(cfg_nao_escolhas: Any, parametr
         assert resp_pdf.status_code == 200
 
 def test_sumula_nao_escolhas_gerar_docx_and_xls(cfg_nao_escolhas: Any, parametrizacao: Any) -> None:
-    """Verifica sumula nao escolhas gerar docx and xls."""
+    """Verifica sumula nao escolhas gerar docx and xls.
+    
+    Args:
+        cfg_nao_escolhas: Parâmetro cfg nao escolhas da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = SumulaNaoEscolhas(configuracao=cfg_nao_escolhas, parametrizacao=parametrizacao)
     svc.processos_service = Mock()
     svc.candidatos_service = Mock()
@@ -102,7 +215,18 @@ def test_sumula_nao_escolhas_gerar_docx_and_xls(cfg_nao_escolhas: Any, parametri
         assert r_xls.status_code == 200
 
 def test_sumula_reconvocacao_gerar_paths(cfg_reconvocacao: Any, parametrizacao: Any) -> None:
-    """Verifica sumula reconvocacao gerar paths."""
+    """Verifica sumula reconvocacao gerar paths.
+    
+    Args:
+        cfg_reconvocacao: Parâmetro cfg reconvocacao da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = SumulaReconvocacao(configuracao=cfg_reconvocacao, parametrizacao=parametrizacao)
     svc.processos_service = Mock()
     svc.candidatos_service = Mock()
@@ -122,7 +246,19 @@ def test_sumula_reconvocacao_gerar_paths(cfg_reconvocacao: Any, parametrizacao: 
         assert svc.gerar('proc-2', _req(), formato='xls')[0].status_code == 200
 
 def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(cfg_relacao_vagas: Any, cfg_lauda_vagas: Any, parametrizacao: Any) -> None:
-    """Verifica relacao vagas and lauda vagas grouping and routes."""
+    """Verifica relacao vagas and lauda vagas grouping and routes.
+    
+    Args:
+        cfg_relacao_vagas: Parâmetro cfg relacao vagas da operação.
+        cfg_lauda_vagas: Parâmetro cfg lauda vagas da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     relacao = RelacaoVagas(configuracao=cfg_relacao_vagas, parametrizacao=parametrizacao)
     lauda = LaudaVagas(configuracao=cfg_lauda_vagas, parametrizacao=parametrizacao)
     relacao.escolhas_service = Mock()
@@ -151,7 +287,21 @@ def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(cfg_relacao_vagas: An
         assert lauda.gerar('proc-4', _req(), formato='pdf')[0].status_code == 200
 
 def test_modules_raise_when_upstream_fails(cfg_nao_escolhas: Any, cfg_reconvocacao: Any, cfg_relacao_vagas: Any, cfg_lauda_vagas: Any, parametrizacao: Any) -> None:
-    """Verifica modules raise when upstream fails."""
+    """Verifica modules raise when upstream fails.
+    
+    Args:
+        cfg_nao_escolhas: Parâmetro cfg nao escolhas da operação.
+        cfg_reconvocacao: Parâmetro cfg reconvocacao da operação.
+        cfg_relacao_vagas: Parâmetro cfg relacao vagas da operação.
+        cfg_lauda_vagas: Parâmetro cfg lauda vagas da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     nao = SumulaNaoEscolhas(configuracao=cfg_nao_escolhas, parametrizacao=parametrizacao)
     nao.processos_service = Mock()
     nao.candidatos_service = Mock()

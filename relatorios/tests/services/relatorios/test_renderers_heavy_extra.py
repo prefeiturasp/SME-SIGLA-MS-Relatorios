@@ -14,28 +14,74 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Executa parametrizacao."""
+    """Executa parametrizacao.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return Parametrizacao.objects.get_or_create(cabecalho='CAB PADRAO')[0]
 
 @pytest.fixture
 def cfgs() -> Any:
-    """Executa cfgs."""
+    """Executa cfgs.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return {'nao': ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_NAO_ESCOLHAS')[0], 'reco': ConfiguracaoRelatorio.objects.get_or_create(tipo='SUMULA_RECONVOCACAO')[0], 'relacao': ConfiguracaoRelatorio.objects.get_or_create(tipo='RELACAO_VAGAS')[0], 'lauda_vagas': ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_VAGAS')[0], 'lauda_conv': ConfiguracaoRelatorio.objects.get_or_create(tipo='LAUDA_CONVOCACAO')[0]}
 
 def _cargos_candidatos() -> Any:
-    """Executa  cargos candidatos."""
+    """Executa  cargos candidatos.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'codigo': '101', 'descricao': 'Professor', 'candidatos': [{'classificacao_geral': 1, 'classificacao_def': '-', 'classificacao_nna': 2, 'nome': 'Maria'}]}]
 
 def _cargos_dres_vagas() -> Any:
-    """Executa  cargos dres vagas."""
+    """Executa  cargos dres vagas.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'codigo': '101', 'descricao': 'Professor', 'dres': [{'codigo': 'D1', 'nome': 'DRE 1', 'vagas': [{'vagas_definitivas': 2, 'vagas_precarias': 1, 'vagas_definitivas_originais': 2, 'vagas_definitivas_atuais': 1, 'vagas_precarias_originais': 1, 'vagas_precarias_atuais': 1, 'escola': {'tipo_ue': 'EMEF', 'nome_oficial': 'Escola A', 'codigo_eol': '999'}}]}]}]
 
 def _cargos_lauda_conv() -> Any:
-    """Executa  cargos lauda conv."""
+    """Executa  cargos lauda conv.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     return [{'cargo_nome': 'Professor', 'sessoes': [{'numero_sessao': 1, 'horario_formatado': '08:00 às 10:00', 'candidatos': [{'ordem_escolha': 1, 'codigo_inscricao': 'INS1', 'classificacao': 1, 'classificacao_pcd': None, 'classificacao_nna': 2, 'candidato': {'nome': 'Joao'}}]}]}]
 
 def test_sumula_nao_escolhas_renderers(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica sumula nao escolhas renderers."""
+    """Verifica sumula nao escolhas renderers.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = SumulaNaoEscolhas(configuracao=cfgs['nao'], parametrizacao=parametrizacao)
     svc.context.update({'cargos': _cargos_candidatos(), 'texto_final': 'fim'})
     xls = svc.render_to_xls(context=svc.context, filename='nao.xlsx')
@@ -46,7 +92,18 @@ def test_sumula_nao_escolhas_renderers(cfgs: Any, parametrizacao: Any) -> None:
     assert 'nao.docx' in docx['Content-Disposition']
 
 def test_sumula_reconvocacao_renderers(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica sumula reconvocacao renderers."""
+    """Verifica sumula reconvocacao renderers.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = SumulaReconvocacao(configuracao=cfgs['reco'], parametrizacao=parametrizacao)
     svc.context.update({'cargos': _cargos_candidatos(), 'texto_final': 'fim'})
     xls = svc.render_to_xls(context=svc.context, filename='reco.xlsx')
@@ -57,7 +114,18 @@ def test_sumula_reconvocacao_renderers(cfgs: Any, parametrizacao: Any) -> None:
     assert 'reco.docx' in docx['Content-Disposition']
 
 def test_relacao_vagas_renderers(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica relacao vagas renderers."""
+    """Verifica relacao vagas renderers.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = RelacaoVagas(configuracao=cfgs['relacao'], parametrizacao=parametrizacao)
     svc.context.update({'cargos': _cargos_dres_vagas(), 'texto_final': 'fim'})
     xls = svc.render_to_xls(context=svc.context, filename='relacao.xlsx')
@@ -68,7 +136,18 @@ def test_relacao_vagas_renderers(cfgs: Any, parametrizacao: Any) -> None:
     assert 'relacao.docx' in docx['Content-Disposition']
 
 def test_lauda_vagas_renderers(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica lauda vagas renderers."""
+    """Verifica lauda vagas renderers.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = LaudaVagas(configuracao=cfgs['lauda_vagas'], parametrizacao=parametrizacao)
     svc.context.update({'cargos': _cargos_dres_vagas(), 'texto_final': 'fim'})
     xls = svc.render_to_xls(context=svc.context, filename='lauda-vagas.xlsx')
@@ -79,7 +158,18 @@ def test_lauda_vagas_renderers(cfgs: Any, parametrizacao: Any) -> None:
     assert 'lauda-vagas.docx' in docx['Content-Disposition']
 
 def test_lauda_convocacao_renderers(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica lauda convocacao renderers."""
+    """Verifica lauda convocacao renderers.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = LaudaConvocacao(configuracao=cfgs['lauda_conv'], parametrizacao=parametrizacao)
     svc.context.update({'texto_final': 'fim'})
     xls = svc._render_xls(_cargos_lauda_conv(), context=svc.context, filename='lauda-conv.xlsx')
@@ -90,7 +180,18 @@ def test_lauda_convocacao_renderers(cfgs: Any, parametrizacao: Any) -> None:
     assert 'lauda-conv.docx' in docx['Content-Disposition']
 
 def test_renderers_logo_fetch_error_paths(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica renderers logo fetch error paths."""
+    """Verifica renderers logo fetch error paths.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     nao = SumulaNaoEscolhas(configuracao=cfgs['nao'], parametrizacao=parametrizacao)
     nao.context.update({'cargos': _cargos_candidatos(), 'usar_logotipo': True, 'logo_url': 'http://x/logo.png'})
     reco = SumulaReconvocacao(configuracao=cfgs['reco'], parametrizacao=parametrizacao)
@@ -113,7 +214,18 @@ def test_renderers_logo_fetch_error_paths(cfgs: Any, parametrizacao: Any) -> Non
         lauda_conv._render_xls(_cargos_lauda_conv(), context=lauda_conv.context, filename='lc.xlsx')
 
 def test_gerar_else_json_path_lauda_convocacao(cfgs: Any, parametrizacao: Any) -> None:
-    """Verifica gerar else json path lauda convocacao."""
+    """Verifica gerar else json path lauda convocacao.
+    
+    Args:
+        cfgs: Parâmetro cfgs da operação.
+        parametrizacao: Parâmetro parametrizacao da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc = LaudaConvocacao(configuracao=cfgs['lauda_conv'], parametrizacao=parametrizacao)
     svc.lauda_service = Mock()
     svc.lauda_service.processar_lauda_convocacao.return_value = {'cargos': [], 'processo': 'p1'}

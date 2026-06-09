@@ -15,7 +15,18 @@ class ParametrizacaoSerializer(serializers.ModelSerializer):
         read_only_fields = ['uuid', 'criado_em', 'atualizado_em']
 
     def to_representation(self, instance: Any) -> Any:
-        """Executa to representation."""
+        """Executa to representation.
+        
+        Args:
+            self: Instância do objeto.
+            instance: Instância do modelo em atualização.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         data = super().to_representation(instance)
         logo = data.get('logo')
         if logo and isinstance(logo, str):

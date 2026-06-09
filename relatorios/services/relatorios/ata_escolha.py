@@ -40,16 +40,46 @@ class AtaEscolha(RelatorioBase):
     TEMPLATE_NAME = 'relatorios/ata_escolha.html'
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias."""
+        """Inicializa o service com as dependências necessárias.
+        
+        Args:
+            self: Instância do objeto.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         super().__init__(**kwargs)
         self.ata_service = AtaEscolhaService(candidatos_base_url=settings.CANDIDATOS_API_URL, processo_base_url=settings.CONVOCACAO_API_URL, agendas_base_url=settings.AGENDAS_API_URL, escolhas_base_url=settings.ESCOLHAS_API_URL)
 
     def _preencher_template(self, cabecalho_capa: Any, dados: Any) -> Any:
-        """Executa  preencher template."""
+        """Executa  preencher template.
+        
+        Args:
+            self: Instância do objeto.
+            cabecalho_capa: Parâmetro cabecalho capa da operação.
+            dados: Parâmetro dados da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         pattern = re.compile('\\[\\[(.*?)\\]\\]')
 
         def replace_func(match: Any) -> Any:
-            """Executa replace func."""
+            """Executa replace func.
+            
+            Args:
+                match: Parâmetro match da operação.
+            
+            Returns:
+                Resultado da operação.
+            
+            Raises:
+                Nenhuma exceção específica documentada.
+            """
             chave = match.group(1)
             return str(dados.get(chave, f'[[ERRO: {chave} NÃO ENCONTRADO]]'))
         return pattern.sub(replace_func, cabecalho_capa)
@@ -58,21 +88,19 @@ class AtaEscolha(RelatorioBase):
         """Gera o relatório de Ata de Escolha para um único cargo.
         
         Args:
-                processo_uuid: UUID do processo de convocação.
-                request: Objeto request do Django.
-                formato: Formato do relatório ('html', 'pdf' ou 'xls').
-                cabecalho: Texto do cabeçalho do relatório (opcional).
-                cargo_codigo: Código do cargo (obrigatório se o processo tiver mais.
-                **kwargs: Argumentos nomeados variáveis.
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+            request: Objeto request do Django.
+            formato: Formato do relatório ('html', 'pdf' ou 'xls').
+            cabecalho: Texto do cabeçalho do relatório (opcional).
+            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais.
+            **kwargs: Argumentos nomeados variáveis.
         
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
-            - dados: estrutura de dados do relatório para salvar no banco
+            Resultado da operação.
         
         Raises:
-            CargoObrigatorioError: Quando o processo tem mais de um cargo e
-            cargo_codigo não foi informado
+            Nenhuma exceção específica documentada.
         """
         try:
             dados_ata = self.ata_service.processar_ata_escolha(processo_uuid=str(processo_uuid) if processo_uuid else '', cargo_codigo=cargo_codigo or None)
@@ -121,12 +149,16 @@ class AtaEscolha(RelatorioBase):
         """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
         
         Args:
+            self: Instância do objeto.
             cargos_list: Lista de cargos com suas sessões e candidatos.
             context: Dicionário com o contexto do template.
             filename: Nome do arquivo Word gerado.
         
         Returns:
-        HttpResponse com o arquivo Word gerado
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
         """
         if not DOCX_AVAILABLE:
             raise ImportError('python-docx não está instalado. Instale com: pip install python-docx>=1.1.0')
@@ -263,7 +295,19 @@ class AtaEscolha(RelatorioBase):
             raise
 
     def _render_xls(self, context_data: Any, filename: Any='ata_escolha.xlsx') -> Any:
-        """Gera um arquivo Excel (XLSX) com a estrutura da Ata de Escolha."""
+        """Gera um arquivo Excel (XLSX) com a estrutura da Ata de Escolha.
+        
+        Args:
+            self: Instância do objeto.
+            context_data: Parâmetro context data da operação.
+            filename: Parâmetro filename da operação.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            ImportError: Se ocorrer erro nesta operação.
+        """
         if not OPENPYXL_AVAILABLE:
             raise ImportError('openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0')
         wb = Workbook()

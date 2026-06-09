@@ -13,21 +13,60 @@ class _Resp:
     """Define _Resp."""
 
     def __init__(self, payload: Any, content: Any=b'img') -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            payload: Parâmetro payload da operação.
+            content: Parâmetro content da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self._payload = payload
         self.content = content
 
     def json(self) -> Any:
-        """Executa json."""
+        """Executa json.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return self._payload
 
     def raise_for_status(self) -> Any:
-        """Executa raise for status."""
+        """Executa raise for status.
+        
+        Args:
+            self: Instância do objeto.
+        
+        Returns:
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         return None
 
 @pytest.fixture
 def svc(settings: Any) -> Any:
-    """Executa svc."""
+    """Executa svc.
+    
+    Args:
+        settings: Parâmetro settings da operação.
+    
+    Returns:
+        Resultado da operação.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     settings.CANDIDATOS_API_URL = 'http://candidatos'
     settings.AGENDAS_API_URL = 'http://agendas'
     cfg = ConfiguracaoRelatorio.objects.get_or_create(tipo='LISTA_CANDIDATOS_SESSAO')[0]
@@ -35,7 +74,18 @@ def svc(settings: Any) -> Any:
     return ListaCandidatosSessao(configuracao=cfg, parametrizacao=par)
 
 def test_fetch_candidatos_variants_and_build_context(svc: Any, monkeypatch: Any) -> None:
-    """Verifica fetch candidatos variants and build context."""
+    """Verifica fetch candidatos variants and build context.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp({'results': [{'x': 1}]}))
     assert svc._fetch_candidatos(['u1']) == [{'x': 1}]
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp([{'y': 2}]))
@@ -48,7 +98,17 @@ def test_fetch_candidatos_variants_and_build_context(svc: Any, monkeypatch: Any)
     assert ctx['candidatos'][0]['nome'] == 'A'
 
 def test_render_xls_and_docx_with_logo_and_sections(svc: Any) -> None:
-    """Verifica render xls and docx with logo and sections."""
+    """Verifica render xls and docx with logo and sections.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     svc.context['cabecalho'] = 'CAB'
     context = {'usar_logotipo': True, 'logo_url': 'http://img/logo.png', 'texto_final': 'Rodape', 'agendas': [{'agenda': {'escolha_em': '2026-04-01', 'hora_convocacao_inicio': '08:00:00', 'hora_convocacao_fim': '09:00:00', 'sessao': 'S1', 'cargo_nome': 'Professor'}, 'candidatos': [{'classificacao': 1, 'classificacao_nna': None, 'classificacao_pcd': None, 'inscricao': 'I1', 'nome': 'N1', 'cpf': 'C1'}]}, {'agenda': {'sessao': 'S2'}, 'candidatos': []}]}
     with patch('relatorios.services.relatorios.lista_candidatos_sessao.requests.get', return_value=_Resp({})):
@@ -60,7 +120,18 @@ def test_render_xls_and_docx_with_logo_and_sections(svc: Any) -> None:
     assert 'lista-extra.docx' in docx['Content-Disposition']
 
 def test_gerar_docx_xls_and_exception_path(svc: Any, monkeypatch: Any) -> None:
-    """Verifica gerar docx xls and exception path."""
+    """Verifica gerar docx xls and exception path.
+    
+    Args:
+        svc: Parâmetro svc da operação.
+        monkeypatch: Fixture do pytest para substituir objetos.
+    
+    Returns:
+        Não retorna valor.
+    
+    Raises:
+        Nenhuma exceção específica documentada.
+    """
     req = RequestFactory().get('/x')
     monkeypatch.setattr(svc.agendas_service, 'buscar_agendas', lambda **kw: _Resp({'results': [{'retardatario': False, 'candidatos_uuids': ['u1'], 'sessao': 'S'}]}))
     monkeypatch.setattr(svc.candidatos_service, 'buscar_por_uuids', lambda **kw: _Resp({'results': [{'classificacao': 1, 'codigo_inscricao': 'I', 'candidato': {'nome': 'N', 'cpf': 'C'}}]}))

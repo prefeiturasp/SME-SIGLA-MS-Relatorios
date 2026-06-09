@@ -13,13 +13,20 @@ from .utils import ajustar_logo_caminho
 logger = logging.getLogger(__name__)
 
 class RelatorioBase(ABC):
-    """Classe abstrata que define a interface comum para todos os tipos de.
-
-    relatórios.
-    """
+    """Classe abstrata que define a interface comum para todos os tipos de."""
 
     def __init__(self, *, configuracao: Any, parametrizacao: Any, **kwargs: Any) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            configuracao: Parâmetro configuracao da operação.
+            parametrizacao: Parâmetro parametrizacao da operação.
+            **kwargs: Argumentos nomeados variáveis.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self.configuracao = configuracao
         self.parametrizacao = parametrizacao
         logo_url = ''
@@ -35,35 +42,34 @@ class RelatorioBase(ABC):
         """Método abstrato que deve ser implementado por todas as classes filhas.
         
         Args:
-                processo_uuid: UUID do processo de convocação.
-                request: Objeto request do Django.
-                formato: Formato do relatório ('html', 'pdf' ou 'xls').
-                **kwargs: Argumentos nomeados variáveis.
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+            request: Objeto request do Django.
+            formato: Formato do relatório ('html', 'pdf' ou 'xls').
+            **kwargs: Argumentos nomeados variáveis.
         
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
-            - dados: estrutura de dados do relatório para salvar no banco
+            Não retorna valor.
         
         Raises:
-            NotImplementedError: Se o método não for implementado pela classe
-            filha
+            Nenhuma exceção específica documentada.
         """
         pass
 
     def render_to_pdf(self, template_name: Any, context: Any, filename: Any='relatorio.pdf') -> Any:
         """Renderiza um template HTML para PDF usando WeasyPrint.
-
-        Método disponível para todas as classes filhas.
-
+        
         Args:
-            template_name: Nome do template (ex:
-            'relatorios/vagas_escolas.html')
-            context: Dicionário com o contexto do template
-            filename: Nome do arquivo PDF gerado
-
+            self: Instância do objeto.
+            template_name: Nome do template (ex:.
+            context: Dicionário com o contexto do template.
+            filename: Nome do arquivo PDF gerado.
+        
         Returns:
-            HttpResponse com o PDF gerado
+            Resultado da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         try:
             html_string = render_to_string(template_name, context)
@@ -81,15 +87,15 @@ class RelatorioBase(ABC):
     @staticmethod
     def processar_cabecalho_html(cabecalho: str) -> str:
         """Remove tags HTML do cabeçalho, preservando quebras de linha,.
-
-        espaçamento, tabs e margens.
-
+        
         Args:
-            cabecalho: String HTML com o cabeçalho
-
+            cabecalho: String HTML com o cabeçalho.
+        
         Returns:
-            String com o texto processado, sem tags HTML mas com formatação
-            preservada
+            Texto resultante da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         if not cabecalho:
             return ''

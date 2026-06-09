@@ -12,20 +12,32 @@ class ProcessosService:
     """Define ProcessosService."""
 
     def __init__(self, base_url: str='https://example.com', timeout_seconds: int=30) -> None:
-        """Executa   init  ."""
+        """Executa   init  .
+        
+        Args:
+            self: Instância do objeto.
+            base_url: Parâmetro base url da operação.
+            timeout_seconds: Parâmetro timeout seconds da operação.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         self.base_url = base_url.rstrip('/')
         self.timeout_seconds = timeout_seconds
         self._default_headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
 
     def buscar_cargos_por_processo(self, processo_uuid: str) -> requests.Response:
         """Busca cargos do processo de convocação por processo_uuid.
-
+        
         Args:
-            processo_uuid: UUID do processo de convocação
+            self: Instância do objeto.
+            processo_uuid: UUID do processo de convocação.
+        
         Returns:
-            Response da API com os cargos do processo
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição.
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/cargos/'
         logger.info('Buscando cargos do processo', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers, 'processo_uuid': processo_uuid})

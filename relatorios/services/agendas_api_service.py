@@ -13,12 +13,14 @@ class AgendasService:
 
     def __init__(self, base_url: str='https://example.com', timeout_seconds: int=30) -> None:
         """'123456789-=.
-
-        Inicializa o serviço de agendas.
-
+        
         Args:
-            base_url: URL base da API de agendas
-            timeout_seconds: Timeout em segundos para as requisições
+            self: Instância do objeto.
+            base_url: URL base da API de agendas.
+            timeout_seconds: Timeout em segundos para as requisições.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
         """
         self.base_url = base_url.rstrip('/')
         self.timeout_seconds = timeout_seconds
@@ -26,17 +28,18 @@ class AgendasService:
 
     def buscar_agendas(self, processo_convocacao_uuid: str, page: int=1, page_size: int=100) -> requests.Response:
         """Busca agendas por processo_convocacao_uuid com paginação.
-
+        
         Args:
-            processo_convocacao_uuid: UUID do processo de convocação
-            page: Número da página (padrão: 1)
-            page_size: Tamanho da página (padrão: 100)
-
+            self: Instância do objeto.
+            processo_convocacao_uuid: UUID do processo de convocação.
+            page: Número da página (padrão: 1).
+            page_size: Tamanho da página (padrão: 100).
+        
         Returns:
-            Response da API com as agendas
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/agendas/'
         params = {'page': page, 'page_size': page_size, 'processo_convocacao_uuid': processo_convocacao_uuid}
@@ -52,15 +55,16 @@ class AgendasService:
 
     def buscar_agenda_por_uuid(self, agenda_uuid: str) -> requests.Response:
         """Busca uma agenda específica pelo UUID.
-
+        
         Args:
-            agenda_uuid: UUID da agenda
-
+            self: Instância do objeto.
+            agenda_uuid: UUID da agenda.
+        
         Returns:
-            Response da API com os dados da agenda
-
+            Resposta HTTP com o resultado da operação.
+        
         Raises:
-            RequestException: Em caso de erro na requisição
+            Nenhuma exceção específica documentada.
         """
         url = f'{self.base_url}/api/v1/agendas/{agenda_uuid}/'
         logger.info('Buscando agenda por UUID', extra={'correlation_id': get_correlation_id(), 'method': 'GET', 'url': url, 'headers': self._default_headers})

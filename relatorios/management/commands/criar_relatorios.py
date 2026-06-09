@@ -10,11 +10,34 @@ class Command(BaseCommand):
     help = 'Cria relatórios de exemplo para desenvolvimento'
 
     def add_arguments(self, parser: Any) -> None:
-        """Registra argumentos da linha de comando."""
+        """Registra argumentos da linha de comando.
+        
+        Args:
+            self: Instância do objeto.
+            parser: Parâmetro parser da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         parser.add_argument('--count', type=int, default=5, help='Número de relatórios a serem criados (padrão: 5)')
 
     def handle(self, *args: Any, **options: Any) -> None:
-        """Executa a lógica principal do comando."""
+        """Executa a lógica principal do comando.
+        
+        Args:
+            self: Instância do objeto.
+            *args: Argumentos posicionais variáveis.
+            **options: Parâmetro options da operação.
+        
+        Returns:
+            Não retorna valor.
+        
+        Raises:
+            Nenhuma exceção específica documentada.
+        """
         count = options['count']
         self.stdout.write(self.style.SUCCESS(f'Criando {count} relatórios...'))
         tipos = ['agenda', 'convocacao', 'selecao', 'avaliacao']
