@@ -47,9 +47,6 @@ class PersonalizacaoViewSet(
 
         Returns:
             Resposta HTTP com os dados serializados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         resultado = (
             self.filter_queryset(self.get_queryset())[0]

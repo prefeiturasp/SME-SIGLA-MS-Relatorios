@@ -190,7 +190,7 @@ def _make_cargo_list(**kwargs: Any) -> Any:
 def test_init(
     settings_config: Any, configuracao_relatorio: Any, parametrizacao: Any
 ) -> None:
-    """Testa inicialização da classe AtaEscolha."""
+    """Verifica init."""
     svc = AtaEscolha(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
@@ -239,7 +239,7 @@ def test_gerar_formatos(
     expected_content_type: Any,
     expected_filename: Any,
 ) -> None:
-    """Testa geração de relatório em diferentes formatos."""
+    """Verifica gerar formatos."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     if formato == "html":
         with patch(
@@ -350,7 +350,7 @@ def test_gerar_formatos(
 def test_gerar_html_uses_cabecalho_padrao_quando_vazio(
     settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any
 ) -> None:
-    """Testa que usa cabecalho_padrao da Parametrizacao quando cabecalho está."""
+    """Verifica gerar html uses cabecalho padrao quando vazio."""
     service_mocked.context["cabecalho_padrao"] = "CABECALHO_PADRAO"
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch(
@@ -383,7 +383,7 @@ def test_gerar_cabecalho_tratamento(
     cabecalho: Any,
     esperado: Any,
 ) -> None:
-    """Testa tratamento de cabeçalho (stripped) e uso de cabecalho_padrao."""
+    """Verifica gerar cabecalho tratamento."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch(
         "relatorios.services.relatorios.ata_escolha.render",
@@ -409,7 +409,7 @@ def test_gerar_cabecalho_tratamento(
 def test_gerar_raises_exception_on_service_failure(
     settings_config: Any, service_mocked: Any, request_obj: Any
 ) -> None:
-    """Testa que exceção é levantada quando o serviço falha."""
+    """Verifica gerar raises exception on service failure."""
     service_mocked.ata_service.processar_ata_escolha.side_effect = Exception(
         "Falha no serviço"
     )
@@ -425,7 +425,7 @@ def test_gerar_raises_exception_on_service_failure(
 def test_gerar_processo_uuid_none(
     settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any
 ) -> None:
-    """Testa geração com processo_uuid None."""
+    """Verifica gerar processo uuid none."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch(
         "relatorios.services.relatorios.ata_escolha.render",
@@ -541,7 +541,7 @@ def test_render_to_docx_variacoes(
     cabecalho: Any,
     cargos_list: Any,
 ) -> None:
-    """Testa geração de DOCX com diferentes variações de dados."""
+    """Verifica render to docx variacoes."""
     cargos = (
         _make_cargo_list(**cargos_list or {})
         if cargos_list
@@ -567,7 +567,7 @@ def test_render_to_docx_variacoes(
 def test_render_to_docx_raises_import_error_when_not_available(
     configuracao_relatorio: Any, parametrizacao: Any
 ) -> None:
-    """Testa que ImportError é levantado quando python-docx não está."""
+    """Verifica render to docx raises import error when not available."""
     with patch(
         "relatorios.services.relatorios.ata_escolha.DOCX_AVAILABLE", False
     ):
@@ -689,7 +689,7 @@ def test_render_xls_variacoes(
     cargos_list: Any,
     check_content_type: Any,
 ) -> None:
-    """Testa geração de XLSX com diferentes variações de dados."""
+    """Verifica render xls variacoes."""
     if cargos_list == "empty_list":
         cargos = []
     elif cargos_list == {"sessoes": []}:
@@ -721,7 +721,7 @@ def test_render_xls_variacoes(
 def test_render_xls_raises_import_error_when_not_available(
     configuracao_relatorio: Any, parametrizacao: Any
 ) -> None:
-    """Testa que ImportError é levantado quando openpyxl não está disponível."""
+    """Verifica render xls raises import error when not available."""
     with patch(
         "relatorios.services.relatorios.ata_escolha.OPENPYXL_AVAILABLE", False
     ):
@@ -741,7 +741,7 @@ def test_render_xls_raises_import_error_when_not_available(
 def test_render_to_docx_exception_handling(
     settings_config: Any, service: Any, dados_ata: Any
 ) -> None:
-    """Testa tratamento de exceção em render_to_docx."""
+    """Verifica render to docx exception handling."""
     with (
         patch(
             "relatorios.services.relatorios.ata_escolha.Document",
@@ -760,7 +760,7 @@ def test_render_to_docx_exception_handling(
 def test_render_xls_exception_handling(
     settings_config: Any, service: Any, dados_ata: Any
 ) -> None:
-    """Testa tratamento de exceção em _render_xls."""
+    """Verifica render xls exception handling."""
     context_data = service.context.copy()
     context_data["cargos"] = dados_ata["cargos"]
     context_data["cabecalho"] = "CABECALHO"

@@ -43,14 +43,11 @@ class ListaCandidatosSessao(RelatorioBase):
     TEMPLATE_NAME = "relatorios/lista_candidatos_sessao.html"
 
     def __init__(self, **kwargs: Any) -> None:
-        """Executa   init  .
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.candidatos_service = CandidatosService(
@@ -63,18 +60,15 @@ class ListaCandidatosSessao(RelatorioBase):
     def _fetch_candidatos(
         self, candidatos_uuids: list[str], order_by: str = "ranking_escolha"
     ) -> list[dict[str, Any]]:
-        """Executa  fetch candidatos.
+        """Fetch candidatos.
 
         Args:
             self: Instância do objeto.
-            candidatos_uuids: Parâmetro candidatos uuids.
-            order_by: Parâmetro order by.
+            candidatos_uuids: Candidatos uuids utilizado na operação.
+            order_by: Order by utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         if not candidatos_uuids:
             return []
@@ -90,16 +84,13 @@ class ListaCandidatosSessao(RelatorioBase):
 
     @staticmethod
     def _flatten_candidato(item: dict[str, Any]) -> dict[str, Any]:
-        """Executa  flatten candidato.
+        """Flatten candidato.
 
         Args:
-            item: Parâmetro item.
+            item: Item utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         cand = item.get("candidato") or {}
         return {
@@ -114,18 +105,15 @@ class ListaCandidatosSessao(RelatorioBase):
     def _build_context(
         self, candidatos: list[dict[str, Any]], agenda_data: dict[str, Any]
     ) -> dict[str, Any]:
-        """Executa  build context.
+        """Monta context.
 
         Args:
             self: Instância do objeto.
-            candidatos: Parâmetro candidatos.
-            agenda_data: Parâmetro agenda data.
+            candidatos: Candidatos utilizado na operação.
+            agenda_data: Agenda data utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         linhas = [self._flatten_candidato(c) for c in candidatos]
         return {
@@ -139,12 +127,12 @@ class ListaCandidatosSessao(RelatorioBase):
         context: dict[str, Any],
         filename: str = "lista_candidatos_sessao.xlsx",
     ) -> HttpResponse:
-        """Executa  render xls.
+        """Render xls.
 
         Args:
             self: Instância do objeto.
-            context: Contexto de renderização ou serialização.
-            filename: Parâmetro filename.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
             Resposta HTTP com o resultado da operação.
@@ -246,16 +234,13 @@ class ListaCandidatosSessao(RelatorioBase):
         row_idx += 2
 
         def _fmt_data(date_str: str) -> str:
-            """Executa  fmt data.
+            """Fmt data.
 
             Args:
-                date_str: Parâmetro date str.
+                date_str: Date str utilizado na operação.
 
             Returns:
                 Texto resultante da operação.
-
-            Raises:
-                Nenhuma exceção específica documentada.
             """
             return (
                 f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}"
@@ -264,16 +249,13 @@ class ListaCandidatosSessao(RelatorioBase):
             )
 
         def _fmt_hora(time_str: str) -> str:
-            """Executa  fmt hora.
+            """Fmt hora.
 
             Args:
-                time_str: Parâmetro time str.
+                time_str: Time str utilizado na operação.
 
             Returns:
                 Texto resultante da operação.
-
-            Raises:
-                Nenhuma exceção específica documentada.
             """
             return time_str[:5] if len(time_str) >= 5 else time_str
 
@@ -421,12 +403,12 @@ class ListaCandidatosSessao(RelatorioBase):
         context: dict[str, Any],
         filename: str = "lista_candidatos_sessao.docx",
     ) -> HttpResponse:
-        """Executa  render docx.
+        """Render docx.
 
         Args:
             self: Instância do objeto.
-            context: Contexto de renderização ou serialização.
-            filename: Parâmetro filename.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
             Resposta HTTP com o resultado da operação.
@@ -458,16 +440,13 @@ class ListaCandidatosSessao(RelatorioBase):
                 doc.add_paragraph()
 
         def _fmt_data(date_str: str) -> str:
-            """Executa  fmt data.
+            """Fmt data.
 
             Args:
-                date_str: Parâmetro date str.
+                date_str: Date str utilizado na operação.
 
             Returns:
                 Texto resultante da operação.
-
-            Raises:
-                Nenhuma exceção específica documentada.
             """
             return (
                 f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}"
@@ -476,16 +455,13 @@ class ListaCandidatosSessao(RelatorioBase):
             )
 
         def _fmt_hora(time_str: str) -> str:
-            """Executa  fmt hora.
+            """Fmt hora.
 
             Args:
-                time_str: Parâmetro time str.
+                time_str: Time str utilizado na operação.
 
             Returns:
                 Texto resultante da operação.
-
-            Raises:
-                Nenhuma exceção específica documentada.
             """
             return time_str[:5] if len(time_str) >= 5 else time_str
 
@@ -617,18 +593,15 @@ class ListaCandidatosSessao(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            processo_uuid: Parâmetro processo uuid.
+            processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Parâmetro formato.
-            cabecalho: Parâmetro cabecalho.
-            agenda_uuid: Parâmetro agenda uuid.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
+            agenda_uuid: UUID de agenda.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Tupla com os objetos criados ou atualizados.
         """
         try:
             if agenda_uuid:

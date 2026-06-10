@@ -19,31 +19,31 @@ pytestmark = pytest.mark.django_db
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, payload: Any) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._payload
 
 
 def _req() -> Any:
-    """Executa  req."""
+    """Req."""
     return RequestFactory().get("/api/v1/relatorios/")
 
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Executa parametrizacao."""
+    """Parametrizacao."""
     return Parametrizacao.objects.get_or_create(cabecalho="CAB PADRAO")[0]
 
 
 @pytest.fixture
 def cfg_nao_escolhas() -> Any:
-    """Executa cfg nao escolhas."""
+    """Cfg nao escolhas."""
     return ConfiguracaoRelatorio.objects.get_or_create(
         tipo="SUMULA_NAO_ESCOLHAS"
     )[0]
@@ -51,7 +51,7 @@ def cfg_nao_escolhas() -> Any:
 
 @pytest.fixture
 def cfg_reconvocacao() -> Any:
-    """Executa cfg reconvocacao."""
+    """Cfg reconvocacao."""
     return ConfiguracaoRelatorio.objects.get_or_create(
         tipo="SUMULA_RECONVOCACAO"
     )[0]
@@ -59,18 +59,18 @@ def cfg_reconvocacao() -> Any:
 
 @pytest.fixture
 def cfg_relacao_vagas() -> Any:
-    """Executa cfg relacao vagas."""
+    """Cfg relacao vagas."""
     return ConfiguracaoRelatorio.objects.get_or_create(tipo="RELACAO_VAGAS")[0]
 
 
 @pytest.fixture
 def cfg_lauda_vagas() -> Any:
-    """Executa cfg lauda vagas."""
+    """Cfg lauda vagas."""
     return ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_VAGAS")[0]
 
 
 def _candidato_payload() -> Any:
-    """Executa  candidato payload."""
+    """Candidato payload."""
     return {
         "results": [
             {
@@ -87,17 +87,17 @@ def _candidato_payload() -> Any:
 
 
 def _cargos_payload() -> Any:
-    """Executa  cargos payload."""
+    """Cargos payload."""
     return [{"cargo_codigo": "101", "cargo_nome": "Professor"}]
 
 
 def _escolhas_payload(situacao: Any) -> Any:
-    """Executa  escolhas payload."""
+    """Escolhas payload."""
     return [{"candidato_uuid": "cand-1", "situacao": situacao}]
 
 
 def _vagas_payload() -> Any:
-    """Executa  vagas payload."""
+    """Vagas payload."""
     return {
         "vagas": [
             {

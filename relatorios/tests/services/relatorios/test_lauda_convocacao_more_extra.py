@@ -16,20 +16,20 @@ pytestmark = pytest.mark.django_db
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, content: Any = b"img") -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self.content = content
 
     def raise_for_status(self) -> Any:
-        """Executa raise for status."""
+        """Raise for status."""
         return None
 
 
 @pytest.fixture
 def svc(settings: Any) -> Any:
-    """Executa svc."""
+    """Svc."""
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.CONVOCACAO_API_URL = "http://convocacao"
     settings.AGENDAS_API_URL = "http://agendas"
@@ -41,7 +41,7 @@ def svc(settings: Any) -> Any:
 
 
 def _cargos() -> Any:
-    """Executa  cargos."""
+    """Cargos."""
     return [
         {
             "cargo_nome": "Professor",

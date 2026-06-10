@@ -47,7 +47,7 @@ class Relatorio(BaseModel):
     )
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         verbose_name = "Relatório"
         verbose_name_plural = "Relatórios"
@@ -55,16 +55,13 @@ class Relatorio(BaseModel):
         db_table = "relatorios"
 
     def __str__(self) -> Any:
-        """Executa   str  .
+        """Retorna representação textual do registro.
 
         Args:
             self: Instância do objeto.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         return f"{self.tipo} - {self.criado_em}"
 

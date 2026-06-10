@@ -9,7 +9,7 @@ class RelatorioSerializer(serializers.ModelSerializer):
     """Serializer para o modelo Relatorio."""
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         model = Relatorio
         fields = [
@@ -33,7 +33,7 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
     """Serializer para o modelo ConfiguracaoRelatorio."""
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         model = ConfiguracaoRelatorio
         fields = [

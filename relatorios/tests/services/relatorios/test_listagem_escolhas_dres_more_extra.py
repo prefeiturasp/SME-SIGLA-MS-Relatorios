@@ -17,18 +17,18 @@ pytestmark = pytest.mark.django_db
 
 
 class _ImgResp:
-    """Define _ImgResp."""
+    """Representa ImgResp."""
 
     content = b"fake-png"
 
     def raise_for_status(self) -> Any:
-        """Executa raise for status."""
+        """Raise for status."""
         return None
 
 
 @pytest.fixture
 def svc() -> Any:
-    """Executa svc."""
+    """Svc."""
     cfg = ConfiguracaoRelatorio.objects.get_or_create(
         tipo="LISTAGEM_ESCOLHAS_DRES"
     )[0]

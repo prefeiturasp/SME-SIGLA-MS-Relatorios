@@ -12,25 +12,25 @@ from relatorios.services.agendas_api_service import AgendasService
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, payload: Any = None, status_code: Any = 200) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._payload
 
     def raise_for_status(self) -> None:
-        """Executa raise for status."""
+        """Raise for status."""
         if self.status_code and self.status_code >= 400:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
 def _svc(base: Any = "http://api.local", timeout: Any = 30) -> Any:
-    """Executa  svc."""
+    """Svc."""
     return AgendasService(base_url=base, timeout_seconds=timeout)
 
 

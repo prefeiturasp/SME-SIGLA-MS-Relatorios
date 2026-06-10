@@ -19,31 +19,25 @@ class LaudaVagasService:
     TEMPLATE_NAME = "relatorios/vagas_escolas.html"
 
     def __init__(self) -> None:
-        """Executa   init  .
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         self.escolhas_service = EscolhasService(
             base_url=settings.ESCOLHAS_API_URL
         )
 
     def gerar_relatorio(self, processo_uuid: str, request: Any) -> Any:
-        """Gera o relatório de Lauda de Vagas.
+        """Gera relatorio.
 
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
+            request: Requisição HTTP recebida.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(
@@ -65,13 +59,10 @@ class LaudaVagasService:
 
         Args:
             self: Instância do objeto.
-            vagas: Lista de vagas.
+            vagas: Vagas utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
@@ -89,13 +80,10 @@ class LaudaVagasService:
 
         Args:
             self: Instância do objeto.
-            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE.
+            vagas_agrupadas: Vagas agrupadas utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         cargos_list = []
         for cargo_codigo, dres in vagas_agrupadas.items():

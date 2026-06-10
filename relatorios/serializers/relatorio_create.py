@@ -27,7 +27,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         model = Relatorio
         fields = [
@@ -49,7 +49,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
             Valor validado do campo tipo.
 
         Raises:
-            ValidationError: Se ocorrer erro nesta operação.
+            ValidationError: Se os dados não passarem na validação.
         """
         tipos_validos = [choice[0] for choice in TIPOS_RELATORIOS]
         if value not in tipos_validos:
@@ -59,7 +59,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cabecalho(self, value: str) -> str:
-        """Se o cabeçalho vier apenas com tags HTML vazias (p/br/hX vazios),.
+        """Retorna vazio se o cabeçalho tiver só tags HTML sem texto.
 
         Args:
             self: Instância do objeto.
@@ -67,9 +67,6 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
 
         Returns:
             Texto resultante da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         try:
             from django.utils.html import strip_tags as _strip
@@ -86,14 +83,11 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
 
         Args:
             self: Instância do objeto.
-            dados: Dados do relatório a serem salvos (opcional).
-            **kwargs: Outros campos que podem ser passados (processo_uuid,.
+            dados: Dados utilizado na operação.
+            **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         relatorio = super().save(**kwargs)
         if dados is not None:

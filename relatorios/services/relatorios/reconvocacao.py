@@ -45,14 +45,11 @@ class SumulaReconvocacao(RelatorioBase):
     TEMPLATE_NAME = "relatorios/reconvocacao.html"
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -78,16 +75,13 @@ class SumulaReconvocacao(RelatorioBase):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx').
-            cabecalho: Texto do cabeçalho do relatório (opcional).
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         cargos_map = {}
         try:
@@ -238,13 +232,10 @@ class SumulaReconvocacao(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            candidatos: Lista de candidatos com suas informações.
+            candidatos: Candidatos utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         cargos_dict = {}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -283,11 +274,11 @@ class SumulaReconvocacao(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            context: Contexto do relatório.
-            filename: Nome do arquivo Excel gerado.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -468,13 +459,13 @@ class SumulaReconvocacao(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Lista de cargos com seus candidatos (estrutura.
-            cabecalho: Texto do cabeçalho do relatório.
-            texto_final: Texto final do relatório.
-            filename: Nome do arquivo Word gerado.
+            cargos_list: Lista de cargos do processo.
+            cabecalho: Cabecalho utilizado na operação.
+            texto_final: Texto final utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.

@@ -46,12 +46,12 @@ class _MockResponse:
     """Classe auxiliar para mockar respostas HTTP."""
 
     def __init__(self, json_data: Any, status_code: Any = 200) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._json_data = json_data
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._json_data
 
 
@@ -169,7 +169,7 @@ class TestInit:
     def test_init_com_kwargs(
         self, settings: Any, configuracao_relatorio: Any, parametrizacao: Any
     ) -> None:
-        """Testa inicialização com kwargs."""
+        """Verifica init com kwargs."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -193,7 +193,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório HTML com sucesso."""
+        """Verifica gerar html success."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -218,7 +218,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório PDF com sucesso."""
+        """Verifica gerar pdf success."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -246,7 +246,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório XLS com sucesso."""
+        """Verifica gerar xls success."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -274,7 +274,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório DOCX com sucesso."""
+        """Verifica gerar docx success."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -302,7 +302,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
+        """Verifica gerar com cabecalho padrao."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -330,7 +330,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que filtra apenas escolhas realizadas."""
+        """Verifica gerar filtra escolhas realizadas."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -354,7 +354,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que filtra escolhas com situação reconvocacao."""
+        """Verifica gerar filtra reconvocacao."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-uuid-1",
@@ -398,7 +398,7 @@ class TestGerar:
     def test_gerar_distribui_classificacao_por_categoria_efetiva(
         self, sumula_escolhas_service: Any, mock_cargos_response: Any
     ) -> None:
-        """Testa distribuição das colunas de classificação por categoria."""
+        """Verifica gerar distribui classificacao por categoria efetiva."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -507,7 +507,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que filtra escolhas com situação None."""
+        """Verifica gerar filtra situacao none."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-uuid-1",
@@ -539,7 +539,7 @@ class TestGerar:
     def test_gerar_erro_buscar_candidatos(
         self, sumula_escolhas_service: Any, mock_cargos_response: Any
     ) -> None:
-        """Testa que erro ao buscar candidatos é propagado."""
+        """Verifica gerar erro buscar candidatos."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro API"
@@ -557,7 +557,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que erro ao buscar escolhas é propagado."""
+        """Verifica gerar erro buscar escolhas."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = Exception(  # noqa: E501
@@ -576,7 +576,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolhas sem candidato_uuid são ignoradas."""
+        """Verifica gerar escolha sem candidato uuid."""
         escolhas = [
             {"candidato_uuid": None},
             {"candidato_uuid": "candidato-uuid-1"},
@@ -601,7 +601,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolhas com candidato não encontrado são ignoradas."""
+        """Verifica gerar candidato nao encontrado."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-inexistente",
@@ -636,7 +636,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidatos vem como lista direta (não dict com."""
+        """Verifica gerar candidatos lista direta."""
         candidatos_lista = [
             {
                 "uuid": "candidato-uuid-1",
@@ -668,7 +668,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato CSV (tratado como XLS)."""
+        """Verifica gerar formato csv."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -695,7 +695,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato DOC (tratado como DOCX)."""
+        """Verifica gerar formato doc."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
@@ -721,7 +721,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidato não tem descrição de cargo."""
+        """Verifica gerar cargo sem descricao."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
@@ -744,7 +744,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando código do cargo é inteiro."""
+        """Verifica gerar cargo codigo int."""
         cargos_response = _MockResponse(
             [{"cargo_codigo": 123, "cargo_nome": "Professor"}]
         )
@@ -768,7 +768,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que erro ao buscar cargos não interrompe o processo."""
+        """Verifica gerar erro buscar cargos continua."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro Cargos"
         )
@@ -791,7 +791,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa quando tipo_vaga é inválido."""
+        """Verifica gerar tipo vaga invalido."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-uuid-1",
@@ -826,7 +826,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidato não tem descrição de cargo mas tem código."""
+        """Verifica gerar cargo sem descricao com codigo."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -870,7 +870,7 @@ class TestGerar:
     def test_gerar_cargo_sem_descricao_sem_codigo(
         self, sumula_escolhas_service: Any, mock_escolhas_response: Any
     ) -> None:
-        """Testa quando candidato não tem descrição nem código de cargo (linha."""
+        """Verifica gerar cargo sem descricao sem codigo."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -913,7 +913,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidato não tem objeto candidato."""
+        """Verifica gerar candidato sem candidato obj."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -947,7 +947,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_basico(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa agrupamento básico por cargo, DRE e escola."""
+        """Verifica agrupar por cargo dre e escola basico."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -983,7 +983,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_ordenacao_candidatos(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa que candidatos são ordenados por classificação."""
+        """Verifica agrupar por cargo dre e escola ordenacao candidatos."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1027,7 +1027,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_sem_descricao_cargo(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa quando não há descrição do cargo."""
+        """Verifica agrupar por cargo dre e escola sem descricao cargo."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1048,7 +1048,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_sem_codigo_cargo(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa quando não há código do cargo."""
+        """Verifica agrupar por cargo dre e escola sem codigo cargo."""
         escolhas = [
             {
                 "cargo_codigo": "",
@@ -1069,7 +1069,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_sem_dre_nome(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa quando não há nome da DRE."""
+        """Verifica agrupar por cargo dre e escola sem dre nome."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1090,7 +1090,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_sem_dre_codigo(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa quando não há código da DRE."""
+        """Verifica agrupar por cargo dre e escola sem dre codigo."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1111,7 +1111,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_sem_escola_nome(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa quando não há nome da escola."""
+        """Verifica agrupar por cargo dre e escola sem escola nome."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1134,7 +1134,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_sem_escola_codigo_eol(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa quando não há código EOL da escola."""
+        """Verifica agrupar por cargo dre e escola sem escola codigo eol."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1158,7 +1158,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_ordenacao_escolas(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa ordenação de escolas por nome."""
+        """Verifica agrupar por cargo dre e escola ordenacao escolas."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1191,7 +1191,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_ordenacao_dres(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa ordenação de DREs por nome."""
+        """Verifica agrupar por cargo dre e escola ordenacao dres."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1224,7 +1224,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_ordenacao_cargos(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa ordenação de cargos por descrição."""
+        """Verifica agrupar por cargo dre e escola ordenacao cargos."""
         escolhas = [
             {
                 "cargo_codigo": "456",
@@ -1256,7 +1256,7 @@ class TestAgruparPorCargoDreEEscola:
     def test_agrupar_por_cargo_dre_e_escola_classificacao_nao_numerica(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa ordenação quando classificação não é numérica."""
+        """Verifica agrupar por cargo dre e escola classificacao nao numerica."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -1291,7 +1291,7 @@ class TestRenderToXls:
     """Testes para o método render_to_xls."""
 
     def test_render_to_xls_success(self, sumula_escolhas_service: Any) -> None:
-        """Testa geração de Excel com sucesso."""
+        """Verifica render to xls success."""
         cargos_list = [
             {
                 "descricao": "Professor",
@@ -1331,7 +1331,7 @@ class TestRenderToXls:
     def test_render_to_xls_sem_cabecalho(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa geração de Excel sem cabeçalho."""
+        """Verifica render to xls sem cabecalho."""
         cargos_list = [{"descricao": "Professor", "dres": []}]
         context = sumula_escolhas_service.context.copy()
         context["cargos"] = cargos_list
@@ -1344,7 +1344,7 @@ class TestRenderToXls:
     def test_render_to_xls_multiplos_cargos_dres_escolas(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa geração de Excel com múltiplos cargos, DREs e escolas."""
+        """Verifica render to xls multiplos cargos dres escolas."""
         cargos_list = [
             {
                 "descricao": "Professor A",
@@ -1402,7 +1402,7 @@ class TestRenderToXls:
     def test_render_to_xls_openpyxl_nao_disponivel(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa erro quando openpyxl não está disponível."""
+        """Verifica render to xls openpyxl nao disponivel."""
         cargos_list = []  # type: ignore[var-annotated]
         context = sumula_escolhas_service.context.copy()
         context["cargos"] = cargos_list
@@ -1415,7 +1415,7 @@ class TestRenderToXls:
     def test_render_to_xls_exception(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa tratamento de exceção no render_to_xls."""
+        """Verifica render to xls exception."""
         cargos_list = []  # type: ignore[var-annotated]
         context = sumula_escolhas_service.context.copy()
         context["cargos"] = cargos_list
@@ -1441,7 +1441,7 @@ class TestRenderToDocx:
     def test_render_to_docx_python_docx_nao_disponivel(
         self, sumula_escolhas_service: Any
     ) -> None:
-        """Testa erro quando python-docx não está disponível."""
+        """Verifica render to docx python docx nao disponivel."""
         cargos_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match="python-docx"):
             sumula_escolhas_service.render_to_docx(
@@ -1483,7 +1483,7 @@ class TestRenderToDocx:
         mock_document: Any,
         sumula_escolhas_service: Any,
     ) -> None:
-        """Testa geração completa de Word com cabeçalho e dados."""
+        """Verifica render to docx completo com cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1602,7 +1602,7 @@ class TestRenderToDocx:
         mock_document: Any,
         sumula_escolhas_service: Any,
     ) -> None:
-        """Testa geração de Word sem cabeçalho."""
+        """Verifica render to docx sem cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1680,7 +1680,7 @@ class TestRenderToDocx:
         mock_document: Any,
         sumula_escolhas_service: Any,
     ) -> None:
-        """Testa quando já existe shading element (existing_shd)."""
+        """Verifica render to docx com existing shd."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1756,7 +1756,7 @@ class TestRenderToDocx:
     def test_render_to_docx_exception(
         self, mock_document: Any, sumula_escolhas_service: Any
     ) -> None:
-        """Testa tratamento de exceção no render_to_docx."""
+        """Verifica render to docx exception."""
         mock_document.side_effect = Exception("Erro ao criar documento")
         cargos_list = []  # type: ignore[var-annotated]
         with pytest.raises(Exception, match="Erro ao criar documento"):
@@ -1775,7 +1775,7 @@ class TestIntegracaoCompleta:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa fluxo completo de geração HTML."""
+        """Verifica fluxo completo html."""
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501

@@ -13,7 +13,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def configuracao() -> Any:
-    """Executa configuracao."""
+    """Configuracao."""
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_VAGAS")
     config.cabecalho = ""
     config.cabecalho_gabarito = ""
@@ -26,7 +26,7 @@ def configuracao() -> Any:
 
 @pytest.fixture
 def configuracao_completa() -> Any:
-    """Executa configuracao completa."""
+    """Configuracao completa."""
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(
         tipo="SUMULA_ESCOLHAS"
     )
@@ -40,7 +40,7 @@ def configuracao_completa() -> Any:
 
 
 class TestConfiguracaoRelatorioModel:
-    """Define TestConfiguracaoRelatorioModel."""
+    """Representa TestConfiguracaoRelatorioModel."""
 
     def test_criacao_com_defaults(self, configuracao: Any) -> None:
         """Verifica criacao com defaults."""
@@ -86,7 +86,7 @@ class TestConfiguracaoRelatorioModel:
 
 
 class TestCabecalhoGabarito:
-    """Define TestCabecalhoGabarito."""
+    """Representa TestCabecalhoGabarito."""
 
     def test_cabecalho_gabarito_default_vazio(self, configuracao: Any) -> None:
         """Verifica cabecalho gabarito default vazio."""

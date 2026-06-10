@@ -12,19 +12,19 @@ from relatorios.services.lauda_convocacao_service import LaudaConvocacaoService
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, payload: Any) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._payload
 
 
 def _make_service_with_mocks() -> Any:
-    """Executa  make service with mocks."""
+    """Make service with mocks."""
     svc = LaudaConvocacaoService(
         candidatos_base_url="http://candidatos",
         processo_base_url="http://processos",

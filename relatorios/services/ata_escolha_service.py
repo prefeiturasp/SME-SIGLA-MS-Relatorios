@@ -22,15 +22,12 @@ class CargoObrigatorioError(Exception):
         cargos: list[dict],
         message: str = "Selecione um cargo para emitir a Ata de Escolha.",
     ) -> None:
-        """Executa   init  .
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            cargos: Parâmetro cargos.
-            message: Parâmetro message.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            cargos: Cargos utilizado na operação.
+            message: Message utilizado na operação.
         """
         self.cargos = cargos
         self.message = message
@@ -55,18 +52,15 @@ class AtaEscolhaService:
         escolhas_base_url: str = "https://example.com",
         timeout_seconds: int = 30,
     ) -> None:
-        """Inicializa o serviço de ata de escolha.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            candidatos_base_url: URL base da API de candidatos.
-            processo_base_url: URL base da API de processos de convocação.
-            agendas_base_url: URL base da API de agendas.
-            escolhas_base_url: URL base da API de escolhas.
-            timeout_seconds: Timeout em segundos para as requisições.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            candidatos_base_url: Candidatos base url utilizado na operação.
+            processo_base_url: Processo base url utilizado na operação.
+            agendas_base_url: Agendas base url utilizado na operação.
+            escolhas_base_url: Escolhas base url utilizado na operação.
+            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
         """
         self.candidatos_service = CandidatosService(
             base_url=candidatos_base_url, timeout_seconds=timeout_seconds
@@ -86,13 +80,10 @@ class AtaEscolhaService:
 
         Args:
             self: Instância do objeto.
-            classificacoes: Lista de classificações (pode conter None).
+            classificacoes: Classificacoes utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         classificacoes_validas = sorted(
             set(
@@ -112,17 +103,14 @@ class AtaEscolhaService:
     def _separar_por_tipo(
         self, candidatos: list[dict]
     ) -> dict[str, list[dict]]:
-        """Separa candidatos por tipo usando o campo categoria_efetiva: GERAL,.
+        """Separa candidatos por categoria_efetiva (GERAL, NNA e PCD).
 
         Args:
             self: Instância do objeto.
-            candidatos: Lista de candidatos retornados da API.
+            candidatos: Candidatos utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         separados = {"pcd": [], "geral": [], "nna": []}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -142,14 +130,11 @@ class AtaEscolhaService:
 
         Args:
             self: Instância do objeto.
-            candidatos: Lista de candidatos.
-            campo: Nome do campo de classificação ('classificacao',.
+            candidatos: Candidatos utilizado na operação.
+            campo: Campo utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         return [candidato.get(campo) for candidato in candidatos]  # type: ignore[misc]
 
@@ -162,22 +147,19 @@ class AtaEscolhaService:
         codigo_cargo: list[str] | str | None = None,
         ordering: str = "ranking_escolha",
     ) -> dict[str, list[dict]]:
-        """Busca candidatos faltantes nos outros processos do mesmo concurso,.
+        """Busca candidatos faltantes em outros processos do concurso.
 
         Args:
             self: Instância do objeto.
-            outros_processos_uuid: Lista de UUIDs dos outros processos.
-            lacunas_geral: Lista de classificações faltantes (Geral).
-            lacunas_nna: Lista de classificações faltantes (NNA).
-            lacunas_pcd: Lista de classificações faltantes (PCD).
-            codigo_cargo: Código(s) do cargo para filtrar (opcional).
-            ordering: Campo para ordenação.
+            outros_processos_uuid: UUID de outros processos.
+            lacunas_geral: Lacunas geral utilizado na operação.
+            lacunas_nna: Lacunas nna utilizado na operação.
+            lacunas_pcd: Lacunas pcd utilizado na operação.
+            codigo_cargo: Codigo cargo utilizado na operação.
+            ordering: Ordering utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
@@ -288,13 +270,10 @@ class AtaEscolhaService:
 
         Args:
             self: Instância do objeto.
-            candidato_uuids: Lista de UUIDs dos candidatos.
+            candidato_uuids: Candidato uuids utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         escolhas_map = {}  # type: ignore[var-annotated]
         if not candidato_uuids:
@@ -323,13 +302,10 @@ class AtaEscolhaService:
 
         Args:
             self: Instância do objeto.
-            escolha: Dicionário com dados da escolha.
+            escolha: Escolha utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         vaga_escola = escolha.get("vaga_escola", {})
         escola = (
@@ -380,13 +356,10 @@ class AtaEscolhaService:
 
         Args:
             self: Instância do objeto.
-            escolhas: Parâmetro escolhas.
+            escolhas: Escolhas utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         contadores = {"escolha": 0, "nao_escolha": 0, "reconvocacao": 0}
         normalizar = {
@@ -415,14 +388,11 @@ class AtaEscolhaService:
 
         Args:
             self: Instância do objeto.
-            candidatos_sep_cargo: Parâmetro candidatos sep cargo.
-            escolhas_map: Parâmetro escolhas map.
+            candidatos_sep_cargo: Candidatos sep cargo utilizado na operação.
+            escolhas_map: Escolhas map utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         resultado: dict[str, dict[str, int]] = {}
         normalizar = {
@@ -460,20 +430,20 @@ class AtaEscolhaService:
         cargo_codigo: str | None = None,
         ordering: str = "ranking_escolha",
     ) -> dict:
-        """Processa a ata de escolha para um processo.
+        """Processa ata escolha.
 
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            cargo_codigo: Fixture do teste.
-            ordering: Campo para ordenação (padrão: 'ranking_escolha').
+            cargo_codigo: Cargo codigo utilizado na operação.
+            ordering: Ordering utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
+            Dicionário com os dados retornados pela operação.
 
         Raises:
-            CargoObrigatorioError: Quando o processo tem mais de um cargo e.
-            ValueError: Se ocorrer erro nesta operação.
+            CargoObrigatorioError: Se ocorrer erro nesta operação.
+            ValueError: Se os dados informados forem inválidos.
         """
         try:
             logger.info(
@@ -680,31 +650,25 @@ class AtaEscolhaService:
                             faltantes_todos.extend(candidatos_faltantes["nna"])
 
                 def key_ranking_escolha(item: Any) -> Any:
-                    """Executa key ranking escolha.
+                    """Key ranking escolha.
 
                     Args:
-                        item: Parâmetro item.
+                        item: Item utilizado na operação.
 
                     Returns:
-                        Resultado da operação.
-
-                    Raises:
-                        Nenhuma exceção específica documentada.
+                        Valor calculado conforme a regra aplicada.
                     """
                     val = item.get("ranking_escolha")
                     return val if val is not None else float("inf")
 
                 def key_categoria_efetiva(item: Any) -> Any:
-                    """Executa key categoria efetiva.
+                    """Key categoria efetiva.
 
                     Args:
-                        item: Parâmetro item.
+                        item: Item utilizado na operação.
 
                     Returns:
-                        Resultado da operação.
-
-                    Raises:
-                        Nenhuma exceção específica documentada.
+                        Valor calculado conforme a regra aplicada.
                     """
                     categoria = item.get("categoria_efetiva", "")
                     if categoria == "PCD":
@@ -716,16 +680,13 @@ class AtaEscolhaService:
                     return 3
 
                 def key_classificacao(item: Any) -> Any:
-                    """Executa key classificacao.
+                    """Key classificacao.
 
                     Args:
-                        item: Parâmetro item.
+                        item: Item utilizado na operação.
 
                     Returns:
-                        Resultado da operação.
-
-                    Raises:
-                        Nenhuma exceção específica documentada.
+                        Valor calculado conforme a regra aplicada.
                     """
                     val = item.get("classificacao")
                     return val if val is not None else float("inf")
@@ -742,16 +703,13 @@ class AtaEscolhaService:
                     def indices_lacunas_classificacao(
                         classificacoes_ordenadas: Any,
                     ) -> Any:
-                        """Retorna mapa {valor_faltante: indice_insercao} sem.
+                        """Mapeia lacunas de classificação para inserção.
 
                         Args:
-                            classificacoes_ordenadas: Fixture do teste.
+                            classificacoes_ordenadas: Classificações ordenadas.
 
                         Returns:
-                            Resultado da operação.
-
-                        Raises:
-                            Nenhuma exceção específica documentada.
+                            Valor calculado conforme a regra aplicada.
                         """
                         gaps = {}  # type: ignore[var-annotated]
                         cont = 0
@@ -775,16 +733,13 @@ class AtaEscolhaService:
                         return gaps
 
                     def _classificacao_para_gap(item: Any) -> Any:
-                        """Executa  classificacao para gap.
+                        """Classificacao para gap.
 
                         Args:
-                            item: Parâmetro item.
+                            item: Item utilizado na operação.
 
                         Returns:
-                            Resultado da operação.
-
-                        Raises:
-                            Nenhuma exceção específica documentada.
+                            Valor calculado conforme a regra aplicada.
                         """
                         return (
                             9999999

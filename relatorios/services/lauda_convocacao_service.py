@@ -27,18 +27,15 @@ class LaudaConvocacaoService:
         escolhas_base_url: str = "https://example.com",
         timeout_seconds: int = 30,
     ) -> None:
-        """Inicializa o serviço de lauda de convocação.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            candidatos_base_url: URL base da API de candidatos.
-            processo_base_url: URL base da API de processos de convocação.
-            agendas_base_url: URL base da API de agendas.
-            escolhas_base_url: URL base da API de escolhas.
-            timeout_seconds: Timeout em segundos para as requisições.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            candidatos_base_url: Candidatos base url utilizado na operação.
+            processo_base_url: Processo base url utilizado na operação.
+            agendas_base_url: Agendas base url utilizado na operação.
+            escolhas_base_url: Escolhas base url utilizado na operação.
+            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
         """
         self.candidatos_service = CandidatosService(
             base_url=candidatos_base_url, timeout_seconds=timeout_seconds
@@ -58,13 +55,10 @@ class LaudaConvocacaoService:
 
         Args:
             self: Instância do objeto.
-            classificacoes: Lista de classificações (pode conter None).
+            classificacoes: Classificacoes utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         classificacoes_validas = sorted(
             set(
@@ -84,17 +78,14 @@ class LaudaConvocacaoService:
     def _separar_por_tipo(
         self, candidatos: list[dict]
     ) -> dict[str, list[dict]]:
-        """Separa candidatos por tipo usando o campo categoria_efetiva: GERAL,.
+        """Separa candidatos por categoria_efetiva (GERAL, NNA e PCD).
 
         Args:
             self: Instância do objeto.
-            candidatos: Lista de candidatos retornados da API.
+            candidatos: Candidatos utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         separados = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -114,14 +105,11 @@ class LaudaConvocacaoService:
 
         Args:
             self: Instância do objeto.
-            candidatos: Lista de candidatos.
-            campo: Nome do campo de classificação ('classificacao',.
+            candidatos: Candidatos utilizado na operação.
+            campo: Campo utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         return [candidato.get(campo) for candidato in candidatos]  # type: ignore[misc]
 
@@ -134,22 +122,19 @@ class LaudaConvocacaoService:
         codigo_cargo: list[str] | str | None = None,
         ordering: str = "ranking_escolha",
     ) -> dict[str, list[dict]]:
-        """Busca candidatos faltantes nos outros processos do mesmo concurso,.
+        """Busca candidatos faltantes em outros processos do concurso.
 
         Args:
             self: Instância do objeto.
-            outros_processos_uuid: Lista de UUIDs dos outros processos.
-            lacunas_geral: Lista de classificações faltantes (Geral).
-            lacunas_nna: Lista de classificações faltantes (NNA).
-            lacunas_pcd: Lista de classificações faltantes (PCD).
-            codigo_cargo: Código(s) do cargo para filtrar (opcional).
-            ordering: Campo para ordenação.
+            outros_processos_uuid: UUID de outros processos.
+            lacunas_geral: Lacunas geral utilizado na operação.
+            lacunas_nna: Lacunas nna utilizado na operação.
+            lacunas_pcd: Lacunas pcd utilizado na operação.
+            codigo_cargo: Codigo cargo utilizado na operação.
+            ordering: Ordering utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
@@ -349,16 +334,13 @@ class LaudaConvocacaoService:
 
         Args:
             self: Instância do objeto.
-            lista_segmento: Parâmetro lista segmento.
-            reclassificados: Parâmetro reclassificados.
-            cargo_codigo: Parâmetro cargo codigo.
-            classificacao_attr: Parâmetro classificacao attr.
+            lista_segmento: Lista segmento utilizado na operação.
+            reclassificados: Reclassificados utilizado na operação.
+            cargo_codigo: Cargo codigo utilizado na operação.
+            classificacao_attr: Classificacao attr utilizado na operação.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         try:
             if (
@@ -416,20 +398,17 @@ class LaudaConvocacaoService:
         cargo_codigo: Any,
         classificacao_attr: str,
     ) -> None:
-        """Insere, dentro de lista_segmento, candidatos ELIMINADOS antes dos.
+        """Insere candidatos eliminados na lista do segmento.
 
         Args:
             self: Instância do objeto.
-            lista_segmento: Parâmetro lista segmento.
-            eliminados: Parâmetro eliminados.
-            cargo_codigo: Parâmetro cargo codigo.
-            classificacao_attr: Parâmetro classificacao attr.
+            lista_segmento: Lista segmento utilizado na operação.
+            eliminados: Eliminados utilizado na operação.
+            cargo_codigo: Cargo codigo utilizado na operação.
+            classificacao_attr: Classificacao attr utilizado na operação.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         try:
             if (
@@ -493,18 +472,15 @@ class LaudaConvocacaoService:
     def processar_lauda_convocacao(
         self, processo_uuid: str, ordering: str = "ranking_escolha"
     ) -> dict:
-        """Processa a lauda de convocação para um processo.
+        """Processa lauda convocacao.
 
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            ordering: Campo para ordenação (padrão: 'ranking_escolha').
+            ordering: Ordering utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         try:
             logger.info(
@@ -731,31 +707,25 @@ class LaudaConvocacaoService:
                                 )
 
                     def key_ranking_escolha(item: Any) -> Any:
-                        """Executa key ranking escolha.
+                        """Key ranking escolha.
 
                         Args:
-                            item: Parâmetro item.
+                            item: Item utilizado na operação.
 
                         Returns:
-                            Resultado da operação.
-
-                        Raises:
-                            Nenhuma exceção específica documentada.
+                            Valor calculado conforme a regra aplicada.
                         """
                         val = item.get("ranking_escolha")
                         return val if val is not None else float("inf")
 
                     def key_classificacao(item: Any) -> Any:
-                        """Executa key classificacao.
+                        """Key classificacao.
 
                         Args:
-                            item: Parâmetro item.
+                            item: Item utilizado na operação.
 
                         Returns:
-                            Resultado da operação.
-
-                        Raises:
-                            Nenhuma exceção específica documentada.
+                            Valor calculado conforme a regra aplicada.
                         """
                         val = item.get("classificacao")
                         return val if val is not None else float("inf")
@@ -768,16 +738,13 @@ class LaudaConvocacaoService:
                         def indices_lacunas_classificacao(
                             classificacoes_ordenadas: Any,
                         ) -> Any:
-                            """Retorna mapa {valor_faltante: indice_insercao}.
+                            """Mapeia lacunas de classificação.
 
                             Args:
-                                classificacoes_ordenadas: Fixture do teste.
+                                classificacoes_ordenadas: Classificações.
 
                             Returns:
-                                Resultado da operação.
-
-                            Raises:
-                                Nenhuma exceção específica documentada.
+                                Valor calculado conforme a regra aplicada.
                             """
                             gaps = {}  # type: ignore[var-annotated]
                             cont = 0
@@ -801,16 +768,13 @@ class LaudaConvocacaoService:
                             return gaps
 
                         def _classificacao_para_gap(item: Any) -> Any:
-                            """Executa  classificacao para gap.
+                            """Classificacao para gap.
 
                             Args:
-                                item: Parâmetro item.
+                                item: Item utilizado na operação.
 
                             Returns:
-                                Resultado da operação.
-
-                            Raises:
-                                Nenhuma exceção específica documentada.
+                                Valor calculado conforme a regra aplicada.
                             """
                             return (
                                 9999999

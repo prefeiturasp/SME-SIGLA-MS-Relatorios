@@ -44,14 +44,11 @@ class LaudaVagas(RelatorioBase):
     TEMPLATE_NAME = "relatorios/vagas_escolas.html"
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -71,16 +68,13 @@ class LaudaVagas(RelatorioBase):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx').
-            cabecalho: Texto do cabeçalho do relatório (opcional).
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(
@@ -137,13 +131,10 @@ class LaudaVagas(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            vagas: Lista de vagas.
+            vagas: Vagas utilizado na operação.
 
         Returns:
-            Dicionário com os dados processados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Dicionário com os dados retornados pela operação.
         """
         vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
@@ -161,13 +152,10 @@ class LaudaVagas(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE.
+            vagas_agrupadas: Vagas agrupadas utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         cargos_list = []
         for cargo_codigo, dres in vagas_agrupadas.items():
@@ -206,11 +194,11 @@ class LaudaVagas(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            context: Dicionário com o contexto do template.
-            filename: Nome do arquivo Excel gerado.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -405,13 +393,13 @@ class LaudaVagas(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Lista de cargos com suas DREs e vagas (estrutura.
-            context: Contexto com os dados do relatório.
-            texto_final: Texto final do relatório.
-            filename: Nome do arquivo Word gerado.
+            cargos_list: Lista de cargos do processo.
+            context: Contexto de serialização ou renderização.
+            texto_final: Texto final utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.

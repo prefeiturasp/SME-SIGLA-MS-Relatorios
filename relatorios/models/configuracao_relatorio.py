@@ -37,7 +37,7 @@ class ConfiguracaoRelatorio(BaseModel):
     )
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         verbose_name = "Configuração de Relatório"
         verbose_name_plural = "Configurações de Relatórios"
@@ -45,16 +45,13 @@ class ConfiguracaoRelatorio(BaseModel):
         db_table = "relatorios_configuracao"
 
     def __str__(self) -> Any:
-        """Executa   str  .
+        """Retorna representação textual do registro.
 
         Args:
             self: Instância do objeto.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         return f"Configuração - {self.get_tipo_display()}"
 

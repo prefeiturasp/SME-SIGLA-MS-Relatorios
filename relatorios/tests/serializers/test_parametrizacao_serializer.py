@@ -34,7 +34,7 @@ class TestParametrizacaoSerializer:
     """Testes para o serializer ParametrizacaoSerializer."""
 
     def test_serializer_serialization(self, parametrizacao: Any) -> None:
-        """Testa serialização de Parametrizacao."""
+        """Verifica serializer serialization."""
         serializer = ParametrizacaoSerializer(parametrizacao)
         data = serializer.data
         assert "uuid" in data
@@ -48,14 +48,14 @@ class TestParametrizacaoSerializer:
     def test_serializer_serialization_with_logo(
         self, parametrizacao_com_logo: Any
     ) -> None:
-        """Testa serialização de Parametrizacao com logo."""
+        """Verifica serializer serialization with logo."""
         serializer = ParametrizacaoSerializer(parametrizacao_com_logo)
         data = serializer.data
         assert data["logo"] is not None
         assert "parametrizacao" in data["logo"] or data["logo"] == ""
 
     def test_serializer_deserialization_create(self) -> None:
-        """Testa deserialização e criação de Parametrizacao."""
+        """Verifica serializer deserialization create."""
         data = {"cabecalho": "<div>Novo Cabeçalho</div>"}
         serializer = ParametrizacaoSerializer(data=data)
         assert serializer.is_valid()
@@ -64,7 +64,7 @@ class TestParametrizacaoSerializer:
         assert parametrizacao.pk is not None
 
     def test_serializer_deserialization_with_empty_cabecalho(self) -> None:
-        """Testa deserialização com cabeçalho vazio."""
+        """Verifica serializer deserialization with empty cabecalho."""
         data = {"cabecalho": ""}
         serializer = ParametrizacaoSerializer(data=data)
         assert serializer.is_valid()
@@ -72,7 +72,7 @@ class TestParametrizacaoSerializer:
         assert parametrizacao.cabecalho == ""
 
     def test_serializer_read_only_fields(self, parametrizacao: Any) -> None:
-        """Testa se campos read_only não podem ser alterados."""
+        """Verifica serializer read only fields."""
         data = {
             "uuid": "00000000-0000-0000-0000-000000000000",
             "criado_em": "2020-01-01T00:00:00Z",
@@ -90,7 +90,7 @@ class TestParametrizacaoSerializer:
         assert updated.cabecalho == "<h1>Novo</h1>"
 
     def test_serializer_update(self, parametrizacao: Any) -> None:
-        """Testa atualização de Parametrizacao existente."""
+        """Verifica serializer update."""
         data = {"cabecalho": "<h1>Cabeçalho Atualizado</h1>"}
         serializer = ParametrizacaoSerializer(
             parametrizacao, data=data, partial=True
@@ -101,7 +101,7 @@ class TestParametrizacaoSerializer:
         assert updated.uuid == parametrizacao.uuid
 
     def test_serializer_all_fields(self, parametrizacao: Any) -> None:
-        """Testa se serializer inclui todos os campos do model."""
+        """Verifica serializer all fields."""
         serializer = ParametrizacaoSerializer(parametrizacao)
         data = serializer.data
         expected_fields = {
@@ -115,7 +115,7 @@ class TestParametrizacaoSerializer:
         assert set(data.keys()) == expected_fields
 
     def test_serializer_with_html_content(self) -> None:
-        """Testa serializer com conteúdo HTML complexo."""
+        """Verifica serializer with html content."""
         html_content = '\n        <div>\n            <h1>Título</h1>\n            <p>Parágrafo com <strong>negrito</strong></p>\n            <img src="logo.png" alt="Logo">\n        </div>\n        '  # noqa: E501
         data = {"cabecalho": html_content}
         serializer = ParametrizacaoSerializer(data=data)
@@ -124,7 +124,7 @@ class TestParametrizacaoSerializer:
         assert parametrizacao.cabecalho == html_content.strip()
 
     def test_serializer_partial_update(self, parametrizacao: Any) -> None:
-        """Testa atualização parcial de Parametrizacao."""
+        """Verifica serializer partial update."""
         data = {"cabecalho": "<h1>Parcial</h1>"}
         serializer = ParametrizacaoSerializer(
             parametrizacao, data=data, partial=True
@@ -136,21 +136,21 @@ class TestParametrizacaoSerializer:
         assert updated.criado_em == parametrizacao.criado_em
 
     def test_serializer_validation_valid_data(self) -> None:
-        """Testa validação com dados válidos."""
+        """Verifica serializer validation valid data."""
         data = {"cabecalho": "<h1>Válido</h1>"}
         serializer = ParametrizacaoSerializer(data=data)
         assert serializer.is_valid()
 
     def test_serializer_meta_model(self) -> None:
-        """Testa se Meta.model está configurado corretamente."""
+        """Verifica serializer meta model."""
         assert ParametrizacaoSerializer.Meta.model == Parametrizacao
 
     def test_serializer_meta_fields(self) -> None:
-        """Testa se Meta.fields está configurado como '__all__'."""
+        """Verifica serializer meta fields."""
         assert ParametrizacaoSerializer.Meta.fields == "__all__"
 
     def test_serializer_meta_read_only_fields(self) -> None:
-        """Testa se Meta.read_only_fields está configurado corretamente."""
+        """Verifica serializer meta read only fields."""
         read_only = ParametrizacaoSerializer.Meta.read_only_fields
         assert "uuid" in read_only
         assert "criado_em" in read_only

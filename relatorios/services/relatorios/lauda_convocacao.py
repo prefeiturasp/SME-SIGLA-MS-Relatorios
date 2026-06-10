@@ -43,14 +43,11 @@ class LaudaConvocacao(RelatorioBase):
     TEMPLATE_NAME = "relatorios/lauda_convocacao.html"
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.lauda_service = LaudaConvocacaoService(
@@ -73,16 +70,13 @@ class LaudaConvocacao(RelatorioBase):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf' ou 'xls').
-            cabecalho: Texto do cabeçalho do relatório (opcional).
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         try:
             dados_lauda = self.lauda_service.processar_lauda_convocacao(
@@ -149,13 +143,13 @@ class LaudaConvocacao(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Lista de cargos com suas sessões e candidatos.
-            context: Contexto com os dados do relatório.
-            texto_final: Texto final do relatório.
-            filename: Nome do arquivo Word gerado.
+            cargos_list: Lista de cargos do processo.
+            context: Contexto de serialização ou renderização.
+            texto_final: Texto final utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -348,16 +342,16 @@ class LaudaConvocacao(RelatorioBase):
         context: Any = None,
         filename: Any = "lauda_convocacao.xlsx",
     ) -> Any:
-        """Gera um arquivo Excel (XLSX) com a estrutura da Lauda de Convocação.
+        """Gera planilha XLSX da lauda de convocação.
 
         Args:
             self: Instância do objeto.
-            cargos_list: Parâmetro cargos list.
-            context: Contexto de renderização ou serialização.
-            filename: Parâmetro filename.
+            cargos_list: Lista de cargos do processo.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.

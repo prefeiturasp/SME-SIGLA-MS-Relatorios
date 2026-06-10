@@ -18,25 +18,25 @@ pytestmark = pytest.mark.django_db
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, payload: Any, content: Any = b"img") -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
         self.content = content
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._payload
 
     def raise_for_status(self) -> Any:
-        """Executa raise for status."""
+        """Raise for status."""
         return None
 
 
 @pytest.fixture
 def svc(settings: Any) -> Any:
-    """Executa svc."""
+    """Svc."""
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.AGENDAS_API_URL = "http://agendas"
     cfg = ConfiguracaoRelatorio.objects.get_or_create(

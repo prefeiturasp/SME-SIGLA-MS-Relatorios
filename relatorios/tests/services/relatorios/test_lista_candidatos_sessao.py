@@ -18,14 +18,14 @@ pytestmark = pytest.mark.django_db
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, payload: Any) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._payload
 
 
@@ -54,7 +54,7 @@ def parametrizacao() -> Any:
 def _make_service(
     settings: Any, configuracao_relatorio: Any, parametrizacao: Any
 ) -> Any:
-    """Executa  make service."""
+    """Make service."""
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.RELATORIO_CABECALHO_PADRAO = "HEADER_PADRAO"
     settings.AGENDAS_API_URL = "http://agendas"
@@ -65,7 +65,7 @@ def _make_service(
 
 
 def _req() -> Any:
-    """Executa  req."""
+    """Req."""
     return RequestFactory().get("/relatorios/lista-candidatos-sessao/")
 
 
@@ -308,7 +308,7 @@ def test_multiple_agendas_filtered_and_separated(
     }
 
     def _cand_resp(**kw: Any) -> Any:
-        """Executa  cand resp."""
+        """Cand resp."""
         return _Resp(
             {
                 "results": [
@@ -375,88 +375,88 @@ def test_render_docx_success_with_fake_python_docx(
     }
 
     class FakeRun:
-        """Define FakeRun."""
+        """Representa FakeRun."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.font = type("Font", (), {"size": None, "bold": False})()
 
     class FakeParagraph:
-        """Define FakeParagraph."""
+        """Representa FakeParagraph."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.alignment = None
             self._runs = [FakeRun()]
             self.runs = self._runs
 
         def add_run(self, text: Any = "") -> Any:
-            """Executa add run."""
+            """Add run."""
             run = FakeRun()
             self._runs.append(run)
             self.runs = self._runs
             return run
 
     class FakeTcPr:
-        """Define FakeTcPr."""
+        """Representa FakeTcPr."""
 
         def find(self, x: Any) -> Any:
-            """Executa find."""
+            """Find."""
             return None
 
         def remove(self, x: Any) -> None:
-            """Executa remove."""
+            """Remove."""
             pass
 
         def append(self, x: Any) -> None:
-            """Executa append."""
+            """Append."""
             pass
 
     class FakeElement:
-        """Define FakeElement."""
+        """Representa FakeElement."""
 
         def get_or_add_tcPr(self) -> Any:
-            """Executa get or add tcPr."""
+            """Get or add tcPr."""
             return FakeTcPr()
 
     class FakeCell:
-        """Define FakeCell."""
+        """Representa FakeCell."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.text = ""
             self.paragraphs = [FakeParagraph()]
             self._element = FakeElement()
 
     class FakeRow:
-        """Define FakeRow."""
+        """Representa FakeRow."""
 
         def __init__(self, cols: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.cells = [FakeCell() for _ in range(cols)]
 
     class FakeTable:
-        """Define FakeTable."""
+        """Representa FakeTable."""
 
         def __init__(self, rows: Any, cols: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.rows = [FakeRow(cols) for _ in range(rows)]
 
     class FakeSection:
-        """Define FakeSection."""
+        """Representa FakeSection."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.top_margin = None
             self.bottom_margin = None
             self.left_margin = None
             self.right_margin = None
 
     class FakeRun:  # type: ignore[no-redef]
-        """Define FakeRun."""
+        """Representa FakeRun."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.font = type(
                 "Font",
                 (),
@@ -468,38 +468,38 @@ def test_render_docx_success_with_fake_python_docx(
             )()
 
     class FakeParagraph:  # type: ignore[no-redef]
-        """Define FakeParagraph."""
+        """Representa FakeParagraph."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.alignment = None
             self._runs = [FakeRun()]
             self.runs = self._runs
 
         def add_run(self, text: Any = "") -> Any:
-            """Executa add run."""
+            """Add run."""
             run = FakeRun()
             self._runs.append(run)
             self.runs = self._runs
             return run
 
     class FakeDocument:
-        """Define FakeDocument."""
+        """Representa FakeDocument."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self._headings = []  # type: ignore[var-annotated]
             self._tables = []  # type: ignore[var-annotated]
             self.sections = [FakeSection()]
             self._paragraphs = []  # type: ignore[var-annotated]
 
         def add_heading(self, text: Any, level: Any = 1) -> Any:
-            """Executa add heading."""
+            """Add heading."""
             self._headings.append((text, level))
             return FakeParagraph()
 
         def add_paragraph(self, text: Any = "") -> Any:
-            """Executa add paragraph."""
+            """Add paragraph."""
             p = FakeParagraph()
             if text:
                 p.add_run(text)
@@ -507,13 +507,13 @@ def test_render_docx_success_with_fake_python_docx(
             return p
 
         def add_table(self, rows: Any, cols: Any) -> Any:
-            """Executa add table."""
+            """Add table."""
             tbl = FakeTable(rows, cols)
             self._tables.append(tbl)
             return tbl
 
         def save(self, buf: Any) -> None:
-            """Executa save."""
+            """Save."""
             buf.write(b"DOCX")
 
     import relatorios.services.relatorios.lista_candidatos_sessao as mod
@@ -547,10 +547,10 @@ def test_render_docx_agenda_paragraphs_all(
     }
 
     class FakeRun:
-        """Define FakeRun."""
+        """Representa FakeRun."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.font = type(
                 "Font",
                 (),
@@ -562,92 +562,92 @@ def test_render_docx_agenda_paragraphs_all(
             )()
 
     class FakeParagraph:
-        """Define FakeParagraph."""
+        """Representa FakeParagraph."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.alignment = None
             self._runs = [FakeRun()]
             self.runs = self._runs
 
         def add_run(self, text: Any = "") -> Any:
-            """Executa add run."""
+            """Add run."""
             run = FakeRun()
             self._runs.append(run)
             self.runs = self._runs
             return run
 
     class FakeTcPr:
-        """Define FakeTcPr."""
+        """Representa FakeTcPr."""
 
         def find(self, x: Any) -> Any:
-            """Executa find."""
+            """Find."""
             return None
 
         def remove(self, x: Any) -> None:
-            """Executa remove."""
+            """Remove."""
             pass
 
         def append(self, x: Any) -> None:
-            """Executa append."""
+            """Append."""
             pass
 
     class FakeElement:
-        """Define FakeElement."""
+        """Representa FakeElement."""
 
         def get_or_add_tcPr(self) -> Any:
-            """Executa get or add tcPr."""
+            """Get or add tcPr."""
             return FakeTcPr()
 
     class FakeCell:
-        """Define FakeCell."""
+        """Representa FakeCell."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.text = ""
             self.paragraphs = [FakeParagraph()]
             self._element = FakeElement()
 
     class FakeRow:
-        """Define FakeRow."""
+        """Representa FakeRow."""
 
         def __init__(self, cols: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.cells = [FakeCell() for _ in range(cols)]
 
     class FakeTable:
-        """Define FakeTable."""
+        """Representa FakeTable."""
 
         def __init__(self, rows: Any, cols: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.rows = [FakeRow(cols) for _ in range(rows)]
 
     class FakeSection:
-        """Define FakeSection."""
+        """Representa FakeSection."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.top_margin = None
             self.bottom_margin = None
             self.left_margin = None
             self.right_margin = None
 
     class FakeDocument:
-        """Define FakeDocument."""
+        """Representa FakeDocument."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.paragraphs_text = []  # type: ignore[var-annotated]
             self.sections = [FakeSection()]
             self._paragraphs = []  # type: ignore[var-annotated]
 
         def add_heading(self, text: Any, level: Any = 1) -> Any:
-            """Executa add heading."""
+            """Add heading."""
             self.paragraphs_text.append(text)
             return FakeParagraph()
 
         def add_paragraph(self, text: Any = "") -> Any:
-            """Executa add paragraph."""
+            """Add paragraph."""
             self.paragraphs_text.append(text)
             p = FakeParagraph()
             if text:
@@ -656,11 +656,11 @@ def test_render_docx_agenda_paragraphs_all(
             return p
 
         def add_table(self, rows: Any, cols: Any) -> Any:
-            """Executa add table."""
+            """Add table."""
             return FakeTable(rows, cols)
 
         def save(self, buf: Any) -> None:
-            """Executa save."""
+            """Save."""
             buf.write(b"DOCX")
 
     import relatorios.services.relatorios.lista_candidatos_sessao as mod
@@ -701,10 +701,10 @@ def test_render_docx_agenda_paragraphs_partial_time_only_start(
     }
 
     class FakeRun:
-        """Define FakeRun."""
+        """Representa FakeRun."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.font = type(
                 "Font",
                 (),
@@ -716,92 +716,92 @@ def test_render_docx_agenda_paragraphs_partial_time_only_start(
             )()
 
     class FakeParagraph:
-        """Define FakeParagraph."""
+        """Representa FakeParagraph."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.alignment = None
             self._runs = [FakeRun()]
             self.runs = self._runs
 
         def add_run(self, text: Any = "") -> Any:
-            """Executa add run."""
+            """Add run."""
             run = FakeRun()
             self._runs.append(run)
             self.runs = self._runs
             return run
 
     class FakeTcPr:
-        """Define FakeTcPr."""
+        """Representa FakeTcPr."""
 
         def find(self, x: Any) -> Any:
-            """Executa find."""
+            """Find."""
             return None
 
         def remove(self, x: Any) -> None:
-            """Executa remove."""
+            """Remove."""
             pass
 
         def append(self, x: Any) -> None:
-            """Executa append."""
+            """Append."""
             pass
 
     class FakeElement:
-        """Define FakeElement."""
+        """Representa FakeElement."""
 
         def get_or_add_tcPr(self) -> Any:
-            """Executa get or add tcPr."""
+            """Get or add tcPr."""
             return FakeTcPr()
 
     class FakeCell:
-        """Define FakeCell."""
+        """Representa FakeCell."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.text = ""
             self.paragraphs = [FakeParagraph()]
             self._element = FakeElement()
 
     class FakeRow:
-        """Define FakeRow."""
+        """Representa FakeRow."""
 
         def __init__(self, cols: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.cells = [FakeCell() for _ in range(cols)]
 
     class FakeTable:
-        """Define FakeTable."""
+        """Representa FakeTable."""
 
         def __init__(self, rows: Any, cols: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.rows = [FakeRow(cols) for _ in range(rows)]
 
     class FakeSection:
-        """Define FakeSection."""
+        """Representa FakeSection."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.top_margin = None
             self.bottom_margin = None
             self.left_margin = None
             self.right_margin = None
 
     class FakeDocument:
-        """Define FakeDocument."""
+        """Representa FakeDocument."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.paragraphs_text = []  # type: ignore[var-annotated]
             self.sections = [FakeSection()]
             self._paragraphs = []  # type: ignore[var-annotated]
 
         def add_heading(self, text: Any, level: Any = 1) -> Any:
-            """Executa add heading."""
+            """Add heading."""
             self.paragraphs_text.append(text)
             return FakeParagraph()
 
         def add_paragraph(self, text: Any = "") -> Any:
-            """Executa add paragraph."""
+            """Add paragraph."""
             self.paragraphs_text.append(text)
             p = FakeParagraph()
             if text:
@@ -810,11 +810,11 @@ def test_render_docx_agenda_paragraphs_partial_time_only_start(
             return p
 
         def add_table(self, rows: Any, cols: Any) -> Any:
-            """Executa add table."""
+            """Add table."""
             return FakeTable(rows, cols)
 
         def save(self, buf: Any) -> None:
-            """Executa save."""
+            """Save."""
             buf.write(b"DOCX")
 
     import relatorios.services.relatorios.lista_candidatos_sessao as mod
@@ -843,27 +843,27 @@ def test_render_xls_layout_with_title_and_agenda(
     import relatorios.services.relatorios.lista_candidatos_sessao as mod
 
     class FakeCell:
-        """Define FakeCell."""
+        """Representa FakeCell."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.value = None
             self.font = None
             self.alignment = None
             self.border = None
 
     class _Dim:
-        """Define _Dim."""
+        """Representa Dim."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.width = None
 
     class FakeWS:
-        """Define FakeWS."""
+        """Representa FakeWS."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.title = ""
             self._cells = {}  # type: ignore[var-annotated]
             self.column_dimensions = {
@@ -871,33 +871,33 @@ def test_render_xls_layout_with_title_and_agenda(
             }
 
         def cell(self, row: Any, column: Any) -> Any:
-            """Executa cell."""
+            """Cell."""
             key = (row, column)
             if key not in self._cells:
                 self._cells[key] = FakeCell()
             return self._cells[key]
 
         def merge_cells(self, *args: Any, **kwargs: Any) -> None:
-            """Executa merge cells."""
+            """Merge cells."""
             return
 
     class FakeWB:
-        """Define FakeWB."""
+        """Representa FakeWB."""
 
         def __init__(self) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             self.active = FakeWS()
             mod._last_ws = self.active  # type: ignore[attr-defined]
 
         def save(self, buf: Any) -> None:
-            """Executa save."""
+            """Save."""
             buf.write(b"XLSX")
 
     class Dummy:
-        """Define Dummy."""
+        """Representa Dummy."""
 
         def __init__(self, *a: Any, **k: Any) -> None:
-            """Executa   init  ."""
+            """Inicializa a instância com os parâmetros informados."""
             pass
 
     monkeypatch.setattr(mod, "OPENPYXL_AVAILABLE", True)

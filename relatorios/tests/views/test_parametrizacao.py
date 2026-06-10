@@ -49,7 +49,7 @@ class TestParametrizacaoViewSet:
     def test_list_parametrizacao(
         self, client: Any, parametrizacao: Any
     ) -> None:
-        """Testa listagem de Parametrizacao."""
+        """Verifica list parametrizacao."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -61,7 +61,7 @@ class TestParametrizacaoViewSet:
     def test_list_parametrizacao_multiple(
         self, client: Any, parametrizacoes_multiplas: Any
     ) -> None:
-        """Testa listagem com múltiplas Parametrizacoes."""
+        """Verifica list parametrizacao multiple."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -70,7 +70,7 @@ class TestParametrizacaoViewSet:
         assert timestamps == sorted(timestamps, reverse=True)
 
     def test_list_parametrizacao_empty(self, client: Any) -> None:
-        """Testa listagem quando não há Parametrizacoes criadas pelo teste."""
+        """Verifica list parametrizacao empty."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -79,7 +79,7 @@ class TestParametrizacaoViewSet:
     def test_retrieve_parametrizacao(
         self, client: Any, parametrizacao: Any
     ) -> None:
-        """Testa recuperação de Parametrizacao específica."""
+        """Verifica retrieve parametrizacao."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -91,7 +91,7 @@ class TestParametrizacaoViewSet:
     def test_retrieve_most_recent(
         self, client: Any, parametrizacoes_multiplas: Any
     ) -> None:
-        """Testa que get_object sempre retorna o mais recente."""
+        """Verifica retrieve most recent."""
         most_recent = parametrizacoes_multiplas[-1]
         url = reverse(
             "parametrizacao-detail", args=[parametrizacoes_multiplas[0].uuid]
@@ -104,7 +104,7 @@ class TestParametrizacaoViewSet:
     def test_update_parametrizacao(
         self, client: Any, parametrizacao: Any
     ) -> None:
-        """Testa atualização de Parametrizacao."""
+        """Verifica update parametrizacao."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         data = {"cabecalho": "<h1>Cabeçalho Atualizado</h1>"}
         response = client.patch(url, data, format="json")
@@ -116,7 +116,7 @@ class TestParametrizacaoViewSet:
     def test_update_most_recent(
         self, client: Any, parametrizacoes_multiplas: Any
     ) -> None:
-        """Testa que update sempre atualiza o mais recente."""
+        """Verifica update most recent."""
         most_recent = parametrizacoes_multiplas[-1]
         old_cabecalho_first = parametrizacoes_multiplas[0].cabecalho
         url = reverse(
@@ -131,7 +131,7 @@ class TestParametrizacaoViewSet:
         assert parametrizacoes_multiplas[0].cabecalho == old_cabecalho_first
 
     def test_update_put_method(self, client: Any, parametrizacao: Any) -> None:
-        """Testa atualização usando PUT."""
+        """Verifica update put method."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         data = {"cabecalho": "<h1>PUT Update</h1>"}
         response = client.put(url, data, format="json")
@@ -140,7 +140,7 @@ class TestParametrizacaoViewSet:
         assert parametrizacao.cabecalho == "<h1>PUT Update</h1>"
 
     def test_create_not_allowed(self, client: Any) -> None:
-        """Testa que criação (POST) não é permitida."""
+        """Verifica create not allowed."""
         initial_count = Parametrizacao.objects.count()
         url = reverse("parametrizacao-list")
         data = {"cabecalho": "<h1>Novo</h1>"}
@@ -152,7 +152,7 @@ class TestParametrizacaoViewSet:
     def test_delete_not_allowed(
         self, client: Any, parametrizacao: Any
     ) -> None:
-        """Testa que deleção não é permitida (ViewSet não tem."""
+        """Verifica delete not allowed."""
         initial_count = Parametrizacao.objects.count()
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         response = client.delete(url)
@@ -162,7 +162,7 @@ class TestParametrizacaoViewSet:
     def test_permission_allow_any(
         self, client: Any, parametrizacao: Any
     ) -> None:
-        """Testa que permissões AllowAny estão configuradas."""
+        """Verifica permission allow any."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -170,7 +170,7 @@ class TestParametrizacaoViewSet:
     def test_pagination_none(
         self, client: Any, parametrizacoes_multiplas: Any
     ) -> None:
-        """Testa que paginação está desabilitada."""
+        """Verifica pagination none."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -179,7 +179,7 @@ class TestParametrizacaoViewSet:
         assert len(response.data) >= 3
 
     def test_response_fields(self, client: Any, parametrizacao: Any) -> None:
-        """Testa que resposta contém todos os campos esperados."""
+        """Verifica response fields."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         response = client.get(url)
         assert response.status_code == status.HTTP_200_OK
@@ -196,7 +196,7 @@ class TestParametrizacaoViewSet:
     def test_update_partial_fields(
         self, client: Any, parametrizacao: Any
     ) -> None:
-        """Testa atualização parcial de campos."""
+        """Verifica update partial fields."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         data = {"cabecalho": "<h1>Parcial</h1>"}
         response = client.patch(url, data, format="json")
@@ -208,7 +208,7 @@ class TestParametrizacaoViewSet:
     def test_get_object_returns_first(
         self, client: Any, parametrizacoes_multiplas: Any
     ) -> None:
-        """Testa que get_object retorna o primeiro do queryset ordenado."""
+        """Verifica get object returns first."""
         most_recent = (
             Parametrizacao.objects.all().order_by("-criado_em").first()
         )
@@ -220,7 +220,7 @@ class TestParametrizacaoViewSet:
         assert response.data["uuid"] == str(most_recent.uuid)  # type: ignore[union-attr]
 
     def test_retrieve_when_no_records(self, client: Any) -> None:
-        """Testa retrieve quando não há registros correspondentes ao UUID."""
+        """Verifica retrieve when no records."""
         import uuid
 
         fake_uuid = uuid.uuid4()
@@ -230,7 +230,7 @@ class TestParametrizacaoViewSet:
         assert "uuid" in response.data
 
     def test_update_when_no_records(self, client: Any) -> None:
-        """Testa update quando não há registros correspondentes ao UUID."""
+        """Verifica update when no records."""
         import uuid
 
         fake_uuid = uuid.uuid4()

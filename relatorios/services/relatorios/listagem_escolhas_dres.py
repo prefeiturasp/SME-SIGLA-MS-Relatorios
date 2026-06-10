@@ -46,14 +46,11 @@ class ListagemEscolhasDres(RelatorioBase):
     TEMPLATE_NAME = "relatorios/listagem_escolhas_dres.html"
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -72,11 +69,11 @@ class ListagemEscolhasDres(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            context: Contexto do relatório.
-            filename: Nome do arquivo Excel gerado.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -308,13 +305,13 @@ class ListagemEscolhasDres(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            escolhas_list: Lista de escolhas com dados dos candidatos.
-            cabecalho: Texto do cabeçalho do relatório.
-            texto_final: Texto final do relatório.
-            filename: Nome do arquivo Word gerado.
+            escolhas_list: Escolhas list utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
+            texto_final: Texto final utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -470,16 +467,13 @@ class ListagemEscolhasDres(RelatorioBase):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf' ou 'xls').
-            cabecalho: Texto do cabeçalho do relatório (opcional).
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         try:
             logger.info(

@@ -18,15 +18,12 @@ class AgendasService:
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
     ) -> None:
-        """'123456789-=.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            base_url: URL base da API de agendas.
-            timeout_seconds: Timeout em segundos para as requisições.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -41,19 +38,16 @@ class AgendasService:
         page: int = 1,
         page_size: int = 100,
     ) -> requests.Response:
-        """Busca agendas por processo_convocacao_uuid com paginação.
+        """Busca agendas.
 
         Args:
             self: Instância do objeto.
-            processo_convocacao_uuid: UUID do processo de convocação.
-            page: Número da página (padrão: 1).
-            page_size: Tamanho da página (padrão: 100).
+            processo_convocacao_uuid: UUID de processo convocacao.
+            page: Page utilizado na operação.
+            page_size: Page size utilizado na operação.
 
         Returns:
             Resposta HTTP com o resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         url = f"{self.base_url}/api/v1/agendas/"
         params = {
@@ -99,17 +93,14 @@ class AgendasService:
         return response  # type: ignore[no-any-return]
 
     def buscar_agenda_por_uuid(self, agenda_uuid: str) -> requests.Response:
-        """Busca uma agenda específica pelo UUID.
+        """Busca agenda por uuid.
 
         Args:
             self: Instância do objeto.
-            agenda_uuid: UUID da agenda.
+            agenda_uuid: UUID de agenda.
 
         Returns:
             Resposta HTTP com o resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}/"
         logger.info(

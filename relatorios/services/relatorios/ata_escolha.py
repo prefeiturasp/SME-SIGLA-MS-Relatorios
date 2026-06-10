@@ -52,14 +52,11 @@ class AtaEscolha(RelatorioBase):
     TEMPLATE_NAME = "relatorios/ata_escolha.html"
 
     def __init__(self, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.ata_service = AtaEscolhaService(
@@ -70,32 +67,26 @@ class AtaEscolha(RelatorioBase):
         )
 
     def _preencher_template(self, cabecalho_capa: Any, dados: Any) -> Any:
-        """Executa  preencher template.
+        """Preencher template.
 
         Args:
             self: Instância do objeto.
-            cabecalho_capa: Parâmetro cabecalho capa.
-            dados: Parâmetro dados.
+            cabecalho_capa: Cabecalho capa utilizado na operação.
+            dados: Dados utilizado na operação.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         pattern = re.compile("\\[\\[(.*?)\\]\\]")
 
         def replace_func(match: Any) -> Any:
-            """Executa replace func.
+            """Replace func.
 
             Args:
-                match: Parâmetro match.
+                match: Match utilizado na operação.
 
             Returns:
-                Resultado da operação.
-
-            Raises:
-                Nenhuma exceção específica documentada.
+                Valor calculado conforme a regra aplicada.
             """
             chave = match.group(1)
             return str(dados.get(chave, f"[[ERRO: {chave} NÃO ENCONTRADO]]"))
@@ -116,17 +107,14 @@ class AtaEscolha(RelatorioBase):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf' ou 'xls').
-            cabecalho: Texto do cabeçalho do relatório (opcional).
-            cargo_codigo: Fixture do teste.
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
+            cargo_codigo: Cargo codigo utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         try:
             dados_ata = self.ata_service.processar_ata_escolha(
@@ -221,12 +209,12 @@ class AtaEscolha(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Lista de cargos com suas sessões e candidatos.
-            context: Dicionário com o contexto do template.
-            filename: Nome do arquivo Word gerado.
+            cargos_list: Lista de cargos do processo.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -465,11 +453,11 @@ class AtaEscolha(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            context_data: Parâmetro context data.
-            filename: Parâmetro filename.
+            context_data: Context data utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.

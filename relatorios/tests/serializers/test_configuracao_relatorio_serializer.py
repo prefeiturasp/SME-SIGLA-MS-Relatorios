@@ -25,7 +25,7 @@ CAMPOS_ESPERADOS = [
 
 @pytest.fixture
 def configuracao() -> Any:
-    """Executa configuracao."""
+    """Configuracao."""
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_VAGAS")
     config.cabecalho = "<h1>Cabeçalho</h1>"
     config.cabecalho_gabarito = "<h1>Gabarito</h1>"
@@ -36,7 +36,7 @@ def configuracao() -> Any:
 
 
 class TestConfiguracaoRelatorioSerializer:
-    """Define TestConfiguracaoRelatorioSerializer."""
+    """Serializer do modelo TestConfiguracaoRelatorio."""
 
     def test_campos_presentes_na_serializacao(self, configuracao: Any) -> None:
         """Verifica campos presentes na serializacao."""

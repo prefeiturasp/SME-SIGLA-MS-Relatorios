@@ -29,21 +29,18 @@ class ParametrizacaoViewSet(
     pagination_class = None
 
     def get_object(self) -> Any:
-        """Sempre retorna o registro mais recente, ignorando o pk.
+        """Retorna object.
 
         Args:
             self: Instância do objeto.
 
         Returns:
             Valor calculado para o campo ou propriedade.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         return self.queryset.first()
 
     def create(self, request: Any, *args: Any, **kwargs: Any) -> Any:
-        """Executa create.
+        """Create.
 
         Args:
             self: Instância do objeto.
@@ -53,9 +50,6 @@ class ParametrizacaoViewSet(
 
         Returns:
             Resposta HTTP com os dados serializados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         return Response(
             {"detail": 'Method "POST" not allowed.'},

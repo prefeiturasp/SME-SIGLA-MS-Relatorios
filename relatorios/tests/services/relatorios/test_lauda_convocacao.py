@@ -38,7 +38,7 @@ def parametrizacao() -> Any:
 
 
 def _make_request() -> Any:
-    """Executa  make request."""
+    """Make request."""
     return RequestFactory().get("/relatorios/lauda-convocacao/")
 
 

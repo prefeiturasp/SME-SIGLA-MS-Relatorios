@@ -20,13 +20,13 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def parametrizacao() -> Any:
-    """Executa parametrizacao."""
+    """Parametrizacao."""
     return Parametrizacao.objects.get_or_create(cabecalho="CAB PADRAO")[0]
 
 
 @pytest.fixture
 def cfgs() -> Any:
-    """Executa cfgs."""
+    """Cfgs."""
     return {
         "nao": ConfiguracaoRelatorio.objects.get_or_create(
             tipo="SUMULA_NAO_ESCOLHAS"
@@ -47,7 +47,7 @@ def cfgs() -> Any:
 
 
 def _cargos_candidatos() -> Any:
-    """Executa  cargos candidatos."""
+    """Cargos candidatos."""
     return [
         {
             "codigo": "101",
@@ -65,7 +65,7 @@ def _cargos_candidatos() -> Any:
 
 
 def _cargos_dres_vagas() -> Any:
-    """Executa  cargos dres vagas."""
+    """Cargos dres vagas."""
     return [
         {
             "codigo": "101",
@@ -96,7 +96,7 @@ def _cargos_dres_vagas() -> Any:
 
 
 def _cargos_lauda_conv() -> Any:
-    """Executa  cargos lauda conv."""
+    """Cargos lauda conv."""
     return [
         {
             "cargo_nome": "Professor",

@@ -12,7 +12,7 @@ from ..models import Relatorio
 
 @pytest.fixture(autouse=True)
 def _remove_sigla_sdk_middlewares_for_tests(settings: Any) -> None:
-    """Executa  remove sigla sdk middlewares for tests."""
+    """Remove sigla sdk middlewares for tests."""
     settings.MIDDLEWARE = [
         m
         for m in settings.MIDDLEWARE

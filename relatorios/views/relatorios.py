@@ -38,7 +38,7 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def create(self, request: Any, *args: Any, **kwargs: Any) -> Any:
-        """Executa create.
+        """Create.
 
         Args:
             self: Instância do objeto.
@@ -48,9 +48,6 @@ class RelatorioViewSet(viewsets.ModelViewSet):
 
         Returns:
             Resposta HTTP com os dados serializados.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         logger.info(
             "Criando relatório",

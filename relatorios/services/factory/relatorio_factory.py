@@ -37,16 +37,16 @@ class RelatorioFactory:
 
     @staticmethod
     def obter_relatorio(tipo_slug: str) -> Any:
-        """Esta é a 'central de inteligência'.
+        """Obtém relatorio.
 
         Args:
-            tipo_slug: String com o tipo do relatório (ex: 'LAUDA_VAGAS').
+            tipo_slug: Tipo slug utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
-            ValueError: Se o tipo fornecido não for um relatório válido.
+            ValueError: Se os dados informados forem inválidos.
         """
         classe = RelatorioFactory._MAPA.get(tipo_slug.upper())
         configuracao = ConfiguracaoRelatorio.objects.get(

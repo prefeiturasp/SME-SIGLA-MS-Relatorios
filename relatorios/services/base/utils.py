@@ -8,16 +8,13 @@ from django.conf import settings
 
 
 def ajustar_logo_caminho(logo: Any) -> Any:
-    """Executa ajustar logo caminho.
+    """Ajustar logo caminho.
 
     Args:
-        logo: Parâmetro logo.
+        logo: Logo utilizado na operação.
 
     Returns:
-        Resultado da operação.
-
-    Raises:
-        Nenhuma exceção específica documentada.
+        Valor calculado conforme a regra aplicada.
     """
     if logo and isinstance(logo, str):
         if settings.DJANGO_ENVIRONMENT != "local":

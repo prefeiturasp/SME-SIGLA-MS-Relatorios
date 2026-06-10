@@ -37,7 +37,7 @@ def parametrizacao() -> Any:
 
 
 class DummyRelatorio(RelatorioBase):
-    """Define DummyRelatorio."""
+    """Representa DummyRelatorio."""
 
     def gerar(
         self,
@@ -46,7 +46,7 @@ class DummyRelatorio(RelatorioBase):
         formato: str = "html",
         cabecalho: str = "",
     ) -> Any:  # type: ignore[override]
-        """Executa gerar."""
+        """Gerar."""
         return (HttpResponse("ok"), {})
 
 

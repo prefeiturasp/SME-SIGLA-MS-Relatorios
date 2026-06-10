@@ -11,27 +11,24 @@ from relatorios.models import Parametrizacao
 
 
 class ParametrizacaoSerializer(serializers.ModelSerializer):
-    """Define ParametrizacaoSerializer."""
+    """Serializer do modelo Parametrizacao."""
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         model = Parametrizacao
         fields = "__all__"
         read_only_fields = ["uuid", "criado_em", "atualizado_em"]
 
     def to_representation(self, instance: Any) -> Any:
-        """Executa to representation.
+        """To representation.
 
         Args:
             self: Instância do objeto.
             instance: Instância do modelo em atualização.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         data = super().to_representation(instance)
         logo = data.get("logo")

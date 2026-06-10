@@ -19,13 +19,13 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def client() -> Any:
-    """Executa client."""
+    """Client."""
     return APIClient()
 
 
 @pytest.fixture
 def relatorio() -> Any:
-    """Executa relatorio."""
+    """Relatorio."""
     return Relatorio.objects.create(
         tipo="agenda",
         usuario="tester",
@@ -37,7 +37,7 @@ def relatorio() -> Any:
 
 @pytest.fixture
 def relatorios() -> Any:
-    """Executa relatorios."""
+    """Relatorios."""
     itens = []
     for i in range(2):
         itens.append(
@@ -68,7 +68,7 @@ def test_relatorio_list(client: Any, relatorio: Any) -> None:
 
 @patch("relatorios.views.relatorios.RelatorioFactory.obter_relatorio")
 def test_relatorio_create(mock_obter_relatorio: Any, client: Any) -> None:
-    """Cria relatório com chamadas externas mockadas."""
+    """Verifica relatorio create."""
     mock_service = Mock()
     mock_service.gerar.return_value = (
         HttpResponse("<html></html>", content_type="text/html"),

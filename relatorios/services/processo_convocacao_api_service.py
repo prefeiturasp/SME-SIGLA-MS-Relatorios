@@ -18,15 +18,12 @@ class ProcessoConvocacaoService:
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
     ) -> None:
-        """Inicializa o serviço de processos de convocação.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            base_url: URL base da API de processos de convocação.
-            timeout_seconds: Timeout em segundos para as requisições.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -38,7 +35,7 @@ class ProcessoConvocacaoService:
     def buscar_processo_convocacao(
         self, processo_uuid: str
     ) -> requests.Response:
-        """Busca um processo de convocação por UUID.
+        """Busca processo convocacao.
 
         Args:
             self: Instância do objeto.
@@ -46,9 +43,6 @@ class ProcessoConvocacaoService:
 
         Returns:
             Resposta HTTP com o resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/"
         logger.info(
@@ -92,17 +86,14 @@ class ProcessoConvocacaoService:
     def buscar_processos_por_concurso(
         self, concurso_uuid: str
     ) -> requests.Response:
-        """Busca processos de convocação por concurso_uuid.
+        """Busca processos por concurso.
 
         Args:
             self: Instância do objeto.
-            concurso_uuid: UUID do concurso.
+            concurso_uuid: UUID do concurso relacionado.
 
         Returns:
             Resposta HTTP com o resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/"
         params = {"concurso_uuid": concurso_uuid}
@@ -148,17 +139,17 @@ class ProcessoConvocacaoService:
     def separar_processos_por_principal(
         self, processo_data: dict
     ) -> tuple[str, list[str]]:
-        """Busca o processo principal e outros processos do mesmo concurso,.
+        """Separa processo principal e demais do mesmo concurso.
 
         Args:
             self: Instância do objeto.
-            processo_data: Dicionário com os dados do processo principal.
+            processo_data: Processo data utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Tupla com os objetos criados ou atualizados.
 
         Raises:
-            ValueError: Fixture do teste.
+            ValueError: Se os dados informados forem inválidos.
         """
         logger.info(
             "Separando processos por principal",

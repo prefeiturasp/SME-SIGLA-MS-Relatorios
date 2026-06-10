@@ -15,14 +15,14 @@ DEFAULT_PAGE_SIZE = 10
 
 
 class CustomPagination(PageNumberPagination):
-    """Define CustomPagination."""
+    """Representa CustomPagination."""
 
     page = DEFAULT_PAGE  # type: ignore[assignment]
     page_size = DEFAULT_PAGE_SIZE
     page_size_query_param = "page_size"
 
     def get_paginated_response(self, data: Any) -> Any:
-        """Executa get paginated response.
+        """Retorna paginated response.
 
         Args:
             self: Instância do objeto.
@@ -30,9 +30,6 @@ class CustomPagination(PageNumberPagination):
 
         Returns:
             Valor calculado para o campo ou propriedade.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         return Response(
             {
@@ -54,13 +51,10 @@ def convert_uuids_to_strings(obj: Any) -> Any:
     """Converte recursivamente todos os objetos UUID para strings em uma.
 
     Args:
-        obj: Objeto (dict, list, UUID, etc.) a ser processado.
+        obj: Obj utilizado na operação.
 
     Returns:
-        Resultado da operação.
-
-    Raises:
-        Nenhuma exceção específica documentada.
+        Valor calculado conforme a regra aplicada.
     """
     if isinstance(obj, uuid.UUID):
         return str(obj)

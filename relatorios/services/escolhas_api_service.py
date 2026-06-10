@@ -13,20 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class EscolhasService:
-    """Define EscolhasService."""
+    """Serviço para operações de escolhas."""
 
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
     ) -> None:
-        """Executa   init  .
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            base_url: Parâmetro base url da operação.
-            timeout_seconds: Parâmetro timeout seconds da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -36,7 +33,7 @@ class EscolhasService:
         }
 
     def buscar_vagas_escolas(self, processo_uuid: str) -> requests.Response:
-        """Busca vagas de escolas por processo_uuid.
+        """Busca vagas escolas.
 
         Args:
             self: Instância do objeto.
@@ -44,9 +41,6 @@ class EscolhasService:
 
         Returns:
             Resposta HTTP com o resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         url = f"{self.base_url}/api/v1/vagas-escolas/"
         params = {"processo_uuid": processo_uuid}
@@ -90,18 +84,15 @@ class EscolhasService:
     def buscar_escolhas_por_candidatos(
         self, candidato_uuids: list, situacao: str = "nao-escolha"
     ) -> list:
-        """Busca escolhas por lista de candidato_uuids filtrando por situação.
+        """Busca escolhas por candidatos.
 
         Args:
             self: Instância do objeto.
-            candidato_uuids: Lista de UUIDs dos candidatos.
-            situacao: Situação da escolha (padrão: 'nao-escolha'). Se None,.
+            candidato_uuids: Candidato uuids utilizado na operação.
+            situacao: Situacao utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         url = f"{self.base_url}/api/v1/escolhas/busca/"
         data = {"candidato_uuid": candidato_uuids}

@@ -48,15 +48,12 @@ class ResultadoEscolha(RelatorioBase):
     TEMPLATE_NAME = "relatorios/resultado_escolha.html"
 
     def __init__(self, tipo: str, **kwargs: Any) -> None:
-        """Inicializa o service com as dependências necessárias.
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            tipo: Parâmetro tipo.
+            tipo: Tipo utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -87,17 +84,14 @@ class ResultadoEscolha(RelatorioBase):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx').
-            cabecalho: Texto do cabeçalho do relatório (opcional).
-            agenda_uuid: UUID da agenda.
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
+            agenda_uuid: UUID de agenda.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         cargos_map = {}
         try:
@@ -444,17 +438,14 @@ class ResultadoEscolha(RelatorioBase):
             return (response, cargos_list)
 
     def _extrair_numero_sessao(self, sessao: str) -> str:
-        """Extrai apenas o número da sessão, removendo a palavra "Sessão" se.
+        """Extrai o número da sessão, removendo o prefixo 'Sessão'.
 
         Args:
             self: Instância do objeto.
-            sessao: String com a sessão (ex: "Sessão 4", "4", etc.).
+            sessao: Sessao utilizado na operação.
 
         Returns:
             Texto resultante da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         if not sessao or sessao == "-":
             return "-"
@@ -473,13 +464,10 @@ class ResultadoEscolha(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            escolhas: Lista de escolhas com suas informações.
+            escolhas: Escolhas utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
@@ -550,17 +538,14 @@ class ResultadoEscolha(RelatorioBase):
         return cargos_list
 
     def _agrupar_por_cargo_tipo_escolha_e_agenda(self, escolhas: list) -> list:
-        """Agrupa escolhas por cargo da agenda, depois por tipo de escolha, e.
+        """Agrupa escolhas por cargo, tipo de escolha e agenda.
 
         Args:
             self: Instância do objeto.
-            escolhas: Lista de escolhas com suas informações.
+            escolhas: Escolhas utilizado na operação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
@@ -669,15 +654,12 @@ class ResultadoEscolha(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Parâmetro cargos list.
-            escolhas_com_candidatos: Parâmetro escolhas com candidatos.
-            processo_uuid: Parâmetro processo uuid.
+            cargos_list: Lista de cargos do processo.
+            escolhas_com_candidatos: Escolhas já enriquecidas com candidatos.
+            processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Lista com os registros resultantes.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Lista com os registros obtidos.
         """
         escolhas_realizadas = [
             e
@@ -810,13 +792,13 @@ class ResultadoEscolha(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Lista de cargos com suas agendas e candidatos.
-            cabecalho_padrao: Cabeçalho padrão do relatório.
-            cabecalho: Texto do cabeçalho do relatório.
-            filename: Nome do arquivo Excel gerado.
+            cargos_list: Lista de cargos do processo.
+            cabecalho_padrao: Cabecalho padrao utilizado na operação.
+            cabecalho: Cabecalho utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.
@@ -1227,13 +1209,13 @@ class ResultadoEscolha(RelatorioBase):
 
         Args:
             self: Instância do objeto.
-            cargos_list: Lista de cargos com suas agendas e candidatos.
-            cabecalho: Texto do cabeçalho do relatório.
-            texto_final: Texto final do relatório (opcional).
-            filename: Nome do arquivo Word gerado.
+            cargos_list: Lista de cargos do processo.
+            cabecalho: Cabecalho utilizado na operação.
+            texto_final: Texto final utilizado na operação.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
+            Valor calculado conforme a regra aplicada.
 
         Raises:
             ImportError: Se ocorrer erro nesta operação.

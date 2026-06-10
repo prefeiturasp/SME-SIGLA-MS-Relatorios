@@ -13,16 +13,13 @@ from relatorios.models import ConfiguracaoRelatorio
 
 
 def _sanitizar_html(value: Any) -> Any:
-    """Executa  sanitizar html.
+    """Sanitizar html.
 
     Args:
         value: Valor recebido para validação.
 
     Returns:
-        Resultado da operação.
-
-    Raises:
-        Nenhuma exceção específica documentada.
+        Valor calculado conforme a regra aplicada.
     """
     if not value:
         return ""
@@ -35,7 +32,7 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
     """Serializer para o modelo ConfiguracaoRelatorio."""
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         model = ConfiguracaoRelatorio
         fields = [
@@ -52,7 +49,7 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
         read_only_fields = ["uuid"]
 
     def validate_cabecalho(self, value: Any) -> Any:
-        """Executa validate cabecalho.
+        """Validate cabecalho.
 
         Args:
             self: Instância do objeto.
@@ -60,14 +57,11 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
 
         Returns:
             Valor validado do campo cabecalho.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         return _sanitizar_html(value)
 
     def validate_cabecalho_gabarito(self, value: Any) -> Any:
-        """Executa validate cabecalho gabarito.
+        """Validate cabecalho gabarito.
 
         Args:
             self: Instância do objeto.
@@ -75,14 +69,11 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
 
         Returns:
             Valor validado do campo cabecalho gabarito.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         return _sanitizar_html(value)
 
     def validate_texto_final(self, value: Any) -> Any:
-        """Executa validate texto final.
+        """Validate texto final.
 
         Args:
             self: Instância do objeto.
@@ -90,8 +81,5 @@ class ConfiguracaoRelatorioSerializer(serializers.ModelSerializer):
 
         Returns:
             Valor validado do campo texto final.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         return _sanitizar_html(value)

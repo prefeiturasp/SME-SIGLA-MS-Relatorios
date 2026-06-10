@@ -46,7 +46,7 @@ class TestParametrizacaoModel:
     """Testes para o model Parametrizacao."""
 
     def test_parametrizacao_creation(self) -> None:
-        """Testa criação básica de Parametrizacao."""
+        """Verifica parametrizacao creation."""
         parametrizacao = Parametrizacao.objects.create(
             cabecalho="<h1>Teste</h1>"
         )
@@ -56,7 +56,7 @@ class TestParametrizacaoModel:
         assert parametrizacao.uuid is not None
 
     def test_parametrizacao_with_default_cabecalho(self) -> None:
-        """Testa criação de Parametrizacao com cabeçalho padrão vazio."""
+        """Verifica parametrizacao with default cabecalho."""
         parametrizacao = Parametrizacao.objects.create()
         assert parametrizacao.cabecalho == ""
         assert not parametrizacao.logo
@@ -64,26 +64,26 @@ class TestParametrizacaoModel:
     def test_parametrizacao_with_logo(
         self, parametrizacao_com_logo: Any
     ) -> None:
-        """Testa criação de Parametrizacao com logo."""
+        """Verifica parametrizacao with logo."""
         assert parametrizacao_com_logo.logo is not None
         assert parametrizacao_com_logo.logo.name.startswith("parametrizacao/")
 
     def test_parametrizacao_uuid_auto_generated(
         self, parametrizacao: Any
     ) -> None:
-        """Testa se UUID é gerado automaticamente."""
+        """Verifica parametrizacao uuid auto generated."""
         assert parametrizacao.uuid is not None
         assert isinstance(parametrizacao.uuid, str) or hasattr(
             parametrizacao.uuid, "hex"
         )
 
     def test_parametrizacao_timestamps(self, parametrizacao: Any) -> None:
-        """Testa se timestamps são criados automaticamente."""
+        """Verifica parametrizacao timestamps."""
         assert parametrizacao.criado_em is not None
         assert parametrizacao.atualizado_em is not None
 
     def test_parametrizacao_str(self, parametrizacao: Any) -> None:
-        """Testa método __str__ do model."""
+        """Verifica parametrizacao str."""
         str_repr = str(parametrizacao)
         assert "Parametrização" in str_repr
         assert "Criado em" in str_repr
@@ -91,24 +91,24 @@ class TestParametrizacaoModel:
     def test_parametrizacao_ordering(
         self, parametrizacoes_multiplas: Any
     ) -> None:
-        """Testa ordenação padrão do model (mais recente primeiro)."""
+        """Verifica parametrizacao ordering."""
         parametrizacoes = Parametrizacao.objects.all()
         timestamps = [p.criado_em for p in parametrizacoes]
         assert timestamps == sorted(timestamps, reverse=True)
 
     def test_parametrizacao_blank_cabecalho(self) -> None:
-        """Testa que cabeçalho pode ser vazio."""
+        """Verifica parametrizacao blank cabecalho."""
         parametrizacao = Parametrizacao.objects.create(cabecalho="")
         assert parametrizacao.cabecalho == ""
 
     def test_parametrizacao_null_logo(self, parametrizacao: Any) -> None:
-        """Testa que logo pode ser None."""
+        """Verifica parametrizacao null logo."""
         assert not parametrizacao.logo
 
     def test_parametrizacao_update_timestamp(
         self, parametrizacao: Any
     ) -> None:
-        """Testa se atualizado_em é atualizado ao modificar o registro."""
+        """Verifica parametrizacao update timestamp."""
         import time
 
         original_updated = parametrizacao.atualizado_em
@@ -119,19 +119,19 @@ class TestParametrizacaoModel:
         assert parametrizacao.atualizado_em >= original_updated
 
     def test_parametrizacao_verbose_names(self) -> None:
-        """Testa se os verbose names estão configurados corretamente."""
+        """Verifica parametrizacao verbose names."""
         assert Parametrizacao._meta.verbose_name == "Parametrização"
         assert Parametrizacao._meta.verbose_name_plural == "Parametrizações"
 
     def test_parametrizacao_field_verbose_names(self) -> None:
-        """Testa se os verbose names dos campos estão configurados."""
+        """Verifica parametrizacao field verbose names."""
         cabecalho_field = Parametrizacao._meta.get_field("cabecalho")
         logo_field = Parametrizacao._meta.get_field("logo")
         assert cabecalho_field.verbose_name == "Cabeçalho Padrão"
         assert logo_field.verbose_name == "Logo"
 
     def test_parametrizacao_field_help_texts(self) -> None:
-        """Testa se os help texts dos campos estão configurados."""
+        """Verifica parametrizacao field help texts."""
         cabecalho_field = Parametrizacao._meta.get_field("cabecalho")
         logo_field = Parametrizacao._meta.get_field("logo")
         assert "Cabeçalho padrão em HTML" in cabecalho_field.help_text

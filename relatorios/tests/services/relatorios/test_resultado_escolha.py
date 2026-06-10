@@ -25,12 +25,12 @@ class _MockResponse:
     """Classe auxiliar para mockar respostas HTTP."""
 
     def __init__(self, json_data: Any, status_code: Any = 200) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._json_data = json_data
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._json_data
 
 
@@ -188,7 +188,7 @@ class TestInit:
     def test_init_com_tipo(
         self, settings: Any, configuracao_relatorio: Any, parametrizacao: Any
     ) -> None:
-        """Testa inicialização com tipo."""
+        """Verifica init com tipo."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -215,7 +215,7 @@ class TestExtrairNumeroSessao:
     def test_extrair_numero_sessao_com_sessao_4(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa extração de número quando vem 'Sessão 4'."""
+        """Verifica extrair numero sessao com sessao 4."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "Sessão 4"
         )
@@ -224,7 +224,7 @@ class TestExtrairNumeroSessao:
     def test_extrair_numero_sessao_com_sessao_minuscula(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa extração com 'sessão' em minúscula."""
+        """Verifica extrair numero sessao com sessao minuscula."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "sessão 5"
         )
@@ -233,35 +233,35 @@ class TestExtrairNumeroSessao:
     def test_extrair_numero_sessao_apenas_numero(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando já vem apenas o número."""
+        """Verifica extrair numero sessao apenas numero."""
         resultado = resultado_escolha_service._extrair_numero_sessao("3")
         assert resultado == "3"
 
     def test_extrair_numero_sessao_vazio(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando a sessão está vazia."""
+        """Verifica extrair numero sessao vazio."""
         resultado = resultado_escolha_service._extrair_numero_sessao("")
         assert resultado == "-"
 
     def test_extrair_numero_sessao_hifen(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando a sessão é '-'."""
+        """Verifica extrair numero sessao hifen."""
         resultado = resultado_escolha_service._extrair_numero_sessao("-")
         assert resultado == "-"
 
     def test_extrair_numero_sessao_none(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando a sessão é None."""
+        """Verifica extrair numero sessao none."""
         resultado = resultado_escolha_service._extrair_numero_sessao(None)
         assert resultado == "-"
 
     def test_extrair_numero_sessao_com_texto_extra(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando há texto extra além do número."""
+        """Verifica extrair numero sessao com texto extra."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "Sessão 10 - Manhã"
         )
@@ -270,7 +270,7 @@ class TestExtrairNumeroSessao:
     def test_extrair_numero_sessao_sem_numero(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando não há número na string."""
+        """Verifica extrair numero sessao sem numero."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "Sem número"
         )
@@ -283,7 +283,7 @@ class TestAgruparPorCargoEAgenda:
     def test_agrupar_por_cargo_e_agenda_basico(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa agrupamento básico por cargo e agenda."""
+        """Verifica agrupar por cargo e agenda basico."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -318,7 +318,7 @@ class TestAgruparPorCargoEAgenda:
     def test_agrupar_por_cargo_e_agenda_ordenacao_candidatos(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa que candidatos são ordenados por classificação geral."""
+        """Verifica agrupar por cargo e agenda ordenacao candidatos."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -362,7 +362,7 @@ class TestAgruparPorCargoEAgenda:
     def test_agrupar_por_cargo_e_agenda_sem_descricao_cargo(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando não há descrição do cargo."""
+        """Verifica agrupar por cargo e agenda sem descricao cargo."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -383,7 +383,7 @@ class TestAgruparPorCargoEAgenda:
     def test_agrupar_por_cargo_e_agenda_sem_codigo_cargo(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa quando não há código do cargo."""
+        """Verifica agrupar por cargo e agenda sem codigo cargo."""
         escolhas = [
             {
                 "cargo_codigo": "",
@@ -404,7 +404,7 @@ class TestAgruparPorCargoEAgenda:
     def test_agrupar_por_cargo_e_agenda_processa_sessao(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa que a sessão é processada corretamente."""
+        """Verifica agrupar por cargo e agenda processa sessao."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -434,7 +434,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório HTML com sucesso."""
+        """Verifica gerar html success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -467,7 +467,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório PDF com sucesso."""
+        """Verifica gerar pdf success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -503,7 +503,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório XLS com sucesso."""
+        """Verifica gerar xls success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -533,7 +533,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório DOCX com sucesso."""
+        """Verifica gerar docx success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -563,7 +563,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
+        """Verifica gerar com cabecalho padrao."""
         resultado_escolha_service.context["cabecalho_padrao"] = (
             "Cabeçalho Padrão"
         )
@@ -605,7 +605,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com tipo RESULTADO_ESCOLHA unificado (busca todas as."""
+        """Verifica gerar tipo resultado escolha unificado."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -672,7 +672,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com tipo RESULTADO_ESCOLHA incluindo não escolha."""
+        """Verifica gerar tipo resultado escolha com nao escolha."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -728,7 +728,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolha valor é 'R' para reconvocação no tipo unificado."""
+        """Verifica gerar escolha valor r reconvocacao."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -793,7 +793,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolha valor é 'N' para não escolha no tipo unificado."""
+        """Verifica gerar escolha valor n nao escolha."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -855,7 +855,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolha valor é 'S' para escolha sim no tipo unificado."""
+        """Verifica gerar escolha valor s."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -893,7 +893,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_agendas_response: Any,
     ) -> None:
-        """Testa que erro ao buscar candidatos é propagado."""
+        """Verifica gerar erro buscar candidatos."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception(  # noqa: E501
@@ -913,7 +913,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que erro ao buscar escolhas é tratado e continua (para."""
+        """Verifica gerar erro buscar escolhas."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -946,7 +946,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolhas sem candidato_uuid são ignoradas."""
+        """Verifica gerar sem candidato na escolha."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -988,7 +988,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolhas com candidato não encontrado são ignoradas."""
+        """Verifica gerar candidato nao encontrado."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -1029,7 +1029,7 @@ class TestGerar:
         mock_cargos_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que quando agenda não é encontrada, cria uma vazia."""
+        """Verifica gerar agenda nao encontrada cria vazia."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = _MockResponse(  # noqa: E501
             {"results": []}
@@ -1070,7 +1070,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que erro ao buscar cargos não interrompe o processo."""
+        """Verifica gerar erro buscar cargos continua."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro Cargos"
         )
@@ -1105,7 +1105,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que erro ao buscar agendas não interrompe o processo."""
+        """Verifica gerar erro buscar agendas continua."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.side_effect = Exception(  # noqa: E501
             "Erro Agendas"
@@ -1140,7 +1140,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidatos vem como lista direta (não dict com."""
+        """Verifica gerar candidatos lista direta."""
         candidatos_lista = [
             {
                 "uuid": "candidato-uuid-1",
@@ -1183,7 +1183,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa fallback de descrição de cargo quando não encontrada."""
+        """Verifica gerar cargo descricao fallback."""
         cargos_response = _MockResponse(
             [{"cargo_codigo": "123", "cargo_nome": ""}]
         )
@@ -1221,7 +1221,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando código do cargo é inteiro."""
+        """Verifica gerar cargo codigo int."""
         cargos_response = _MockResponse(
             [{"cargo_codigo": 123, "cargo_nome": "Professor"}]
         )
@@ -1257,7 +1257,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidato não tem objeto candidato."""
+        """Verifica gerar candidato sem candidato obj."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -1302,7 +1302,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando agenda é encontrada pelo cargo do candidato."""
+        """Verifica gerar agenda encontrada por cargo."""
         agenda_response = _MockResponse(
             {
                 "results": [
@@ -1350,7 +1350,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato CSV (tratado como XLS)."""
+        """Verifica gerar formato csv."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -1383,7 +1383,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato DOC (tratado como DOCX)."""
+        """Verifica gerar formato doc."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -1418,7 +1418,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com tipo inválido (não RESULTADO_ESCOLHA)."""
+        """Verifica gerar tipo invalido."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
@@ -1474,7 +1474,7 @@ class TestGerar:
         mock_agendas_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando candidato não tem descrição nem código de cargo."""
+        """Verifica gerar cargo sem descricao sem codigo."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -1525,7 +1525,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando agenda não tem descrição e busca no mapa de cargos."""
+        """Verifica gerar agenda sem descricao busca mapa."""
         agenda_response = _MockResponse(
             {
                 "results": [
@@ -1567,7 +1567,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando agenda não tem descrição e não encontra no mapa."""
+        """Verifica gerar agenda sem descricao sem mapa."""
         agenda_response = _MockResponse(
             {
                 "results": [
@@ -1616,7 +1616,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando agenda não tem descrição nem código."""
+        """Verifica gerar agenda sem descricao sem codigo."""
         agenda_response = _MockResponse(
             {
                 "results": [
@@ -1659,7 +1659,7 @@ class TestGerar:
     def test_render_to_xls_exception(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa tratamento de exceção no render_to_xls."""
+        """Verifica render to xls exception."""
         cargos_list = [{"descricao": "Professor", "agendas": []}]
         with (
             patch(
@@ -1679,7 +1679,7 @@ class TestRenderToXls:
     def test_render_to_xls_success(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa geração de Excel com sucesso."""
+        """Verifica render to xls success."""
         cargos_list = [
             {
                 "descricao": "Professor",
@@ -1715,7 +1715,7 @@ class TestRenderToXls:
     def test_render_to_xls_sem_cabecalho(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa geração de Excel sem cabeçalho."""
+        """Verifica render to xls sem cabecalho."""
         cargos_list = [{"descricao": "Professor", "agendas": []}]
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "", "", filename="test.xlsx"
@@ -1725,7 +1725,7 @@ class TestRenderToXls:
     def test_render_to_xls_multiplos_cargos(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa geração de Excel com múltiplos cargos."""
+        """Verifica render to xls multiplos cargos."""
         cargos_list = [
             {
                 "descricao": "Professor A",
@@ -1778,7 +1778,7 @@ class TestRenderToXls:
     def test_render_to_xls_openpyxl_nao_disponivel(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa erro quando openpyxl não está disponível."""
+        """Verifica render to xls openpyxl nao disponivel."""
         cargos_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match="openpyxl"):
             resultado_escolha_service.render_to_xls(
@@ -1796,7 +1796,7 @@ class TestRenderToDocx:
     def test_render_to_docx_python_docx_nao_disponivel(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa erro quando python-docx não está disponível."""
+        """Verifica render to docx python docx nao disponivel."""
         cargos_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match="python-docx"):
             resultado_escolha_service.render_to_docx(
@@ -1845,7 +1845,7 @@ class TestRenderToDocx:
         mock_document: Any,
         resultado_escolha_service: Any,
     ) -> None:
-        """Testa geração completa de Word com cabeçalho e dados."""
+        """Verifica render to docx completo com cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1975,7 +1975,7 @@ class TestRenderToDocx:
         mock_document: Any,
         resultado_escolha_service: Any,
     ) -> None:
-        """Testa geração de Word sem cabeçalho."""
+        """Verifica render to docx sem cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -2065,7 +2065,7 @@ class TestRenderToDocx:
         mock_document: Any,
         resultado_escolha_service: Any,
     ) -> Any:
-        """Testa geração de Word com múltiplos cargos e candidatos."""
+        """Verifica render to docx multiplos cargos e candidatos."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -2092,7 +2092,7 @@ class TestRenderToDocx:
         mock_table.rows = [mock_header_row]
 
         def create_data_row() -> Any:
-            """Executa create data row."""
+            """Create data row."""
             mock_row = MagicMock()
             mock_cells = []
             for _i in range(8):
@@ -2212,7 +2212,7 @@ class TestRenderToDocx:
         mock_document: Any,
         resultado_escolha_service: Any,
     ) -> None:
-        """Testa quando já existe shading element (existing_shd)."""
+        """Verifica render to docx com existing shd."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -2291,7 +2291,7 @@ class TestRenderToDocx:
     def test_render_to_docx_exception(
         self, mock_document: Any, resultado_escolha_service: Any
     ) -> None:
-        """Testa tratamento de exceção no render_to_docx."""
+        """Verifica render to docx exception."""
         mock_document.side_effect = Exception("Erro ao criar documento")
         cargos_list = [{"descricao": "Professor", "agendas": []}]
         with pytest.raises(Exception, match="Erro ao criar documento"):
@@ -2302,7 +2302,7 @@ class TestRenderToDocx:
     def test_agrupar_por_cargo_sem_agenda_uuid(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa agrupamento quando agenda não tem UUID."""
+        """Verifica agrupar por cargo sem agenda uuid."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2326,7 +2326,7 @@ class TestRenderToDocx:
     def test_agrupar_por_cargo_sessao_nao_numerica(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa agrupamento quando sessão não é numérica."""
+        """Verifica agrupar por cargo sessao nao numerica."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2348,7 +2348,7 @@ class TestRenderToDocx:
     def test_agrupar_por_cargo_classificacao_infinito(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa ordenação quando classificação não é numérica."""
+        """Verifica agrupar por cargo classificacao infinito."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2381,7 +2381,7 @@ class TestRenderToDocx:
     def test_agrupar_por_cargo_ordenacao_agendas(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa ordenação de agendas por data e sessão."""
+        """Verifica agrupar por cargo ordenacao agendas."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2414,7 +2414,7 @@ class TestRenderToDocx:
     def test_agrupar_por_cargo_ordenacao_cargos(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa ordenação de cargos por descrição."""
+        """Verifica agrupar por cargo ordenacao cargos."""
         escolhas = [
             {
                 "cargo_codigo": "456",
@@ -2450,7 +2450,7 @@ class TestAgruparPorCargoTipoEscolhaEAgenda:
     def test_agrupar_por_cargo_tipo_escolha_e_agenda_basico(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa agrupamento básico por cargo, tipo de escolha e agenda."""
+        """Verifica agrupar por cargo tipo escolha e agenda basico."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2505,7 +2505,7 @@ class TestAdicionarResumoDreEscola:
     def test_adicionar_resumo_dre_escola_basico(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa adição básica de resumo DRE/Escola."""
+        """Verifica adicionar resumo dre escola basico."""
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
@@ -2566,7 +2566,7 @@ class TestAdicionarResumoDreEscola:
     def test_adicionar_resumo_dre_escola_sem_vagas(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa resumo DRE/Escola quando não há vagas retornadas."""
+        """Verifica adicionar resumo dre escola sem vagas."""
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
@@ -2601,7 +2601,7 @@ class TestRenderToXlsResumoDreEscola:
     def test_render_to_xls_com_resumo_dre_escola(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização Excel com resumo DRE/Escola."""
+        """Verifica render to xls com resumo dre escola."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -2637,7 +2637,7 @@ class TestRenderToXlsResumoDreEscola:
     def test_render_to_xls_com_logo_url(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização Excel com logo via URL."""
+        """Verifica render to xls com logo url."""
         resultado_escolha_service.context["usar_logotipo"] = True
         resultado_escolha_service.context["logo_url"] = (
             "http://example.com/logo.png"
@@ -2660,7 +2660,7 @@ class TestRenderToXlsResumoDreEscola:
     def test_render_to_xls_com_texto_final(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização Excel com texto final."""
+        """Verifica render to xls com texto final."""
         resultado_escolha_service.context["texto_final"] = "<p>Texto final</p>"
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
@@ -2677,7 +2677,7 @@ class TestRenderToDocxResumoDreEscola:
     def test_render_to_docx_com_resumo_dre_escola(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização DOCX com resumo DRE/Escola."""
+        """Verifica render to docx com resumo dre escola."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -2713,7 +2713,7 @@ class TestRenderToDocxResumoDreEscola:
     def test_render_to_docx_com_texto_final(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização DOCX com texto final."""
+        """Verifica render to docx com texto final."""
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
@@ -2734,7 +2734,7 @@ class TestTiposAntigosCompatibilidade:
         mock_agendas_response: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa geração com tipo antigo RESULTADO_ESCOLHA_SIM."""
+        """Verifica gerar tipo resultado escolha sim."""
         config_antiga, _ = ConfiguracaoRelatorio.objects.get_or_create(
             tipo="RESULTADO_ESCOLHA_SIM",
             defaults={
@@ -2791,7 +2791,7 @@ class TestTiposAntigosCompatibilidade:
     def test_render_to_xls_tipo_antigo(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização Excel com tipo antigo (sem tipos_escolha)."""
+        """Verifica render to xls tipo antigo."""
         resultado_escolha_service.tipo = "RESULTADO_ESCOLHA_SIM"
         cargos_list = [
             {
@@ -2815,7 +2815,7 @@ class TestTiposAntigosCompatibilidade:
     def test_render_to_docx_tipo_antigo(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização DOCX com tipo antigo (sem tipos_escolha)."""
+        """Verifica render to docx tipo antigo."""
         resultado_escolha_service.tipo = "RESULTADO_ESCOLHA_SIM"
         cargos_list = [
             {
@@ -2839,7 +2839,7 @@ class TestTiposAntigosCompatibilidade:
     def test_render_to_xls_logo_erro(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização Excel quando há erro ao processar logo."""
+        """Verifica render to xls logo erro."""
         resultado_escolha_service.context["usar_logotipo"] = True
         resultado_escolha_service.context["logo_url"] = (
             "http://example.com/logo.png"
@@ -2859,7 +2859,7 @@ class TestTiposAntigosCompatibilidade:
     def test_render_to_xls_logo_arquivo_local(
         self, resultado_escolha_service: Any, tmp_path: Any
     ) -> None:
-        """Testa renderização Excel com logo de arquivo local."""
+        """Verifica render to xls logo arquivo local."""
         resultado_escolha_service.context["usar_logotipo"] = True
         logo_file = tmp_path / "logo.png"
         logo_file.write_bytes(b"fake_image")
@@ -2875,7 +2875,7 @@ class TestTiposAntigosCompatibilidade:
     def test_render_to_xls_tipos_escolha_completo(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização Excel com estrutura completa de tipos_escolha."""
+        """Verifica render to xls tipos escolha completo."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -2913,7 +2913,7 @@ class TestTiposAntigosCompatibilidade:
     def test_render_to_docx_tipos_escolha_completo(
         self, resultado_escolha_service: Any
     ) -> None:
-        """Testa renderização DOCX com estrutura completa de tipos_escolha."""
+        """Verifica render to docx tipos escolha completo."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -2960,7 +2960,7 @@ class TestIntegracaoCompleta:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa fluxo completo de geração HTML."""
+        """Verifica fluxo completo html."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
@@ -3004,7 +3004,7 @@ class TestIntegracaoCompleta:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa quando agenda é encontrada pelo cargo do candidato."""
+        """Verifica fluxo completo com agenda por cargo."""
         agenda_response = _MockResponse(
             {
                 "results": [

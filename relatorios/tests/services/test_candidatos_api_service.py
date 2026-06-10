@@ -12,25 +12,25 @@ from relatorios.services.candidatos_api_service import CandidatosService
 
 
 class _Resp:
-    """Define _Resp."""
+    """Representa Resp."""
 
     def __init__(self, payload: Any, status_code: Any = 200) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._payload
 
     def raise_for_status(self) -> None:
-        """Executa raise for status."""
+        """Raise for status."""
         if self.status_code and self.status_code >= 400:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
 def _svc() -> Any:
-    """Executa  svc."""
+    """Svc."""
     return CandidatosService(base_url="http://api.local", timeout_seconds=5)
 
 
@@ -264,7 +264,7 @@ def test_buscar_candidatos_por_agendas_success_extracts_both_formats(
     def _mock_buscar_por_uuids(
         uuids: Any, order_by: Any = "ranking_escolha"
     ) -> Any:
-        """Executa  mock buscar por uuids."""
+        """Mock buscar por uuids."""
         calls.append(list(uuids))
         if uuids == ["x", "y"]:
             return _Resp({"results": [{"uuid": "x"}, {"uuid": "y"}]})
@@ -295,7 +295,7 @@ def test_buscar_candidatos_por_agendas_handles_request_exception(
     agendas_response = _Resp([{"uuid": "a1", "candidatos_uuids": ["z"]}])
 
     def _raise(*args: Any, **kwargs: Any) -> None:
-        """Executa  raise."""
+        """Raise."""
         raise requests.RequestException("boom")
 
     monkeypatch.setattr(

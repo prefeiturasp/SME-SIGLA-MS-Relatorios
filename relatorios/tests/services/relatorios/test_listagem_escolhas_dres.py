@@ -49,12 +49,12 @@ class _MockResponse:
     """Classe auxiliar para mockar respostas HTTP."""
 
     def __init__(self, json_data: Any, status_code: Any = 200) -> None:
-        """Executa   init  ."""
+        """Inicializa a instância com os parâmetros informados."""
         self._json_data = json_data
         self.status_code = status_code
 
     def json(self) -> Any:
-        """Executa json."""
+        """Json."""
         return self._json_data
 
 
@@ -152,7 +152,7 @@ class TestInit:
     def test_init(
         self, settings: Any, configuracao_relatorio: Any, parametrizacao: Any
     ) -> None:
-        """Testa inicialização."""
+        """Verifica init."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         service = ListagemEscolhasDres(
@@ -173,7 +173,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório HTML com sucesso."""
+        """Verifica gerar html success."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         with patch(
@@ -197,7 +197,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório PDF com sucesso."""
+        """Verifica gerar pdf success."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         with patch.object(
@@ -223,7 +223,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório XLS com sucesso."""
+        """Verifica gerar xls success."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         with patch.object(
@@ -249,7 +249,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração de relatório DOCX com sucesso."""
+        """Verifica gerar docx success."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         mock_response = HttpResponse(
@@ -281,7 +281,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
+        """Verifica gerar com cabecalho padrao."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         listagem_escolhas_dres_service.context["cabecalho_padrao"] = (
@@ -304,7 +304,7 @@ class TestGerar:
     def test_gerar_erro_buscar_candidatos(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa que erro ao buscar candidatos é propagado."""
+        """Verifica gerar erro buscar candidatos."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro API"
         )
@@ -320,7 +320,7 @@ class TestGerar:
         listagem_escolhas_dres_service: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que erro ao buscar escolhas é propagado."""
+        """Verifica gerar erro buscar escolhas."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = Exception(  # noqa: E501
             "Erro Escolhas"
@@ -337,7 +337,7 @@ class TestGerar:
         listagem_escolhas_dres_service: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolhas sem candidato_uuid são ignoradas."""
+        """Verifica gerar escolha sem candidato uuid."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [  # noqa: E501
             {"candidato_uuid": None},
@@ -359,7 +359,7 @@ class TestGerar:
         listagem_escolhas_dres_service: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa que escolhas com candidato não encontrado são ignoradas."""
+        """Verifica gerar candidato nao encontrado."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [  # noqa: E501
             {
@@ -382,7 +382,7 @@ class TestGerar:
     def test_gerar_candidatos_lista_direta(
         self, listagem_escolhas_dres_service: Any, mock_escolhas_response: Any
     ) -> None:
-        """Testa quando candidatos vem como lista direta (não dict com."""
+        """Verifica gerar candidatos lista direta."""
         candidatos_lista = [
             {
                 "uuid": "candidato-uuid-1",
@@ -411,7 +411,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato CSV (tratado como XLS)."""
+        """Verifica gerar formato csv."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         with patch.object(
@@ -436,7 +436,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato XLSX."""
+        """Verifica gerar formato xlsx."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         with patch.object(
@@ -461,7 +461,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato DOC (tratado como DOCX)."""
+        """Verifica gerar formato doc."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         mock_response = HttpResponse(
@@ -489,7 +489,7 @@ class TestGerar:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa geração com formato JSON."""
+        """Verifica gerar formato json."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         response, dados = listagem_escolhas_dres_service.gerar(
@@ -503,7 +503,7 @@ class TestGerar:
         listagem_escolhas_dres_service: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa ordenação por cargo."""
+        """Verifica gerar ordenacao por cargo."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-uuid-1",
@@ -554,7 +554,7 @@ class TestGerar:
         listagem_escolhas_dres_service: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa quando vaga_escola está vazio ou None."""
+        """Verifica gerar dados vaga escola vazios."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-uuid-1",
@@ -581,7 +581,7 @@ class TestGerar:
         listagem_escolhas_dres_service: Any,
         mock_candidatos_response: Any,
     ) -> None:
-        """Testa quando tipo_vaga é inválido."""
+        """Verifica gerar tipo vaga invalido."""
         escolhas = [
             {
                 "candidato_uuid": "candidato-uuid-1",
@@ -621,7 +621,7 @@ class TestRenderToXls:
     def test_render_to_xls_success(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa geração de Excel com sucesso."""
+        """Verifica render to xls success."""
         escolhas_list = [
             {
                 "cargo": "Professor",
@@ -661,7 +661,7 @@ class TestRenderToXls:
     def test_render_to_xls_sem_cabecalho(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa geração de Excel sem cabeçalho."""
+        """Verifica render to xls sem cabecalho."""
         escolhas_list = []  # type: ignore[var-annotated]
         context = listagem_escolhas_dres_service.context.copy()
         context["escolhas"] = escolhas_list
@@ -677,7 +677,7 @@ class TestRenderToXls:
     def test_render_to_xls_tipo_vaga_d(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa formatação especial para tipo_vaga 'D'."""
+        """Verifica render to xls tipo vaga d."""
         escolhas_list = [
             {
                 "cargo": "Professor",
@@ -711,7 +711,7 @@ class TestRenderToXls:
     def test_render_to_xls_tipo_vaga_p(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa formatação especial para tipo_vaga 'P'."""
+        """Verifica render to xls tipo vaga p."""
         escolhas_list = [
             {
                 "cargo": "Professor",
@@ -745,7 +745,7 @@ class TestRenderToXls:
     def test_render_to_xls_multiplas_escolhas(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa geração de Excel com múltiplas escolhas."""
+        """Verifica render to xls multiplas escolhas."""
         escolhas_list = [
             {
                 "cargo": "Professor A",
@@ -797,7 +797,7 @@ class TestRenderToXls:
     def test_render_to_xls_openpyxl_nao_disponivel(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa erro quando openpyxl não está disponível."""
+        """Verifica render to xls openpyxl nao disponivel."""
         escolhas_list = []  # type: ignore[var-annotated]
         context = listagem_escolhas_dres_service.context.copy()
         context["escolhas"] = escolhas_list
@@ -813,7 +813,7 @@ class TestRenderToXls:
     def test_render_to_xls_exception(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa tratamento de exceção no render_to_xls."""
+        """Verifica render to xls exception."""
         escolhas_list = []  # type: ignore[var-annotated]
         context = listagem_escolhas_dres_service.context.copy()
         context["escolhas"] = escolhas_list
@@ -840,7 +840,7 @@ class TestRenderToDocx:
     def test_render_to_docx_python_docx_nao_disponivel(
         self, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa erro quando python-docx não está disponível."""
+        """Verifica render to docx python docx nao disponivel."""
         escolhas_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match="python-docx"):
             listagem_escolhas_dres_service.render_to_docx(
@@ -890,7 +890,7 @@ class TestRenderToDocx:
         mock_document: Any,
         listagem_escolhas_dres_service: Any,
     ) -> None:
-        """Testa geração completa de Word com cabeçalho e dados."""
+        """Verifica render to docx completo com cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1011,7 +1011,7 @@ class TestRenderToDocx:
         mock_document: Any,
         listagem_escolhas_dres_service: Any,
     ) -> None:
-        """Testa geração de Word sem cabeçalho."""
+        """Verifica render to docx sem cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1097,7 +1097,7 @@ class TestRenderToDocx:
         mock_document: Any,
         listagem_escolhas_dres_service: Any,
     ) -> None:
-        """Testa formatação especial para tipo_vaga 'D'."""
+        """Verifica render to docx tipo vaga d."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1203,7 +1203,7 @@ class TestRenderToDocx:
         mock_document: Any,
         listagem_escolhas_dres_service: Any,
     ) -> None:
-        """Testa formatação especial para tipo_vaga 'P'."""
+        """Verifica render to docx tipo vaga p."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1309,7 +1309,7 @@ class TestRenderToDocx:
         mock_document: Any,
         listagem_escolhas_dres_service: Any,
     ) -> None:
-        """Testa quando já existe shading element (existing_shd)."""
+        """Verifica render to docx com existing shd."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
         mock_section = MagicMock()
@@ -1387,7 +1387,7 @@ class TestRenderToDocx:
     def test_render_to_docx_exception(
         self, mock_document: Any, listagem_escolhas_dres_service: Any
     ) -> None:
-        """Testa tratamento de exceção no render_to_docx."""
+        """Verifica render to docx exception."""
         mock_document.side_effect = Exception("Erro ao criar documento")
         escolhas_list = []  # type: ignore[var-annotated]
         with pytest.raises(Exception, match="Erro ao criar documento"):
@@ -1405,7 +1405,7 @@ class TestIntegracaoCompleta:
         mock_candidatos_response: Any,
         mock_escolhas_response: Any,
     ) -> None:
-        """Testa fluxo completo de geração HTML."""
+        """Verifica fluxo completo html."""
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
         with patch(

@@ -19,12 +19,12 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def client() -> Any:
-    """Executa client."""
+    """Client."""
     return APIClient()
 
 
 def _payload(tipo: Any = "LISTA_CANDIDATOS_SESSAO") -> Any:
-    """Executa  payload."""
+    """Payload."""
     return {
         "tipo": tipo,
         "usuario": "u1",

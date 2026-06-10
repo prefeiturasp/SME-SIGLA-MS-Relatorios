@@ -24,16 +24,13 @@ class RelatorioBase(ABC):
     def __init__(
         self, *, configuracao: Any, parametrizacao: Any, **kwargs: Any
     ) -> None:
-        """Executa   init  .
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            configuracao: Parâmetro configuracao.
-            parametrizacao: Parâmetro parametrizacao.
+            configuracao: Configuracao utilizado na operação.
+            parametrizacao: Parametrizacao utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         self.configuracao = configuracao
         self.parametrizacao = parametrizacao
@@ -68,15 +65,12 @@ class RelatorioBase(ABC):
         Args:
             self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            request: Objeto request do Django.
-            formato: Formato do relatório ('html', 'pdf' ou 'xls').
+            request: Requisição HTTP recebida.
+            formato: Formato utilizado na operação.
             **kwargs: Argumentos nomeados variáveis.
 
         Returns:
-            Não retorna valor.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Nenhum valor.
         """
         pass
 
@@ -87,15 +81,12 @@ class RelatorioBase(ABC):
 
         Args:
             self: Instância do objeto.
-            template_name: Nome do template (ex:.
-            context: Dicionário com o contexto do template.
-            filename: Nome do arquivo PDF gerado.
+            template_name: Template name utilizado na operação.
+            context: Contexto de serialização ou renderização.
+            filename: Filename utilizado na operação.
 
         Returns:
-            Resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            Valor calculado conforme a regra aplicada.
         """
         try:
             html_string = render_to_string(template_name, context)
@@ -118,16 +109,13 @@ class RelatorioBase(ABC):
 
     @staticmethod
     def processar_cabecalho_html(cabecalho: str) -> str:
-        """Remove tags HTML do cabeçalho, preservando quebras de linha,.
+        """Processa cabecalho html.
 
         Args:
-            cabecalho: String HTML com o cabeçalho.
+            cabecalho: Cabecalho utilizado na operação.
 
         Returns:
             Texto resultante da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         if not cabecalho:
             return ""

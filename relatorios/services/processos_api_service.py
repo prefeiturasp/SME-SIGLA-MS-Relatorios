@@ -13,20 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class ProcessosService:
-    """Define ProcessosService."""
+    """Serviço para operações de processos."""
 
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
     ) -> None:
-        """Executa   init  .
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
             self: Instância do objeto.
-            base_url: Parâmetro base url.
-            timeout_seconds: Parâmetro timeout seconds.
-
-        Raises:
-            Nenhuma exceção específica documentada.
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -38,7 +35,7 @@ class ProcessosService:
     def buscar_cargos_por_processo(
         self, processo_uuid: str
     ) -> requests.Response:
-        """Busca cargos do processo de convocação por processo_uuid.
+        """Busca cargos por processo.
 
         Args:
             self: Instância do objeto.
@@ -46,9 +43,6 @@ class ProcessosService:
 
         Returns:
             Resposta HTTP com o resultado da operação.
-
-        Raises:
-            Nenhuma exceção específica documentada.
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/cargos/"  # noqa: E501
         logger.info(

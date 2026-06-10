@@ -27,13 +27,13 @@ CAMPOS_ESPERADOS = [
 
 @pytest.fixture
 def client() -> Any:
-    """Executa client."""
+    """Client."""
     return APIClient()
 
 
 @pytest.fixture
 def configuracao_lauda_vagas() -> Any:
-    """Executa configuracao lauda vagas."""
+    """Configuracao lauda vagas."""
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_VAGAS")
     config.cabecalho = "<h1>Cabeçalho</h1>"
     config.cabecalho_gabarito = "<h1>Gabarito Lauda</h1>"
@@ -44,7 +44,7 @@ def configuracao_lauda_vagas() -> Any:
 
 @pytest.fixture
 def configuracao_ata_escolha() -> Any:
-    """Executa configuracao ata escolha."""
+    """Configuracao ata escolha."""
     config, _ = ConfiguracaoRelatorio.objects.get_or_create(tipo="ATA_ESCOLHA")
     config.cabecalho_gabarito = "<h1>Gabarito Ata</h1>"
     config.cabecalho_capa_ata = "<h2>Capa da Ata</h2>"
@@ -53,7 +53,7 @@ def configuracao_ata_escolha() -> Any:
 
 
 class TestPersonalizacaoListagem:
-    """Define TestPersonalizacaoListagem."""
+    """Representa TestPersonalizacaoListagem."""
 
     def test_list_retorna_200(
         self, client: Any, configuracao_lauda_vagas: Any
@@ -99,7 +99,7 @@ class TestPersonalizacaoListagem:
 
 
 class TestPersonalizacaoAtualizacao:
-    """Define TestPersonalizacaoAtualizacao."""
+    """Representa TestPersonalizacaoAtualizacao."""
 
     def test_patch_atualiza_cabecalho_gabarito(
         self, client: Any, configuracao_lauda_vagas: Any
@@ -233,7 +233,7 @@ class TestPersonalizacaoAtualizacao:
 
 
 class TestPersonalizacaoFiltragemPorTipo:
-    """Define TestPersonalizacaoFiltragemPorTipo."""
+    """Representa TestPersonalizacaoFiltragemPorTipo."""
 
     def test_filtro_tipo_retorna_configuracao_correta(
         self,

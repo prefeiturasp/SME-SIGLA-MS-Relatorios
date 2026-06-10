@@ -6,10 +6,10 @@ from ..models import Relatorio
 
 
 class RelatorioSerializer(serializers.ModelSerializer):
-    """Define RelatorioSerializer."""
+    """Serializer do modelo Relatorio."""
 
     class Meta:
-        """Define Meta."""
+        """Representa Meta."""
 
         model = Relatorio
         fields = "__all__"
