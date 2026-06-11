@@ -1,4 +1,9 @@
+"""Módulo views/relatorios."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -20,9 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class RelatorioViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para gerenciar relatorios.
-    """
+    """ViewSet para gerenciar relatorios."""
 
     queryset = Relatorio.objects.all()
     serializer_class = RelatorioSerializer
@@ -34,7 +37,17 @@ class RelatorioViewSet(viewsets.ModelViewSet):
     ordering = ["-criado_em"]
     pagination_class = CustomPagination
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Any, *args: Any, **kwargs: Any) -> Any:
+        """Create.
+
+        Args:
+            request: Requisição HTTP recebida.
+            *args: Argumentos posicionais repassados ao comando.
+            **kwargs: Argumentos nomeados repassados ao comando.
+
+        Returns:
+            Resposta HTTP com os dados serializados.
+        """
         logger.info(
             "Criando relatório",
             extra={
@@ -52,22 +65,16 @@ class RelatorioViewSet(viewsets.ModelViewSet):
         )
         serializer = RelatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         tipo_relatorio = serializer.validated_data.get("tipo")
         processo_uuid = serializer.validated_data.get("processo_uuid")
-        # Sanitização de cabecalho realizada no serializer (validate_cabecalho)
         usuario = serializer.validated_data.get("usuario", "")
         serializer.validated_data.get("candidatos_uuids", None)
         agenda_uuid = serializer.validated_data.get("agenda_uuid", None)
-        # Para Ata de Escolha: cargo_codigo não é campo do model, vem do body
         cargo_codigo = request.data.get("cargo_codigo") or None
         if isinstance(cargo_codigo, str):
             cargo_codigo = cargo_codigo.strip() or None
-
         format_param = request.query_params.get("formato", "").lower()
         accept_header = request.META.get("HTTP_ACCEPT", "")
-
-        # Determinar formato: xls, pdf, docx ou html (padrão)
         if (
             format_param == "xls"
             or format_param == "xlsx"
@@ -86,14 +93,11 @@ class RelatorioViewSet(viewsets.ModelViewSet):
             formato = "docx"
         else:
             formato = "html"
-
         logger.info(
             "Tipo de relatório: %s, Formato solicitado: %s",
             tipo_relatorio,
             formato,
         )
-
-        # Usar Factory para obter a instância correta do relatório
         try:
             relatorio_service = RelatorioFactory.obter_relatorio(
                 tipo_relatorio
@@ -118,9 +122,7 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                     exc,
                     exc_info=True,
                 )
-
             return response
-
         except CargoObrigatorioError as exc:
             logger.info(
                 "Ata de Escolha: processo com mais de um cargo, exige seleção"
@@ -129,7 +131,6 @@ class RelatorioViewSet(viewsets.ModelViewSet):
                 {"error": exc.message, "cargos": exc.cargos},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         except ValueError as exc:
             logger.error(
                 "Tipo de relatório inválido: %s - %s", tipo_relatorio, exc
@@ -137,7 +138,6 @@ class RelatorioViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST
             )
-
         except Exception as exc:
             logger.error(
                 "Erro ao gerar relatório do tipo %s: %s",

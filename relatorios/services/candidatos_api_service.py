@@ -1,6 +1,6 @@
-"""
-Serviços para integração com API de candidatos.
-"""
+"""Serviços para integração com API de candidatos."""
+
+from __future__ import annotations
 
 import logging
 
@@ -13,19 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 class CandidatosService:
-    """
-    Service para integração com API de candidatos.
-    """
+    """Service para integração com API de candidatos."""
 
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
-    ):
-        """
-        Inicializa o serviço de candidatos.
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
-            base_url: URL base da API de candidatos
-            timeout_seconds: Timeout em segundos para as requisições
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -40,27 +37,18 @@ class CandidatosService:
         codigo_cargo: list[str] | str | None = None,
         ordering: str = "ranking_escolha",
     ) -> requests.Response:
-        """
-        Busca candidatos habilitados por processo_uuid, ordenados por
-        ranking_escolha.
+        """Busca habilitados.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            codigo_cargo: Código(s) de cargo para filtragem (opcional)
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
+            processo_uuid: UUID do processo de convocação.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Response da API com os candidatos habilitados
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/"
-
-        params = {
-            "processo_uuid": processo_uuid,
-            "ordering": ordering,
-        }
+        params = {"processo_uuid": processo_uuid, "ordering": ordering}
         if codigo_cargo is not None:
             if isinstance(codigo_cargo, list):
                 if len(codigo_cargo) > 1:
@@ -92,16 +80,14 @@ class CandidatosService:
                 timeout=self.timeout_seconds,
             )
             response.raise_for_status()
-
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar candidatos habilitados (processo_uuid=%s, codigo_cargo=%s): %s",  # noqa: E501
+                "Erro ao buscar candidatos habilitados (processo_uuid=%s, codigo_cargo=%s): %s",
                 processo_uuid,
                 params.get("codigo_cargo") or params.get("codigo_cargo__in"),
                 exc,
             )
             raise
-
         logger.info(
             "Candidatos habilitados buscados com sucesso",
             extra={
@@ -113,7 +99,7 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_habilitados_por_processos_e_classificacoes(
         self,
@@ -123,57 +109,33 @@ class CandidatosService:
         codigo_cargo: list[str] | str | None = None,
         ordering: str = "ranking_escolha",
     ) -> requests.Response:
-        """
-        Busca candidatos habilitados em múltiplos processos com classificações
-        específicas.
-        Suporta filtros por classificacao e/ou classificacao_nna de forma
-        flexível.
+        """Busca habilitados por processos e classificacoes.
 
         Args:
-            processo_uuids: Lista de UUIDs dos processos ou string com UUIDs
-            separados por vírgula
-            classificacao: Lista de classificações ou string com classificações
-            separadas por vírgula (opcional)
-            classificacao_nna: Lista de classificações NNA ou string com
-            classificações separadas por vírgula (opcional)
-            codigo_cargo: Lista de códigos de cargo ou string com códigos
-            separados por vírgula (opcional)
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
+            processo_uuids: Processo uuids.
+            classificacao: Classificacao.
+            classificacao_nna: Classificacao nna.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Response da API com os candidatos habilitados
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/"
-
-        # Normaliza processo_uuids para string separada por vírgula
         if isinstance(processo_uuids, list):
             processo_uuid_param = ",".join(processo_uuids)
         else:
             processo_uuid_param = processo_uuids
-
-        params = {
-            "ordering": ordering,
-        }
-
-        # Adiciona processo_uuid - django-filter aceita vírgulas com sufixo __in  # noqa: E501
-        # Para múltiplos valores, usa o formato: processo_uuid__in=uuid1,uuid2
+        params = {"ordering": ordering}
         if isinstance(processo_uuids, list):
             if len(processo_uuids) > 1:
                 params["processo_uuid__in"] = ",".join(processo_uuids)
             else:
                 params["processo_uuid"] = processo_uuids[0]
+        elif "," in processo_uuid_param:
+            params["processo_uuid__in"] = processo_uuid_param
         else:
-            # String: verifica se tem vírgula (múltiplos valores)
-            if "," in processo_uuid_param:
-                params["processo_uuid__in"] = processo_uuid_param
-            else:
-                params["processo_uuid"] = processo_uuid_param
-
-        # Adiciona classificacao se fornecido
-        # django-filter aceita vírgulas: classificacao__in=1,2,3
+            params["processo_uuid"] = processo_uuid_param
         if classificacao is not None:
             if isinstance(classificacao, list):
                 classificacao_param = ",".join(str(c) for c in classificacao)
@@ -187,9 +149,6 @@ class CandidatosService:
                     params["classificacao__in"] = classificacao_param
                 else:
                     params["classificacao"] = classificacao_param
-
-        # Adiciona classificacao_nna se fornecido
-        # django-filter aceita vírgulas: classificacao_nna__in=1,2,3
         if classificacao_nna is not None:
             if isinstance(classificacao_nna, list):
                 classificacao_nna_param = ",".join(
@@ -205,9 +164,6 @@ class CandidatosService:
                     params["classificacao_nna__in"] = classificacao_nna_param
                 else:
                     params["classificacao_nna"] = classificacao_nna_param
-
-        # Adiciona codigo_cargo se fornecido
-        # django-filter aceita vírgulas: codigo_cargo__in=cod1,cod2
         if codigo_cargo is not None:
             if isinstance(codigo_cargo, list):
                 codigo_cargo_param = ",".join(str(c) for c in codigo_cargo)
@@ -241,7 +197,7 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar candidatos habilitados (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s): %s",  # noqa: E501
+                "Erro ao buscar candidatos habilitados (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s): %s",
                 processo_uuid_param,
                 params.get("classificacao"),
                 params.get("classificacao_nna"),
@@ -261,30 +217,22 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_por_uuids(
         self, uuids: list[str], order_by: str = "ranking_escolha"
     ) -> requests.Response:
-        """
-        Busca candidatos habilitados por uma lista de UUIDs usando método POST.
+        """Busca por uuids.
 
         Args:
-            uuids: Lista de UUIDs dos candidatos
-            order_by: Campo para ordenação (padrão: 'ranking_escolha')
+            uuids: Uuids.
+            order_by: Order by.
 
         Returns:
-            Response da API com os candidatos habilitados
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/buscar-por-uuids/"
-
-        params = {
-            "order_by": order_by,
-        }
-
+        params = {"order_by": order_by}
         payload = {"uuids": uuids}
         logger.info(
             "Buscando candidatos por UUIDs",
@@ -297,7 +245,6 @@ class CandidatosService:
                 "headers": self._default_headers,
             },
         )
-
         try:
             response = http_client.post(
                 url,
@@ -309,7 +256,7 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar candidatos por UUIDs (total_uuids=%d, order_by=%s): %s",  # noqa: E501
+                "Erro ao buscar candidatos por UUIDs (total_uuids=%d, order_by=%s): %s",
                 len(uuids),
                 order_by,
                 exc,
@@ -328,57 +275,36 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_candidatos_por_agendas(
         self,
         agendas_response: requests.Response,
         order_by: str = "ranking_escolha",
     ) -> dict:
-        """
-        Itera sobre as agendas retornadas e busca candidatos para cada agenda
-        usando os candidatos_uuids de cada uma.
+        """Busca candidatos por agendas.
 
         Args:
-            agendas_response: Response da API de agendas (deve conter 'results'
-            com lista de agendas)
-            order_by: Campo para ordenação (padrão: 'ranking_escolha')
+            agendas_response: Agendas response.
+            order_by: Order by.
 
         Returns:
-            Dicionário com agendas e seus respectivos candidatos:
-            {
-                'agendas': [
-                    {
-                        'agenda': {...},  # Dados da agenda original
-                        'candidatos': [...]  # Lista de candidatos encontrados
-                    },
-                    ...
-                ]
-            }
-
-        Raises:
-            RequestException: Em caso de erro nas requisições
+            Dicionário com os dados processados.
         """
         try:
             agendas_data = agendas_response.json()
-
-            # Extrair lista de agendas (pode estar em 'results' ou ser uma lista direta)  # noqa: E501
             if isinstance(agendas_data, dict) and "results" in agendas_data:
                 agendas = agendas_data["results"]
             elif isinstance(agendas_data, list):
                 agendas = agendas_data
             else:
                 agendas = []
-
             logger.info(
                 "Processando %d agendas para buscar candidatos", len(agendas)
             )
-
-            resultado = {"agendas": []}
-
+            resultado = {"agendas": []}  # type: ignore[var-annotated]
             for agenda in agendas:
                 candidatos_uuids = agenda.get("candidatos_uuids", [])
-
                 if not candidatos_uuids:
                     logger.warning(
                         "Agenda %s não possui candidatos_uuids",
@@ -388,16 +314,11 @@ class CandidatosService:
                         {"agenda": agenda, "candidatos": []}
                     )
                     continue
-
                 try:
-                    # Buscar candidatos usando os UUIDs da agenda
                     response_candidatos = self.buscar_por_uuids(
                         uuids=candidatos_uuids, order_by=order_by
                     )
-
                     candidatos_data = response_candidatos.json()
-
-                    # Extrair lista de candidatos (pode ser uma lista direta ou um objeto com 'results')  # noqa: E501
                     if (
                         isinstance(candidatos_data, dict)
                         and "results" in candidatos_data
@@ -407,36 +328,29 @@ class CandidatosService:
                         candidatos = candidatos_data
                     else:
                         candidatos = []
-
                     logger.info(
-                        "Encontrados %d candidatos para agenda %s (de %d UUIDs)",  # noqa: E501
+                        "Encontrados %d candidatos para agenda %s (de %d UUIDs)",
                         len(candidatos),
                         agenda.get("uuid", "desconhecido"),
                         len(candidatos_uuids),
                     )
-
                     resultado["agendas"].append(
                         {"agenda": agenda, "candidatos": candidatos}
                     )
-
                 except RequestException as exc:
                     logger.error(
                         "Erro ao buscar candidatos para agenda %s: %s",
                         agenda.get("uuid", "desconhecido"),
                         exc,
                     )
-                    # Adiciona a agenda mesmo com erro, mas sem candidatos
                     resultado["agendas"].append(
                         {"agenda": agenda, "candidatos": [], "erro": str(exc)}
                     )
-
             logger.info(
                 "Processamento concluído: %d agendas processadas",
                 len(resultado["agendas"]),
             )
-
             return resultado
-
         except Exception as exc:
             logger.error(
                 "Erro ao processar agendas e buscar candidatos: %s", exc
@@ -446,31 +360,16 @@ class CandidatosService:
     def buscar_concurso_candidatos_por_processo(
         self, processo_uuid: str
     ) -> requests.Response:
-        """
-        Busca ConcursoCandidato por processo_uuid.
-        Tenta usar o endpoint /api/v1/candidatos/ que pode retornar
-        ConcursoCandidato
-        através do relacionamento 'concursos'.
+        """Busca concurso candidatos por processo.
 
         Args:
-            processo_uuid: UUID do processo de convocação
+            processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Response da API com os dados (pode ser Candidato ou
-            ConcursoCandidato)
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
-        # O endpoint /api/v1/candidatos/ pode retornar Candidato com relacionamento concursos  # noqa: E501
-        # Ou pode ter uma lógica customizada que retorna ConcursoCandidato
-        # Vamos tentar buscar e ver o que retorna
         url = f"{self.base_url}/api/v1/habilitados/"
-
-        params = {
-            "processo_uuid": processo_uuid,
-            "page_size": 10000,
-        }
+        params = {"processo_uuid": processo_uuid, "page_size": 10000}
         logger.info(
             "Buscando ConcursoCandidato",
             extra={
@@ -492,7 +391,6 @@ class CandidatosService:
         except RequestException as exc:
             logger.error("Erro ao buscar ConcursoCandidato: %s", exc)
             raise
-
         logger.info(
             "ConcursoCandidato encontrado",
             extra={
@@ -505,17 +403,19 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_reclassificados_por_concurso(
         self, concurso_uuid: str, processo_uuid: str
     ) -> requests.Response:
-        """
-        Busca candidatos reclassificados (de NNA/PCD -> GERAL) por
-        concurso_uuid.
-        Endpoint esperado do ms-candidatos:
-            GET /api/v1/reclassificados/?concurso_uuid=<uuid>
-        Retorna um dicionário com duas chaves: 'nna' e 'pcd'.
+        """Busca reclassificados por concurso.
+
+        Args:
+            concurso_uuid: UUID do concurso relacionado.
+            processo_uuid: UUID do processo de convocação.
+
+        Returns:
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/reclassificados/"
         params = {
@@ -559,7 +459,7 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_eliminados_por_concurso(
         self,
@@ -568,18 +468,16 @@ class CandidatosService:
         classificacao_max: int,
         classificacao_min: int,
     ) -> requests.Response:
-        """
-        Busca candidatos eliminados por concurso_uuid e classificacao_max e
-        classificacao_min.
-        Endpoint esperado do ms-candidatos:
-            GET
-            /api/v1/eliminados/?concurso_uuid=<uuid>&classificacao_max=<int>&classificacao_min=<int>
-        Retorna um dicionário separado por tipo de classificação:
-        {
-          "geral": [...],
-          "nna": [...],
-          "pcd": [...]
-        }
+        """Busca eliminados por concurso.
+
+        Args:
+            concurso_uuid: UUID do concurso relacionado.
+            processo_uuid: UUID do processo de convocação.
+            classificacao_max: Classificacao max.
+            classificacao_min: Classificacao min.
+
+        Returns:
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/eliminados/"
         params = {
@@ -608,7 +506,7 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s",  # noqa: E501
+                "Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s",
                 concurso_uuid,
                 processo_uuid,
                 classificacao_max,
@@ -628,4 +526,4 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]

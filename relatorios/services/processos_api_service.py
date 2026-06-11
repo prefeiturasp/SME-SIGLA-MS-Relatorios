@@ -1,6 +1,6 @@
-"""
-Serviços para integração com API de processos de convocação.
-"""
+"""Serviços para integração com API de processos de convocação."""
+
+from __future__ import annotations
 
 import logging
 
@@ -13,9 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class ProcessosService:
+    """Serviço para operações de processos."""
+
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
-    ):
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera, em segundos.
+        """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self._default_headers = {
@@ -26,14 +34,13 @@ class ProcessosService:
     def buscar_cargos_por_processo(
         self, processo_uuid: str
     ) -> requests.Response:
-        """
-        Busca cargos do processo de convocação por processo_uuid.
+        """Busca cargos por processo.
+
         Args:
-            processo_uuid: UUID do processo de convocação
+            processo_uuid: UUID do processo de convocação.
+
         Returns:
-            Response da API com os cargos do processo
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/cargos/"  # noqa: E501
         logger.info(
@@ -56,7 +63,6 @@ class ProcessosService:
         except RequestException as exc:
             logger.error("Erro ao buscar cargos do processo: %s", exc)
             raise
-
         logger.info(
             "Cargos do processo encontrados",
             extra={
@@ -69,4 +75,4 @@ class ProcessosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]

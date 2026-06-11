@@ -1,3 +1,8 @@
+"""Módulo tests/services/relatorios/test_low_coverage_modules_extra."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,47 +19,58 @@ pytestmark = pytest.mark.django_db
 
 
 class _Resp:
-    def __init__(self, payload):
+    """Representa Resp."""
+
+    def __init__(self, payload: Any) -> None:
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
 
-    def json(self):
+    def json(self) -> Any:
+        """Json."""
         return self._payload
 
 
-def _req():
+def _req() -> Any:
+    """Req."""
     return RequestFactory().get("/api/v1/relatorios/")
 
 
 @pytest.fixture
-def parametrizacao():
+def parametrizacao() -> Any:
+    """Parametrizacao."""
     return Parametrizacao.objects.get_or_create(cabecalho="CAB PADRAO")[0]
 
 
 @pytest.fixture
-def cfg_nao_escolhas():
+def cfg_nao_escolhas() -> Any:
+    """Cfg nao escolhas."""
     return ConfiguracaoRelatorio.objects.get_or_create(
         tipo="SUMULA_NAO_ESCOLHAS"
     )[0]
 
 
 @pytest.fixture
-def cfg_reconvocacao():
+def cfg_reconvocacao() -> Any:
+    """Cfg reconvocacao."""
     return ConfiguracaoRelatorio.objects.get_or_create(
         tipo="SUMULA_RECONVOCACAO"
     )[0]
 
 
 @pytest.fixture
-def cfg_relacao_vagas():
+def cfg_relacao_vagas() -> Any:
+    """Cfg relacao vagas."""
     return ConfiguracaoRelatorio.objects.get_or_create(tipo="RELACAO_VAGAS")[0]
 
 
 @pytest.fixture
-def cfg_lauda_vagas():
+def cfg_lauda_vagas() -> Any:
+    """Cfg lauda vagas."""
     return ConfiguracaoRelatorio.objects.get_or_create(tipo="LAUDA_VAGAS")[0]
 
 
-def _candidato_payload():
+def _candidato_payload() -> Any:
+    """Candidato payload."""
     return {
         "results": [
             {
@@ -70,15 +86,18 @@ def _candidato_payload():
     }
 
 
-def _cargos_payload():
+def _cargos_payload() -> Any:
+    """Cargos payload."""
     return [{"cargo_codigo": "101", "cargo_nome": "Professor"}]
 
 
-def _escolhas_payload(situacao):
+def _escolhas_payload(situacao: Any) -> Any:
+    """Escolhas payload."""
     return [{"candidato_uuid": "cand-1", "situacao": situacao}]
 
 
-def _vagas_payload():
+def _vagas_payload() -> Any:
+    """Vagas payload."""
     return {
         "vagas": [
             {
@@ -102,8 +121,9 @@ def _vagas_payload():
 
 
 def test_sumula_nao_escolhas_gerar_html_and_json(
-    cfg_nao_escolhas, parametrizacao
-):
+    cfg_nao_escolhas: Any, parametrizacao: Any
+) -> None:
+    """Verifica sumula nao escolhas gerar html and json."""
     svc = SumulaNaoEscolhas(
         configuracao=cfg_nao_escolhas, parametrizacao=parametrizacao
     )
@@ -119,7 +139,6 @@ def test_sumula_nao_escolhas_gerar_html_and_json(
     svc.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
         _escolhas_payload("nao-escolha")
     )
-
     with patch(
         "relatorios.services.relatorios.nao_escolhas.render",
         return_value=HttpResponse("ok"),
@@ -127,15 +146,15 @@ def test_sumula_nao_escolhas_gerar_html_and_json(
         resp, dados = svc.gerar("proc-1", _req(), formato="html")
         assert resp.status_code == 200
         assert dados and dados[0]["codigo"] == "101"
-
     with patch.object(svc, "render_to_pdf", return_value=HttpResponse("pdf")):
         resp_pdf, _ = svc.gerar("proc-1", _req(), formato="pdf")
         assert resp_pdf.status_code == 200
 
 
 def test_sumula_nao_escolhas_gerar_docx_and_xls(
-    cfg_nao_escolhas, parametrizacao
-):
+    cfg_nao_escolhas: Any, parametrizacao: Any
+) -> None:
+    """Verifica sumula nao escolhas gerar docx and xls."""
     svc = SumulaNaoEscolhas(
         configuracao=cfg_nao_escolhas, parametrizacao=parametrizacao
     )
@@ -151,7 +170,6 @@ def test_sumula_nao_escolhas_gerar_docx_and_xls(
     svc.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
         _escolhas_payload("nao-escolha")
     )
-
     with patch.object(
         svc, "render_to_docx", return_value=HttpResponse("docx")
     ):
@@ -162,7 +180,10 @@ def test_sumula_nao_escolhas_gerar_docx_and_xls(
         assert r_xls.status_code == 200
 
 
-def test_sumula_reconvocacao_gerar_paths(cfg_reconvocacao, parametrizacao):
+def test_sumula_reconvocacao_gerar_paths(
+    cfg_reconvocacao: Any, parametrizacao: Any
+) -> None:
+    """Verifica sumula reconvocacao gerar paths."""
     svc = SumulaReconvocacao(
         configuracao=cfg_reconvocacao, parametrizacao=parametrizacao
     )
@@ -178,7 +199,6 @@ def test_sumula_reconvocacao_gerar_paths(cfg_reconvocacao, parametrizacao):
     svc.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
         _escolhas_payload("reconvocacao")
     )
-
     with patch(
         "relatorios.services.relatorios.reconvocacao.render",
         return_value=HttpResponse("ok"),
@@ -186,7 +206,6 @@ def test_sumula_reconvocacao_gerar_paths(cfg_reconvocacao, parametrizacao):
         resp, dados = svc.gerar("proc-2", _req(), formato="html")
         assert resp.status_code == 200
         assert dados and dados[0]["descricao"]
-
     with patch.object(svc, "render_to_pdf", return_value=HttpResponse("pdf")):
         assert svc.gerar("proc-2", _req(), formato="pdf")[0].status_code == 200
     with patch.object(
@@ -200,8 +219,9 @@ def test_sumula_reconvocacao_gerar_paths(cfg_reconvocacao, parametrizacao):
 
 
 def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(
-    cfg_relacao_vagas, cfg_lauda_vagas, parametrizacao
-):
+    cfg_relacao_vagas: Any, cfg_lauda_vagas: Any, parametrizacao: Any
+) -> None:
+    """Verifica relacao vagas and lauda vagas grouping and routes."""
     relacao = RelacaoVagas(
         configuracao=cfg_relacao_vagas, parametrizacao=parametrizacao
     )
@@ -216,7 +236,6 @@ def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(
     lauda.escolhas_service.buscar_vagas_escolas.return_value = _Resp(
         _vagas_payload()
     )
-
     with patch(
         "relatorios.services.relatorios.relacao_vagas.render",
         return_value=HttpResponse("ok"),
@@ -224,7 +243,6 @@ def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(
         resp_r, dados_r = relacao.gerar("proc-3", _req(), formato="html")
         assert resp_r.status_code == 200
         assert dados_r and dados_r[0]["codigo"] == "101"
-
     with patch.object(
         relacao, "render_to_xls", return_value=HttpResponse("xls")
     ):
@@ -246,7 +264,6 @@ def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(
             relacao.gerar("proc-3", _req(), formato="pdf")[0].status_code
             == 200
         )
-
     with patch(
         "relatorios.services.relatorios.lauda_vagas.render",
         return_value=HttpResponse("ok"),
@@ -254,7 +271,6 @@ def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(
         resp_l, dados_l = lauda.gerar("proc-4", _req(), formato="html")
         assert resp_l.status_code == 200
         assert dados_l and dados_l[0]["dres"]
-
     with patch.object(
         lauda, "render_to_xls", return_value=HttpResponse("xls")
     ):
@@ -276,12 +292,13 @@ def test_relacao_vagas_and_lauda_vagas_grouping_and_routes(
 
 
 def test_modules_raise_when_upstream_fails(
-    cfg_nao_escolhas,
-    cfg_reconvocacao,
-    cfg_relacao_vagas,
-    cfg_lauda_vagas,
-    parametrizacao,
-):
+    cfg_nao_escolhas: Any,
+    cfg_reconvocacao: Any,
+    cfg_relacao_vagas: Any,
+    cfg_lauda_vagas: Any,
+    parametrizacao: Any,
+) -> None:
+    """Verifica modules raise when upstream fails."""
     nao = SumulaNaoEscolhas(
         configuracao=cfg_nao_escolhas, parametrizacao=parametrizacao
     )
@@ -293,7 +310,6 @@ def test_modules_raise_when_upstream_fails(
     )
     with pytest.raises(RuntimeError):
         nao.gerar("proc", _req(), formato="html")
-
     reco = SumulaReconvocacao(
         configuracao=cfg_reconvocacao, parametrizacao=parametrizacao
     )
@@ -307,13 +323,11 @@ def test_modules_raise_when_upstream_fails(
         {"results": []}
     )
     reco.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
-    # erro de cargos é tolerado (warning), mas não deve explodir
     with patch(
         "relatorios.services.relatorios.reconvocacao.render",
         return_value=HttpResponse("ok"),
     ):
         reco.gerar("proc", _req(), formato="html")
-
     relacao = RelacaoVagas(
         configuracao=cfg_relacao_vagas, parametrizacao=parametrizacao
     )
@@ -323,7 +337,6 @@ def test_modules_raise_when_upstream_fails(
     )
     with pytest.raises(RuntimeError):
         relacao.gerar("proc", _req(), formato="html")
-
     lauda = LaudaVagas(
         configuracao=cfg_lauda_vagas, parametrizacao=parametrizacao
     )

@@ -1,4 +1,9 @@
+"""Módulo views/parametrizacao."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny
@@ -16,21 +21,32 @@ class ParametrizacaoViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    """
-    ViewSet para gerenciar parametrização de relatórios.
-    Sempre trabalha com o registro mais recente.
-    """
+    """ViewSet para gerenciar parametrização de relatórios."""
 
     queryset = Parametrizacao.objects.all().order_by("-criado_em")
     serializer_class = ParametrizacaoSerializer
     permission_classes = [AllowAny]
     pagination_class = None
 
-    def get_object(self):
-        """Sempre retorna o registro mais recente, ignorando o pk."""
+    def get_object(self) -> Any:
+        """Retorna object.
+
+        Returns:
+            Resposta HTTP com os dados solicitados.
+        """
         return self.queryset.first()
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Any, *args: Any, **kwargs: Any) -> Any:
+        """Create.
+
+        Args:
+            request: Requisição HTTP recebida.
+            *args: Argumentos posicionais repassados ao comando.
+            **kwargs: Argumentos nomeados repassados ao comando.
+
+        Returns:
+            Resposta HTTP com os dados serializados.
+        """
         return Response(
             {"detail": 'Method "POST" not allowed.'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED,

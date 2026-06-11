@@ -1,3 +1,9 @@
+"""Módulo models/configuracao_relatorio."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from auditlog.registry import auditlog
 from django.db import models
 
@@ -6,10 +12,7 @@ from .constants import TIPOS_RELATORIOS
 
 
 class ConfiguracaoRelatorio(BaseModel):
-    """
-    Modelo para representar configurações específicas de cada tipo de
-    relatório.
-    """
+    """Modelo para representar configurações específicas de cada tipo de."""
 
     tipo = models.CharField(
         max_length=200,
@@ -29,18 +32,20 @@ class ConfiguracaoRelatorio(BaseModel):
     texto_final = models.TextField(
         verbose_name="Texto Final", default="", blank=True
     )
-
     cabecalho_capa_ata = models.TextField(
         verbose_name="Cabeçalho Capa da Ata", default="", blank=True
     )
 
     class Meta:
+        """Representa Meta."""
+
         verbose_name = "Configuração de Relatório"
         verbose_name_plural = "Configurações de Relatórios"
         ordering = ["tipo"]
         db_table = "relatorios_configuracao"
 
-    def __str__(self):
+    def __str__(self) -> Any:
+        """Retorna representação textual do registro."""
         return f"Configuração - {self.get_tipo_display()}"
 
 

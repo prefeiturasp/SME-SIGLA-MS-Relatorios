@@ -1,3 +1,8 @@
+"""Módulo tests/services/relatorios/test_lista_candidatos_sessao_more_extra."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -13,19 +18,25 @@ pytestmark = pytest.mark.django_db
 
 
 class _Resp:
-    def __init__(self, payload, content=b"img"):
+    """Representa Resp."""
+
+    def __init__(self, payload: Any, content: Any = b"img") -> None:
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
         self.content = content
 
-    def json(self):
+    def json(self) -> Any:
+        """Json."""
         return self._payload
 
-    def raise_for_status(self):
+    def raise_for_status(self) -> Any:
+        """Raise for status."""
         return None
 
 
 @pytest.fixture
-def svc(settings):
+def svc(settings: Any) -> Any:
+    """Svc."""
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.AGENDAS_API_URL = "http://agendas"
     cfg = ConfiguracaoRelatorio.objects.get_or_create(
@@ -35,7 +46,10 @@ def svc(settings):
     return ListaCandidatosSessao(configuracao=cfg, parametrizacao=par)
 
 
-def test_fetch_candidatos_variants_and_build_context(svc, monkeypatch):
+def test_fetch_candidatos_variants_and_build_context(
+    svc: Any, monkeypatch: Any
+) -> None:
+    """Verifica fetch candidatos variants and build context."""
     monkeypatch.setattr(
         svc.candidatos_service,
         "buscar_por_uuids",
@@ -55,7 +69,6 @@ def test_fetch_candidatos_variants_and_build_context(svc, monkeypatch):
     )
     assert svc._fetch_candidatos(["u1"]) == []
     assert svc._fetch_candidatos([]) == []
-
     ctx = svc._build_context(
         [
             {
@@ -70,7 +83,8 @@ def test_fetch_candidatos_variants_and_build_context(svc, monkeypatch):
     assert ctx["candidatos"][0]["nome"] == "A"
 
 
-def test_render_xls_and_docx_with_logo_and_sections(svc):
+def test_render_xls_and_docx_with_logo_and_sections(svc: Any) -> None:
+    """Verifica render xls and docx with logo and sections."""
     svc.context["cabecalho"] = "CAB"
     context = {
         "usar_logotipo": True,
@@ -96,10 +110,7 @@ def test_render_xls_and_docx_with_logo_and_sections(svc):
                     }
                 ],
             },
-            {
-                "agenda": {"sessao": "S2"},
-                "candidatos": [],
-            },
+            {"agenda": {"sessao": "S2"}, "candidatos": []},
         ],
     }
     with patch(
@@ -114,7 +125,8 @@ def test_render_xls_and_docx_with_logo_and_sections(svc):
     assert "lista-extra.docx" in docx["Content-Disposition"]
 
 
-def test_gerar_docx_xls_and_exception_path(svc, monkeypatch):
+def test_gerar_docx_xls_and_exception_path(svc: Any, monkeypatch: Any) -> None:
+    """Verifica gerar docx xls and exception path."""
     req = RequestFactory().get("/x")
     monkeypatch.setattr(
         svc.agendas_service,
@@ -146,7 +158,6 @@ def test_gerar_docx_xls_and_exception_path(svc, monkeypatch):
             }
         ),
     )
-
     with patch.object(svc, "_render_xls", return_value=HttpResponse("ok-xls")):
         r_xls, _ = svc.gerar("p1", req, formato="xls")
         assert r_xls.status_code == 200
@@ -155,7 +166,6 @@ def test_gerar_docx_xls_and_exception_path(svc, monkeypatch):
     ):
         r_docx, _ = svc.gerar("p1", req, formato="docx")
         assert r_docx.status_code == 200
-
     monkeypatch.setattr(
         svc.agendas_service,
         "buscar_agendas",

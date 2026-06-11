@@ -1,3 +1,5 @@
+"""Módulo services/relatorios/__init__."""
+
 from .ata_escolha import AtaEscolha
 from .lauda_convocacao import LaudaConvocacao
 from .lauda_vagas import LaudaVagas

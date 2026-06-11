@@ -1,3 +1,9 @@
+"""Módulo models/relatorio."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from auditlog.registry import auditlog
 from django.db import models
 
@@ -6,9 +12,7 @@ from .constants import TIPOS_RELATORIOS
 
 
 class Relatorio(BaseModel):
-    """
-    Modelo para representar relatórios gerados no sistema.
-    """
+    """Modelo para representar relatórios gerados no sistema."""
 
     tipo = models.CharField(
         max_length=200,
@@ -43,12 +47,15 @@ class Relatorio(BaseModel):
     )
 
     class Meta:
+        """Representa Meta."""
+
         verbose_name = "Relatório"
         verbose_name_plural = "Relatórios"
         ordering = ["-criado_em"]
         db_table = "relatorios"
 
-    def __str__(self):
+    def __str__(self) -> Any:
+        """Retorna representação textual do registro."""
         return f"{self.tipo} - {self.criado_em}"
 
 

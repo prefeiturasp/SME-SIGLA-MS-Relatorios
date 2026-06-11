@@ -1,14 +1,17 @@
-"""
-Implementação concreta do relatório de Ata de Escolha.
+"""Implementação concreta do relatório de Ata de Escolha.
+
 Baseado no padrão da Ata de Convocação, mas com informações da escola
 escolhida.
 """
+
+from __future__ import annotations
 
 import logging
 import os
 import re
 import tempfile
 from io import BytesIO
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -27,12 +30,11 @@ try:
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
-    from docx.shared import Cm, Inches, Pt, RGBColor  # noqa: F401
+    from docx.shared import Cm, Inches, Pt, RGBColor
 
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
-
 try:
     from openpyxl import Workbook
     from openpyxl.drawing.image import Image as XLImage
@@ -41,19 +43,20 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 
 class AtaEscolha(RelatorioBase):
-    """
-    Classe concreta responsável por gerar o relatório de Ata de Escolha.
-    """
+    """Classe concreta responsável por gerar o relatório de Ata de Escolha."""
 
     TEMPLATE_NAME = "relatorios/ata_escolha.html"
 
-    def __init__(self, **kwargs):
-        """Inicializa o service com as dependências necessárias."""
+    def __init__(self, **kwargs: Any) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            **kwargs: Argumentos nomeados repassados ao comando.
+        """
         super().__init__(**kwargs)
         self.ata_service = AtaEscolhaService(
             candidatos_base_url=settings.CANDIDATOS_API_URL,
@@ -62,12 +65,13 @@ class AtaEscolha(RelatorioBase):
             escolhas_base_url=settings.ESCOLHAS_API_URL,
         )
 
-    def _preencher_template(self, cabecalho_capa, dados):
-        # Regex para encontrar qualquer coisa entre [[ ]]
-        pattern = re.compile(r"\[\[(.*?)\]\]")
+    def _preencher_template(self, cabecalho_capa: Any, dados: Any) -> Any:
+        """Preenche template com os dados informados."""
+        pattern = re.compile("\\[\\[(.*?)\\]\\]")
 
-        def replace_func(match):
-            chave = match.group(1)  # Pega o que está dentro de [[ ]]
+        def replace_func(match: Any) -> Any:
+            """Substitui placeholders pelos valores correspondentes."""
+            chave = match.group(1)
             return str(dados.get(chave, f"[[ERRO: {chave} NÃO ENCONTRADO]]"))
 
         return pattern.sub(replace_func, cabecalho_capa)
@@ -75,31 +79,24 @@ class AtaEscolha(RelatorioBase):
     def gerar(
         self,
         processo_uuid: str,
-        request,
+        request: Any,
         formato: str = "html",
         cabecalho: str = "",
         cargo_codigo: str = None,
-        **kwargs,
-    ):
-        """
-        Gera o relatório de Ata de Escolha para um único cargo.
+        **kwargs: Any,
+    ) -> Any:  # type: ignore[assignment]
+        """Gera o relatório de Ata de Escolha para um único cargo.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            request: Objeto request do Django
-            formato: Formato do relatório ('html', 'pdf' ou 'xls')
-            cabecalho: Texto do cabeçalho do relatório (opcional)
-            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais
-            de um cargo)
+            processo_uuid: UUID do processo de convocação.
+            request: Requisição HTTP recebida.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            cargo_codigo: Código numérico do cargo.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
-            - dados: estrutura de dados do relatório para salvar no banco
-
-        Raises:
-            CargoObrigatorioError: Quando o processo tem mais de um cargo e
-            cargo_codigo não foi informado
+            Tupla com resposta HTTP e dados do relatório processado.
         """
         try:
             dados_ata = self.ata_service.processar_ata_escolha(
@@ -125,11 +122,9 @@ class AtaEscolha(RelatorioBase):
             if self.context.get("logo_url")
             else ""
         )
-
         cabecalho_processado = (
             cabecalho.strip() if cabecalho and cabecalho.strip() else None
         )
-
         context_data = self.context.copy()
         context_data.update(
             {
@@ -152,15 +147,13 @@ class AtaEscolha(RelatorioBase):
         )
         if cabecalho_processado:
             context_data["cabecalho"] = cabecalho_processado
-
         if formato == "docx" or formato == "doc":
             filename = f"ata_escolha_{processo_uuid}.docx"
             logger.info("Gerando Word: %s", filename)
             response = self.render_to_docx(
                 dados_ata.get("cargos", []), self.context, filename=filename
             )
-
-            return response, dados_ata
+            return (response, dados_ata)
         elif formato == "pdf":
             context_data["mostrar_capa_ata"] = True
             filename = f"ata_escolha_{processo_uuid}.pdf"
@@ -169,61 +162,57 @@ class AtaEscolha(RelatorioBase):
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME, context_data, filename=filename
             )
-            return response, dados_ata
+            return (response, dados_ata)
         elif formato in ("xls", "xlsx"):
             filename = f"ata_escolha_{processo_uuid}.xlsx"
             logger.info("Gerando XLS: %s", filename)
             response = self._render_xls(context_data, filename=filename)
-            return response, dados_ata
+            return (response, dados_ata)
         elif formato == "html":
             context_data["mostrar_capa_ata"] = True
             logger.info("Gerando HTML")
             response = render(request, self.TEMPLATE_NAME, context_data)
-            return response, dados_ata
+            return (response, dados_ata)
         else:
-            # Retornar JSON por padrão
             response = JsonResponse(
                 dados_ata,
                 safe=False,
                 json_dumps_params={"indent": 2, "ensure_ascii": False},
             )
-
-        return response, dados_ata
+        return (response, dados_ata)
 
     def render_to_docx(
-        self, cargos_list, context, filename="ata_escolha.docx"
-    ):
-        """
-        Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
+        self,
+        cargos_list: Any,
+        context: Any,
+        filename: Any = "ata_escolha.docx",
+    ) -> Any:
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            cargos_list: Lista de cargos com suas sessões e candidatos
-            cabecalho: Texto do cabeçalho do relatório
-            filename: Nome do arquivo Word gerado
+            cargos_list: Lista de cargos agrupados para o relatório.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
                 "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"  # noqa: E501
             )
-
         try:
             doc = Document()
-
-            # Configurar margens da página
             section = doc.sections[0]
             section.orientation = WD_ORIENT.LANDSCAPE
             section.page_width = Cm(50)
             section.page_height = Cm(35)
-
-            # Cores (em RGB)
-            RGBColor(52, 73, 94)  # #34495e
-            RGBColor(102, 126, 234)  # #667eea
-            RGBColor(236, 240, 241)  # #ECF0F1
-
-            # Cabeçalho
+            RGBColor(52, 73, 94)
+            RGBColor(102, 126, 234)
+            RGBColor(236, 240, 241)
             if context.get("cabecalho_padrao"):
                 cabecalho_texto = self.processar_cabecalho_html(
                     context.get("cabecalho_padrao")
@@ -234,8 +223,6 @@ class AtaEscolha(RelatorioBase):
                 run.font.size = Pt(12)
                 run.font.bold = True
                 doc.add_paragraph()
-
-            # Cabeçalho
             if context.get("cabecalho"):
                 cabecalho_texto = self.processar_cabecalho_html(
                     context.get("cabecalho")
@@ -246,35 +233,26 @@ class AtaEscolha(RelatorioBase):
                 run.font.size = Pt(12)
                 run.font.bold = True
                 doc.add_paragraph()
-
-            # Título
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run("ATA DE ESCOLHA")
             run.font.size = Pt(14)
             run.font.bold = True
             doc.add_paragraph()
-
-            # Lei de referência
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = p.add_run("")
             run.font.size = Pt(10)
             run.font.italic = True
             doc.add_paragraph()
-
-            # Processar cargos e sessões
             for cargo in cargos_list:
                 cargo_nome = cargo.get("cargo_nome", "")
-
                 for sessao in cargo.get("sessoes", []):
-                    # Cabeçalho da sessão
                     numero_sessao = sessao.get("numero_sessao", "")
                     horario_formatado = sessao.get("horario_formatado", "")
                     sessao_texto = f"{numero_sessao}ª SESSÃO"
                     if horario_formatado:
                         sessao_texto += f" - Horário: {horario_formatado}"
-
                     p = doc.add_paragraph()
                     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     run = p.add_run(sessao_texto)
@@ -289,8 +267,6 @@ class AtaEscolha(RelatorioBase):
                     shading_elm.set(qn("w:fill"), "34495e")
                     shading_elm.set(qn("w:val"), "clear")
                     p_pr.append(shading_elm)
-
-                    # Cabeçalho do cargo
                     p = doc.add_paragraph()
                     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     run = p.add_run(f"CARGO: {cargo_nome}")
@@ -305,8 +281,6 @@ class AtaEscolha(RelatorioBase):
                     shading_elm.set(qn("w:fill"), "667eea")
                     shading_elm.set(qn("w:val"), "clear")
                     p_pr.append(shading_elm)
-
-                    # Criar tabela
                     headers = [
                         "Class. Geral",
                         "Class. Def.",
@@ -324,8 +298,6 @@ class AtaEscolha(RelatorioBase):
                     ]
                     table = doc.add_table(rows=1, cols=len(headers))
                     table.style = "Light Grid Accent 1"
-
-                    # Cabeçalho da tabela
                     header_cells = table.rows[0].cells
                     for i, header in enumerate(headers):
                         cell = header_cells[i]
@@ -345,19 +317,13 @@ class AtaEscolha(RelatorioBase):
                         shading_elm.set(qn("w:fill"), "ECF0F1")
                         shading_elm.set(qn("w:val"), "clear")
                         tc_pr.append(shading_elm)
-
-                    # Dados dos candidatos
                     for candidato in sessao.get("candidatos", []):
                         row_cells = table.add_row().cells
-
-                        # Extrair dados do candidato
                         candidato_obj = (
                             candidato.get("candidato", {})
                             if isinstance(candidato.get("candidato"), dict)
                             else {}
                         )
-
-                        # Classificações
                         row_cells[0].text = (
                             "-"
                             if str(candidato.get("classificacao", "-"))
@@ -376,9 +342,6 @@ class AtaEscolha(RelatorioBase):
                             == "None"
                             else str(candidato.get("classificacao_nna", "-"))
                         )
-
-                        # RF, RG, CPF
-                        # RF = registro_funcional (do model candidato)
                         rf = (
                             candidato.get("rf", "")
                             or (
@@ -409,8 +372,6 @@ class AtaEscolha(RelatorioBase):
                         row_cells[3].text = str(rf)
                         row_cells[4].text = str(rg)
                         row_cells[5].text = str(cpf)
-
-                        # Nome
                         status_especial = candidato.get("status_especial", "")
                         if status_especial:
                             row_cells[6].text = status_especial
@@ -421,8 +382,6 @@ class AtaEscolha(RelatorioBase):
                                 else "N/A"
                             )
                             row_cells[6].text = nome
-
-                        # Dados da escola escolhida
                         row_cells[7].text = str(
                             candidato.get("codigo_eol", "-") or "-"
                         )
@@ -442,28 +401,20 @@ class AtaEscolha(RelatorioBase):
                             candidato.get("assinatura", "Não Escolha")
                             or "Não Escolha"
                         )
-
-                        # Alinhamento
                         for i, cell in enumerate(row_cells):
-                            if (
-                                i < 6 or (i >= 7 and i < 12)
-                            ):  # Colunas centralizadas (exceto Nome e Unidade Escolhida)  # noqa: E501
+                            if i < 6 or (i >= 7 and i < 12):
                                 cell.paragraphs[
                                     0
                                 ].alignment = WD_ALIGN_PARAGRAPH.CENTER
-                            else:  # Nome e Unidade Escolhida
+                            else:
                                 cell.paragraphs[
                                     0
                                 ].alignment = WD_ALIGN_PARAGRAPH.LEFT
                             cell.paragraphs[0].runs[0].font.size = Pt(7)
-
                     doc.add_paragraph()
-
-            # Salvar em buffer
             buffer = BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -472,24 +423,32 @@ class AtaEscolha(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Word: %s", exc, exc_info=True)
             raise
 
-    def _render_xls(self, context_data, filename="ata_escolha.xlsx"):
-        """
-        Gera um arquivo Excel (XLSX) com a estrutura da Ata de Escolha.
+    def _render_xls(
+        self, context_data: Any, filename: Any = "ata_escolha.xlsx"
+    ) -> Any:
+        """Gera um arquivo Excel (XLSX) com a estrutura da Ata de Escolha.
+
+        Args:
+            context_data: Context data.
+            filename: Nome do arquivo gerado para download.
+
+        Returns:
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not OPENPYXL_AVAILABLE:
             raise ImportError(
                 "openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0"  # noqa: E501
             )
-
         wb = Workbook()
         ws = wb.active
         ws.title = "Ata de Escolha"
-
         header_fill = PatternFill(
             start_color="ECF0F1", end_color="ECF0F1", fill_type="solid"
         )
@@ -504,11 +463,8 @@ class AtaEscolha(RelatorioBase):
             top=Side(style="thin"),
             bottom=Side(style="thin"),
         )
-
-        # Título
         row_idx = 1
         temp_image_paths = []
-        # Inserir logotipo no topo, se disponível
         logo_url = (
             (context_data or self.context).get("logo_url")
             if context_data or self.context
@@ -532,24 +488,17 @@ class AtaEscolha(RelatorioBase):
                     image_path = logo_url
                 if image_path:
                     img = XLImage(image_path)
-                    # opcional: ajustar tamanho
                     try:
-                        # Reduz o tamanho da imagem
                         img.width = 220
                         img.height = 90
                     except Exception:
                         pass
-                    # Aproxima o alinhamento central ancorando em uma coluna intermediária  # noqa: E501
-                    # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado  # noqa: E501
                     ws.add_image(img, "G1")
-                    # Avança algumas linhas para não sobrepor conteúdo
                     row_idx = max(row_idx, 8)
             except Exception as exc:
                 logger.warning(
                     "Não foi possível inserir o logotipo no XLS: %s", exc
                 )
-
-        # Cabeçalho institucional
         cabecalho_padrao = self.context.get("cabecalho_padrao", "")
         if cabecalho_padrao:
             ws.merge_cells(f"A{row_idx}:M{row_idx}")
@@ -567,8 +516,6 @@ class AtaEscolha(RelatorioBase):
             cell.font = title_font
             cell.alignment = center
             row_idx += 2
-
-        # Percorre cargos e sessões
         headers = [
             "Class. Geral",
             "Class. Def.",
@@ -584,19 +531,15 @@ class AtaEscolha(RelatorioBase):
             "Tipo Vaga",
             "Assinatura",
         ]
-
         for cargo in context_data.get("cargos", []) or []:
             cargo_nome = cargo.get("cargo_nome", "")
             sessoes = cargo.get("sessoes", []) or []
-
             for sessao in sessoes:
                 numero_sessao = sessao.get("numero_sessao", "")
                 horario_formatado = sessao.get("horario_formatado", "")
                 sessao_texto = f"{numero_sessao}ª SESSÃO"
                 if horario_formatado:
                     sessao_texto += f" - Horário: {horario_formatado}"
-
-                # Linha de sessão
                 ws.merge_cells(
                     start_row=row_idx,
                     start_column=1,
@@ -612,8 +555,6 @@ class AtaEscolha(RelatorioBase):
                 )
                 c.font = Font(bold=True, size=11, color="FFFFFF")
                 row_idx += 1
-
-                # Linha de cargo
                 ws.merge_cells(
                     start_row=row_idx,
                     start_column=1,
@@ -629,8 +570,6 @@ class AtaEscolha(RelatorioBase):
                 )
                 c.font = Font(bold=True, size=11, color="FFFFFF")
                 row_idx += 1
-
-                # Cabeçalho da tabela
                 for col, h in enumerate(headers, start=1):
                     cell = ws.cell(row=row_idx, column=col)
                     cell.value = h
@@ -642,8 +581,6 @@ class AtaEscolha(RelatorioBase):
                         else left
                     )
                     cell.border = border
-
-                # Dados
                 for r, cand in enumerate(
                     sessao.get("candidatos", []), start=row_idx + 1
                 ):
@@ -652,7 +589,6 @@ class AtaEscolha(RelatorioBase):
                         if isinstance(cand.get("candidato"), dict)
                         else {}
                     )
-
                     values = [
                         "-"
                         if str(cand.get("classificacao", "-")) == "None"
@@ -664,9 +600,6 @@ class AtaEscolha(RelatorioBase):
                         if str(cand.get("classificacao_nna", "-")) == "None"
                         else str(cand.get("classificacao_nna", "-")),
                     ]
-
-                    # RF, RG, CPF
-                    # RF = registro_funcional (do model candidato)
                     rf = (
                         cand.get("rf", "")
                         or (
@@ -695,8 +628,6 @@ class AtaEscolha(RelatorioBase):
                         or "-"
                     )
                     values.extend([str(rf), str(rg), str(cpf)])
-
-                    # Nome
                     status_especial = cand.get("status_especial", "")
                     if status_especial:
                         nome = status_especial
@@ -707,8 +638,6 @@ class AtaEscolha(RelatorioBase):
                             else "N/A"
                         )
                     values.append(nome)
-
-                    # Dados da escola escolhida
                     values.extend(
                         [
                             str(cand.get("codigo_eol", "-") or "-"),
@@ -722,7 +651,6 @@ class AtaEscolha(RelatorioBase):
                             ),
                         ]
                     )
-
                     for col, val in enumerate(values, start=1):
                         cell = ws.cell(row=r, column=col)
                         cell.value = val
@@ -733,31 +661,24 @@ class AtaEscolha(RelatorioBase):
                             else left
                         )
                         cell.border = border
-
-                # Atualiza row_idx após os dados da sessão + linha em branco
                 row_idx = row_idx + 1 + len(sessao.get("candidatos", [])) + 1
-
-        # Largura das colunas
         column_widths = {
-            "A": 12,  # Class. Geral
-            "B": 12,  # Class. Def.
-            "C": 12,  # Class. NNA
-            "D": 12,  # RF
-            "E": 15,  # RG
-            "F": 15,  # CPF
-            "G": 35,  # Nome
-            "H": 12,  # Código EOL
-            "I": 10,  # DRE
-            "J": 15,  # Tipo Unidade
-            "K": 40,  # Unidade Escolhida
-            "L": 10,  # Tipo Vaga
-            "M": 12,  # Assinatura
+            "A": 12,
+            "B": 12,
+            "C": 12,
+            "D": 12,
+            "E": 15,
+            "F": 15,
+            "G": 35,
+            "H": 12,
+            "I": 10,
+            "J": 15,
+            "K": 40,
+            "L": 10,
+            "M": 12,
         }
-
         for col_letter, width in column_widths.items():
             ws.column_dimensions[col_letter].width = width
-
-        # Adiciona texto final ao término do relatório, se houver
         texto_final = self.context.get("texto_final")
         if texto_final:
             row_idx += 1
@@ -768,24 +689,20 @@ class AtaEscolha(RelatorioBase):
             cell.alignment = Alignment(
                 horizontal="left", vertical="top", wrap_text=True
             )
-
-        # Salvar em buffer
         from io import BytesIO
 
         buf = BytesIO()
         wb.save(buf)
         buf.seek(0)
-
         for p in temp_image_paths:
             try:
                 if os.path.exists(p):
                     os.unlink(p)
             except Exception:
                 pass
-
         resp = HttpResponse(
             buf.read(),
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-        resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+        )  # type: ignore[assignment]
+        resp["Content-Disposition"] = f'attachment; filename="{filename}"'  # type: ignore[index]
         return resp

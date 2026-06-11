@@ -1,6 +1,6 @@
-"""
-Classe abstrata base para todos os tipos de relatórios.
-"""
+"""Classe abstrata base para todos os tipos de relatórios."""
+
+from __future__ import annotations
 
 import logging
 import re
@@ -19,24 +19,26 @@ logger = logging.getLogger(__name__)
 
 
 class RelatorioBase(ABC):
-    """
-    Classe abstrata que define a interface comum para todos os tipos de
-    relatórios.
-    """
+    """Classe abstrata que define a interface comum para todos os tipos de."""
 
-    def __init__(self, *, configuracao, parametrizacao, **kwargs):
+    def __init__(
+        self, *, configuracao: Any, parametrizacao: Any, **kwargs: Any
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            configuracao: Configuracao.
+            parametrizacao: Parametrizacao.
+            **kwargs: Argumentos nomeados repassados ao comando.
+        """
         self.configuracao = configuracao
         self.parametrizacao = parametrizacao
-        # Contexto padrão derivado de Configuração e Parametrização
-        # Pode ser atualizado/estendido pelas subclasses conforme necessário
-        # Tratar logo quando não há arquivo associado
         logo_url = ""
         if parametrizacao and parametrizacao.logo:
             try:
                 logo_url = ajustar_logo_caminho(parametrizacao.logo.url) or ""
             except (ValueError, AttributeError):
                 logo_url = ""
-
         self.context: dict[str, Any] = {
             "cabecalho": configuracao.cabecalho
             or configuracao.cabecalho_gabarito,
@@ -51,57 +53,46 @@ class RelatorioBase(ABC):
 
     @abstractmethod
     def gerar(
-        self, processo_uuid: str, request, formato: str = "html", **kwargs
-    ):
-        """
-        Método abstrato que deve ser implementado por todas as classes filhas.
+        self,
+        processo_uuid: str,
+        request: Any,
+        formato: str = "html",
+        **kwargs: Any,
+    ) -> None:
+        """Método abstrato que deve ser implementado por todas as classes.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            request: Objeto request do Django
-            formato: Formato do relatório ('html', 'pdf' ou 'xls')
+            processo_uuid: UUID do processo de convocação.
+            request: Requisição HTTP recebida.
+            formato: Formato.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF ou XLS)
-            - dados: estrutura de dados do relatório para salvar no banco
-
-        Raises:
-            NotImplementedError: Se o método não for implementado pela classe
-            filha
+            Nenhum valor.
         """
         pass
 
-    def render_to_pdf(self, template_name, context, filename="relatorio.pdf"):
-        """
-        Renderiza um template HTML para PDF usando WeasyPrint.
-        Método disponível para todas as classes filhas.
+    def render_to_pdf(
+        self, template_name: Any, context: Any, filename: Any = "relatorio.pdf"
+    ) -> Any:
+        """Renderiza um template HTML para PDF usando WeasyPrint.
 
         Args:
-            template_name: Nome do template (ex:
-            'relatorios/vagas_escolas.html')
-            context: Dicionário com o contexto do template
-            filename: Nome do arquivo PDF gerado
+            template_name: Template name.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o PDF gerado
+            Conteúdo textual gerado.
         """
         try:
-            # Renderizar template HTML
             html_string = render_to_string(template_name, context)
-
-            # Gerar PDF a partir do HTML
-            # Usar base_url vazio para evitar problemas com recursos externos
             html = HTML(string=html_string, base_url="")
             pdf_buffer = BytesIO()
-
-            # Opções para melhor compatibilidade e controle de páginas
             html.write_pdf(
                 pdf_buffer, optimize_images=True, presentational_hints=True
             )
             pdf_buffer.seek(0)
-
-            # Criar resposta HTTP com o PDF
             response = HttpResponse(
                 pdf_buffer.read(), content_type="application/pdf"
             )
@@ -109,46 +100,35 @@ class RelatorioBase(ABC):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar PDF: %s", exc, exc_info=True)
             raise
 
     @staticmethod
     def processar_cabecalho_html(cabecalho: str) -> str:
-        """
-        Remove tags HTML do cabeçalho, preservando quebras de linha,
-        espaçamento, tabs e margens.
+        """Processa cabecalho html.
 
         Args:
-            cabecalho: String HTML com o cabeçalho
+            cabecalho: Cabecalho.
 
         Returns:
-            String com o texto processado, sem tags HTML mas com formatação
-            preservada
+            Conteúdo textual gerado.
         """
         if not cabecalho:
             return ""
-
-        # Primeiro, converte tags de quebra de linha para caracteres de nova linha  # noqa: E501
         cabecalho_texto = cabecalho
-        # Converte <br>, <br/>, <br /> para quebra de linha
         cabecalho_texto = (
             cabecalho_texto.replace("<br>", "\n")
             .replace("<br/>", "\n")
             .replace("<br />", "\n")
         )
-        # Converte <p> e </p> para quebras de linha (parágrafos)
         cabecalho_texto = (
             cabecalho_texto.replace("</p>", "\n")
             .replace("<p>", "")
             .replace("<p ", "<p>")
         )
-        # Remove outras tags HTML, mas preserva o texto e quebras de linha
         cabecalho_texto = strip_tags(cabecalho_texto)
-        # Preserva espaços múltiplos e tabs (substitui &nbsp; por espaço se ainda houver)  # noqa: E501
         cabecalho_texto = cabecalho_texto.replace("&nbsp;", " ")
-        # Remove entidades HTML restantes
         cabecalho_texto = (
             cabecalho_texto.replace("&amp;", "&")
             .replace("&lt;", "<")
@@ -157,9 +137,6 @@ class RelatorioBase(ABC):
         cabecalho_texto = cabecalho_texto.replace("&quot;", '"').replace(
             "&#39;", "'"
         )
-        # Limpa múltiplas quebras de linha consecutivas (mantém no máximo 2)
-        cabecalho_texto = re.sub(r"\n{3,}", "\n\n", cabecalho_texto)
-        # Remove espaços em branco no início e fim, mas preserva quebras de linha  # noqa: E501
+        cabecalho_texto = re.sub("\\n{3,}", "\n\n", cabecalho_texto)
         cabecalho_texto = cabecalho_texto.strip()
-
         return cabecalho_texto

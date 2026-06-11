@@ -1,13 +1,16 @@
+"""Módulo models/parametrizacao."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from django.db import models
 
 from .base import BaseModel
 
 
 class Parametrizacao(BaseModel):
-    """
-    Model para gerenciar parâmetros de relatórios.
-    Armazena o cabeçalho padrão (HTML) e a logo para os relatórios.
-    """
+    """Model para gerenciar parâmetros de relatórios."""
 
     cabecalho = models.TextField(
         default="",
@@ -24,9 +27,12 @@ class Parametrizacao(BaseModel):
     )
 
     class Meta:
+        """Representa Meta."""
+
         verbose_name = "Parametrização"
         verbose_name_plural = "Parametrizações"
         ordering = ["-criado_em"]
 
-    def __str__(self):
+    def __str__(self) -> Any:
+        """Retorna representação textual do registro."""
         return f"Parametrização - Criado em {self.criado_em}"

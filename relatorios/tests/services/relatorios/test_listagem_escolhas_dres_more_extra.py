@@ -1,3 +1,8 @@
+"""Módulo tests/services/relatorios/test_listagem_escolhas_dres_more_extra."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -12,14 +17,18 @@ pytestmark = pytest.mark.django_db
 
 
 class _ImgResp:
+    """Representa ImgResp."""
+
     content = b"fake-png"
 
-    def raise_for_status(self):
+    def raise_for_status(self) -> Any:
+        """Raise for status."""
         return None
 
 
 @pytest.fixture
-def svc():
+def svc() -> Any:
+    """Svc."""
     cfg = ConfiguracaoRelatorio.objects.get_or_create(
         tipo="LISTAGEM_ESCOLHAS_DRES"
     )[0]
@@ -27,7 +36,8 @@ def svc():
     return ListagemEscolhasDres(configuracao=cfg, parametrizacao=par)
 
 
-def test_render_to_xls_with_logo_headers_and_footer(svc):
+def test_render_to_xls_with_logo_headers_and_footer(svc: Any) -> None:
+    """Verifica render to xls with logo headers and footer."""
     svc.context["cabecalho"] = "CAB"
     escolhas = [
         {
@@ -71,7 +81,6 @@ def test_render_to_xls_with_logo_headers_and_footer(svc):
         "logo_url": "http://example/logo.png",
         "texto_final": "Rodape final",
     }
-
     with patch(
         "relatorios.services.relatorios.listagem_escolhas_dres.requests.get",
         return_value=_ImgResp(),
@@ -79,7 +88,6 @@ def test_render_to_xls_with_logo_headers_and_footer(svc):
         response = svc.render_to_xls(
             context=context, filename="listagem-extra.xlsx"
         )
-
     assert isinstance(response, HttpResponse)
     assert response.status_code == 200
     assert "listagem-extra.xlsx" in response["Content-Disposition"]

@@ -1,3 +1,8 @@
+"""Módulo tests/services/base/test_relatorio_base."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -10,10 +15,10 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def configuracao_relatorio():
+def configuracao_relatorio() -> Any:
     """Fixture que cria uma ConfiguracaoRelatorio para testes."""
     return ConfiguracaoRelatorio.objects.get_or_create(
-        tipo="LAUDA_VAGAS",  # Tipo genérico para testes
+        tipo="LAUDA_VAGAS",
         defaults={
             "usar_logotipo": False,
             "cabecalho": "",
@@ -24,7 +29,7 @@ def configuracao_relatorio():
 
 
 @pytest.fixture
-def parametrizacao():
+def parametrizacao() -> Any:
     """Fixture que cria uma Parametrizacao para testes."""
     return Parametrizacao.objects.create(
         cabecalho="Cabeçalho Padrão Teste", logo=None
@@ -32,66 +37,65 @@ def parametrizacao():
 
 
 class DummyRelatorio(RelatorioBase):
+    """Representa DummyRelatorio."""
+
     def gerar(
         self,
         processo_uuid: str,
-        request,
+        request: Any,
         formato: str = "html",
         cabecalho: str = "",
-    ):
-        return HttpResponse("ok"), {}
+    ) -> Any:  # type: ignore[override]
+        """Gerar."""
+        return (HttpResponse("ok"), {})
 
 
 def test_context_cabecalho_usa_gabarito_quando_cabecalho_vazio(
-    configuracao_relatorio, parametrizacao
-):
+    configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica context cabecalho usa gabarito quando cabecalho vazio."""
     configuracao_relatorio.cabecalho = ""
     configuracao_relatorio.cabecalho_gabarito = "Gabarito Teste"
     configuracao_relatorio.save()
-
     rel = DummyRelatorio(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
-
     assert rel.context["cabecalho"] == "Gabarito Teste"
 
 
 def test_context_cabecalho_prefere_cabecalho_sobre_gabarito(
-    configuracao_relatorio, parametrizacao
-):
+    configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica context cabecalho prefere cabecalho sobre gabarito."""
     configuracao_relatorio.cabecalho = "Cabeçalho Customizado"
     configuracao_relatorio.cabecalho_gabarito = "Gabarito Teste"
     configuracao_relatorio.save()
-
     rel = DummyRelatorio(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
-
     assert rel.context["cabecalho"] == "Cabeçalho Customizado"
 
 
 def test_context_cabecalho_vazio_quando_ambos_vazios(
-    configuracao_relatorio, parametrizacao
-):
+    configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica context cabecalho vazio quando ambos vazios."""
     configuracao_relatorio.cabecalho = ""
     configuracao_relatorio.cabecalho_gabarito = ""
     configuracao_relatorio.save()
-
     rel = DummyRelatorio(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
-
     assert rel.context["cabecalho"] == "" or rel.context["cabecalho"] is None
 
 
 def test_render_to_pdf_success(
-    monkeypatch, configuracao_relatorio, parametrizacao
-):
+    monkeypatch: Any, configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica render to pdf success."""
     rel = DummyRelatorio(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
-
-    # Mock render_to_string to return simple HTML
     with (
         patch(
             "relatorios.services.base.relatorio_base.render_to_string",
@@ -101,22 +105,19 @@ def test_render_to_pdf_success(
     ):
         m_html = Mock()
         m_html_cls.return_value = m_html
-
         response = rel.render_to_pdf("tpl.html", {"x": 1}, filename="file.pdf")
-
     m_render.assert_called_once_with("tpl.html", {"x": 1})
     m_html_cls.assert_called_once()
-    # write_pdf foi chamado
     assert m_html.write_pdf.call_count == 1
-    # Resposta é um PDF
     assert isinstance(response, HttpResponse)
     assert response["Content-Type"] == "application/pdf"
     assert 'attachment; filename="file.pdf"' in response["Content-Disposition"]
 
 
 def test_render_to_pdf_error_propagates(
-    monkeypatch, configuracao_relatorio, parametrizacao
-):
+    monkeypatch: Any, configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica render to pdf error propagates."""
     rel = DummyRelatorio(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
@@ -146,13 +147,10 @@ def test_render_to_pdf_error_propagates(
         ("Texto sem tags", "Texto sem tags"),
         ("<p>Um</p><p>Dois</p><p>Três</p>", "Um\nDois\nTrês"),
         ("A&nbsp;&lt;B&gt; &quot;C&quot; &#39;D&#39;", "A <B> \"C\" 'D'"),
-        (
-            "Linha1<br/><br />\n<br> Linha2",
-            "Linha1\n\n Linha2",
-        ),  # quebra dupla vira, no final, compactada
+        ("Linha1<br/><br />\n<br> Linha2", "Linha1\n\n Linha2"),
     ],
 )
-def test_processar_cabecalho_html(html, expected):
+def test_processar_cabecalho_html(html: Any, expected: Any) -> None:
+    """Verifica processar cabecalho html."""
     result = RelatorioBase.processar_cabecalho_html(html)
-    # Normaliza quebras múltiplas para comparar com expected
     assert result == expected.strip()

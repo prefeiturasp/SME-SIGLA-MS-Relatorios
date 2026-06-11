@@ -1,8 +1,9 @@
-"""
-Testes unitários para as views do app relatorios usando pytest.
-"""
+"""Testes unitários para as views do app relatorios usando pytest."""
+
+from __future__ import annotations
 
 import uuid
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -17,12 +18,14 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def client():
+def client() -> Any:
+    """Client."""
     return APIClient()
 
 
 @pytest.fixture
-def relatorio():
+def relatorio() -> Any:
+    """Relatorio."""
     return Relatorio.objects.create(
         tipo="agenda",
         usuario="tester",
@@ -33,13 +36,14 @@ def relatorio():
 
 
 @pytest.fixture
-def relatorios():
+def relatorios() -> Any:
+    """Relatorios."""
     itens = []
     for i in range(2):
         itens.append(
             Relatorio.objects.create(
                 tipo="agenda",
-                usuario=f"user{i+1}",
+                usuario=f"user{i + 1}",
                 dados={"idx": i + 1},
                 processo_uuid=uuid.uuid4(),
                 cabecalho=None,
@@ -48,17 +52,13 @@ def relatorios():
     return itens
 
 
-# Testes para RelatorioViewSet
-
-
-def test_relatorio_list(client, relatorio):
+def test_relatorio_list(client: Any, relatorio: Any) -> None:
+    """Verifica relatorio list."""
     url = reverse("relatorio-list")
     response = client.get(url)
-
     assert response.status_code == status.HTTP_200_OK
     assert "results" in response.data
     assert len(response.data["results"]) == 1
-    # Novos campos presentes no retorno
     assert response.data["results"][0]["tipo"] == relatorio.tipo
     assert response.data["results"][0]["usuario"] == relatorio.usuario
     assert "dados" in response.data["results"][0]
@@ -67,15 +67,14 @@ def test_relatorio_list(client, relatorio):
 
 
 @patch("relatorios.views.relatorios.RelatorioFactory.obter_relatorio")
-def test_relatorio_create(mock_obter_relatorio, client):
-    """Cria relatório com chamadas externas mockadas."""
+def test_relatorio_create(mock_obter_relatorio: Any, client: Any) -> None:
+    """Verifica relatorio create."""
     mock_service = Mock()
     mock_service.gerar.return_value = (
         HttpResponse("<html></html>", content_type="text/html"),
         {"k": "v"},
     )
     mock_obter_relatorio.return_value = mock_service
-
     url = reverse("relatorio-list")
     data = {
         "tipo": "LAUDA_VAGAS",
@@ -84,28 +83,25 @@ def test_relatorio_create(mock_obter_relatorio, client):
         "processo_uuid": str(uuid.uuid4()),
         "cabecalho": "<p>header</p>",
     }
-
     response = client.post(url, data, format="json")
     assert response.status_code == status.HTTP_200_OK
     assert Relatorio.objects.count() == 1
-
     item = Relatorio.objects.first()
-    assert item.tipo == "LAUDA_VAGAS"
-    assert item.usuario == "criador"
-    assert str(item.processo_uuid) == data["processo_uuid"]
-    assert item.cabecalho == "<p>header</p>"
-    assert item.dados == {"k": "v"}
+    assert item.tipo == "LAUDA_VAGAS"  # type: ignore[union-attr]
+    assert item.usuario == "criador"  # type: ignore[union-attr]
+    assert str(item.processo_uuid) == data["processo_uuid"]  # type: ignore[union-attr]
+    assert item.cabecalho == "<p>header</p>"  # type: ignore[union-attr]
+    assert item.dados == {"k": "v"}  # type: ignore[union-attr]
     mock_obter_relatorio.assert_called_once_with("LAUDA_VAGAS")
     mock_service.gerar.assert_called_once()
 
 
-def test_relatorio_get(client, relatorio):
+def test_relatorio_get(client: Any, relatorio: Any) -> None:
+    """Verifica relatorio get."""
     url = reverse("relatorio-detail", args=[relatorio.pk])
     response = client.get(url)
-
     assert response.status_code == status.HTTP_200_OK
     assert response.data["uuid"] == str(relatorio.uuid)
-    # Novos campos presentes no retrieve
     assert response.data["tipo"] == relatorio.tipo
     assert response.data["usuario"] == relatorio.usuario
     assert "dados" in response.data
@@ -113,9 +109,9 @@ def test_relatorio_get(client, relatorio):
     assert "cabecalho" in response.data
 
 
-def test_relatorio_delete(client, relatorio):
+def test_relatorio_delete(client: Any, relatorio: Any) -> None:
+    """Verifica relatorio delete."""
     url = reverse("relatorio-detail", args=[relatorio.pk])
     response = client.delete(url)
-
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert Relatorio.objects.count() == 0

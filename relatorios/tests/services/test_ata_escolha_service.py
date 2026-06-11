@@ -1,3 +1,8 @@
+"""Módulo tests/services/test_ata_escolha_service."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -10,15 +15,19 @@ from relatorios.services.ata_escolha_service import (
 
 
 class _Resp:
-    def __init__(self, payload):
+    """Representa Resp."""
+
+    def __init__(self, payload: Any) -> None:
+        """Inicializa a instância com os parâmetros informados."""
         self._payload = payload
 
-    def json(self):
+    def json(self) -> Any:
+        """Json."""
         return self._payload
 
 
 @pytest.fixture
-def service():
+def service() -> Any:
     """Fixture para criar serviço com mocks."""
     svc = AtaEscolhaService(
         candidatos_base_url="http://candidatos",
@@ -35,7 +44,7 @@ def service():
 
 
 @pytest.fixture
-def agenda_basica():
+def agenda_basica() -> Any:
     """Helper para criar agenda básica."""
     return {
         "cargo_nome": "Professor",
@@ -47,7 +56,7 @@ def agenda_basica():
 
 
 @pytest.fixture
-def candidato_basico():
+def candidato_basico() -> Any:
     """Helper para criar candidato básico."""
     return {
         "uuid": "a",
@@ -69,13 +78,15 @@ def candidato_basico():
         ([5, 1, 3], [2, 4]),
     ],
 )
-def test_identificar_lacunas(service, classificacoes, esperado):
-    """Testa identificação de lacunas em classificações."""
+def test_identificar_lacunas(
+    service: Any, classificacoes: Any, esperado: Any
+) -> None:
+    """Verifica identificar lacunas."""
     assert service._identificar_lacunas(classificacoes) == esperado
 
 
-def test_separar_por_tipo(service):
-    """Testa separação de candidatos por tipo (PCD, GERAL, NNA)."""
+def test_separar_por_tipo(service: Any) -> None:
+    """Verifica separar por tipo."""
     candidatos = [
         {"categoria_efetiva": "GERAL", "uuid": "g1"},
         {"categoria_efetiva": "NNA", "uuid": "n1"},
@@ -114,13 +125,15 @@ def test_separar_por_tipo(service):
         ),
     ],
 )
-def test_extrair_classificacoes(service, candidatos, campo, esperado):
-    """Testa extração de classificações de candidatos."""
+def test_extrair_classificacoes(
+    service: Any, candidatos: Any, campo: Any, esperado: Any
+) -> None:
+    """Verifica extrair classificacoes."""
     assert service._extrair_classificacoes(candidatos, campo) == esperado
 
 
-def test_buscar_candidatos_faltantes_sucesso(service):
-    """Testa busca de candidatos faltantes com sucesso."""
+def test_buscar_candidatos_faltantes_sucesso(service: Any) -> None:
+    """Verifica buscar candidatos faltantes sucesso."""
     service.candidatos_service.buscar_habilitados_por_processos_e_classificacoes.side_effect = [  # noqa: E501
         _Resp(
             [
@@ -139,7 +152,6 @@ def test_buscar_candidatos_faltantes_sucesso(service):
         ),
         _Resp([{"uuid": "p2", "classificacao_pcd": 99}]),
     ]
-
     res = service._buscar_candidatos_faltantes(
         outros_processos_uuid=["proc-1", "proc-2"],
         lacunas_geral=[4, 5],
@@ -148,7 +160,6 @@ def test_buscar_candidatos_faltantes_sucesso(service):
         codigo_cargo="123",
         ordering="ranking_escolha",
     )
-
     assert [c["uuid"] for c in res["geral"]] == ["gX", "gY"]
     assert [c["uuid"] for c in res["nna"]] == ["nX"]
     assert [c["uuid"] for c in res["pcd"]] == ["p1"]
@@ -161,15 +172,12 @@ def test_buscar_candidatos_faltantes_sucesso(service):
 
 
 @pytest.mark.parametrize(
-    "outros_processos,esperado",
-    [
-        ([], {"geral": [], "nna": [], "pcd": []}),
-    ],
+    "outros_processos,esperado", [([], {"geral": [], "nna": [], "pcd": []})]
 )
 def test_buscar_candidatos_faltantes_sem_outros_processos(
-    service, outros_processos, esperado
-):
-    """Testa busca de candidatos faltantes quando não há outros processos."""
+    service: Any, outros_processos: Any, esperado: Any
+) -> None:
+    """Verifica buscar candidatos faltantes sem outros processos."""
     res = service._buscar_candidatos_faltantes(
         outros_processos_uuid=outros_processos,
         lacunas_geral=[1, 2],
@@ -179,8 +187,8 @@ def test_buscar_candidatos_faltantes_sem_outros_processos(
     assert res == esperado
 
 
-def test_buscar_candidatos_faltantes_request_exception(service):
-    """Testa tratamento de exceção ao buscar candidatos faltantes."""
+def test_buscar_candidatos_faltantes_request_exception(service: Any) -> None:
+    """Verifica buscar candidatos faltantes request exception."""
     service.candidatos_service.buscar_habilitados_por_processos_e_classificacoes.side_effect = RequestException(  # noqa: E501
         "err"
     )
@@ -217,9 +225,13 @@ def test_buscar_candidatos_faltantes_request_exception(service):
     ],
 )
 def test_buscar_escolhas_por_candidatos(
-    service, candidato_uuids, escolhas_data, esperado_len, esperado_uuids
-):
-    """Testa busca de escolhas por lista de candidatos."""
+    service: Any,
+    candidato_uuids: Any,
+    escolhas_data: Any,
+    esperado_len: Any,
+    esperado_uuids: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos."""
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
         escolhas_data
     )
@@ -232,8 +244,10 @@ def test_buscar_escolhas_por_candidatos(
         service.escolhas_service.buscar_escolhas_por_candidatos.assert_not_called()
 
 
-def test_buscar_escolhas_por_candidatos_request_exception(service):
-    """Testa tratamento de exceção ao buscar escolhas."""
+def test_buscar_escolhas_por_candidatos_request_exception(
+    service: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos request exception."""
     service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = (
         RequestException("err")
     )
@@ -301,15 +315,21 @@ def test_buscar_escolhas_por_candidatos_request_exception(service):
         ),
     ],
 )
-def test_extrair_dados_escola_escolhida(service, escolha, esperado):
-    """Testa extração de dados da escola escolhida."""
+def test_extrair_dados_escola_escolhida(
+    service: Any, escolha: Any, esperado: Any
+) -> None:
+    """Verifica extrair dados escola escolhida."""
     dados = service._extrair_dados_escola_escolhida(escolha)
     assert dados == esperado
 
 
 def _setup_processamento_basico(
-    service, agendas, candidatos, escolhas=None, processo_data=None
-):
+    service: Any,
+    agendas: Any,
+    candidatos: Any,
+    escolhas: Any = None,
+    processo_data: Any = None,
+) -> None:
     """Helper para configurar mocks básicos de processamento."""
     service.agendas_service.buscar_agendas.return_value = _Resp(agendas)
     service.candidatos_service.buscar_por_uuids.return_value = _Resp(
@@ -339,9 +359,9 @@ def _setup_processamento_basico(
 
 
 def test_processar_ata_escolha_fluxo_basico(
-    service, agenda_basica, candidato_basico
-):
-    """Testa processamento básico de ata de escolha."""
+    service: Any, agenda_basica: Any, candidato_basico: Any
+) -> None:
+    """Verifica processar ata escolha fluxo basico."""
     agendas = [
         {**agenda_basica, "candidatos_uuids": ["a"]},
         {
@@ -406,18 +426,15 @@ def test_processar_ata_escolha_fluxo_basico(
     _setup_processamento_basico(
         service, agendas, candidatos, escolhas, processo_data=processo_data
     )
-
     resultado = service.processar_ata_escolha(
         processo_uuid="proc-abc", ordering="ranking_escolha"
     )
-
     assert resultado["processo_uuid"] == "proc-abc"
     assert resultado["total_cargos"] == 1
     cargo = resultado["cargos"][0]
     assert cargo["cargo_nome"] == "Professor"
     assert cargo["cargo_codigo"] == "123"
     assert cargo["numero_sessoes"] == 2
-
     candidatos_todos = [
         c for sessao in cargo["sessoes"] for c in sessao["candidatos"]
     ]
@@ -430,8 +447,10 @@ def test_processar_ata_escolha_fluxo_basico(
     )
 
 
-def test_processar_ata_escolha_com_lacunas_e_faltantes(service, agenda_basica):
-    """Testa processamento com lacunas e candidatos faltantes."""
+def test_processar_ata_escolha_com_lacunas_e_faltantes(
+    service: Any, agenda_basica: Any
+) -> None:
+    """Verifica processar ata escolha com lacunas e faltantes."""
     candidatos = [
         {
             "uuid": "a",
@@ -464,14 +483,12 @@ def test_processar_ata_escolha_com_lacunas_e_faltantes(service, agenda_basica):
             }
         ]
     )
-
     resultado = service.processar_ata_escolha(processo_uuid="proc-123")
     candidatos_todos = [
         c
         for sessao in resultado["cargos"][0]["sessoes"]
         for c in sessao["candidatos"]
     ]
-
     assert "gx" in [c["uuid"] for c in candidatos_todos]
     assert "status_especial" in next(
         c for c in candidatos_todos if c["uuid"] == "gx"
@@ -479,12 +496,9 @@ def test_processar_ata_escolha_com_lacunas_e_faltantes(service, agenda_basica):
 
 
 def test_processar_ata_escolha_multiplos_cargos_sem_cargo_levanta_erro(
-    service,
-):
-    """
-    Com múltiplos cargos e sem cargo_codigo deve levantar
-    CargoObrigatorioError.
-    """
+    service: Any,
+) -> None:
+    """Verifica processar ata escolha multiplos cargos sem cargo levanta erro."""
     agendas = [
         {
             "cargo_nome": "Professor",
@@ -510,10 +524,10 @@ def test_processar_ata_escolha_multiplos_cargos_sem_cargo_levanta_erro(
     assert {c["cargo_codigo"] for c in exc_info.value.cargos} == {"123", "456"}
 
 
-def test_processar_ata_escolha_um_cargo_quando_informa_cargo_codigo(service):
-    """
-    Com múltiplos cargos, ao informar cargo_codigo retorna apenas esse cargo.
-    """
+def test_processar_ata_escolha_um_cargo_quando_informa_cargo_codigo(
+    service: Any,
+) -> None:
+    """Verifica processar ata escolha um cargo quando informa cargo codigo."""
     agendas = [
         {
             "cargo_nome": "Professor",
@@ -556,18 +570,18 @@ def test_processar_ata_escolha_um_cargo_quando_informa_cargo_codigo(service):
         _Resp({})
     )
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
-
     resultado = service.processar_ata_escolha(
         processo_uuid="proc-multi", cargo_codigo="123"
     )
-
     assert resultado["total_cargos"] == 1
     assert resultado["cargos"][0]["cargo_codigo"] == "123"
     assert resultado["cargos"][0]["cargo_nome"] == "Professor"
 
 
-def test_processar_ata_escolha_ordenacao_pcd_primeiro(service, agenda_basica):
-    """Testa que PCD aparece primeiro na ordenação."""
+def test_processar_ata_escolha_ordenacao_pcd_primeiro(
+    service: Any, agenda_basica: Any
+) -> None:
+    """Verifica processar ata escolha ordenacao pcd primeiro."""
     candidatos = [
         {
             "uuid": "geral1",
@@ -592,19 +606,19 @@ def test_processar_ata_escolha_ordenacao_pcd_primeiro(service, agenda_basica):
         },
     ]
     _setup_processamento_basico(service, [agenda_basica], candidatos)
-
     resultado = service.processar_ata_escolha(processo_uuid="proc-pcd")
     candidatos_todos = [
         c
         for sessao in resultado["cargos"][0]["sessoes"]
         for c in sessao["candidatos"]
     ]
-
     assert candidatos_todos[0]["categoria_efetiva"] == "PCD"
 
 
-def test_processar_ata_escolha_ordem_escolha(service, agenda_basica):
-    """Testa atribuição de ordem_escolha."""
+def test_processar_ata_escolha_ordem_escolha(
+    service: Any, agenda_basica: Any
+) -> None:
+    """Verifica processar ata escolha ordem escolha."""
     candidatos = [
         {
             "uuid": "a",
@@ -622,23 +636,21 @@ def test_processar_ata_escolha_ordem_escolha(service, agenda_basica):
         },
     ]
     _setup_processamento_basico(service, [agenda_basica], candidatos)
-
     resultado = service.processar_ata_escolha(processo_uuid="proc-ordem")
     candidatos_todos = [
         c
         for sessao in resultado["cargos"][0]["sessoes"]
         for c in sessao["candidatos"]
     ]
-
     for i, candidato in enumerate(candidatos_todos, start=1):
         if not candidato.get("status_especial"):
             assert candidato.get("ordem_escolha") == i
 
 
 def test_processar_ata_escolha_ordem_escolha_com_status_especial(
-    service, agenda_basica
-):
-    """Testa que candidatos com status_especial não recebem ordem_escolha."""
+    service: Any, agenda_basica: Any
+) -> None:
+    """Verifica processar ata escolha ordem escolha com status especial."""
     candidatos = [
         {
             "uuid": "a",
@@ -669,30 +681,26 @@ def test_processar_ata_escolha_ordem_escolha_com_status_especial(
         processo_data={"concurso_uuid": "cu1"},
     )
     service.candidatos_service.buscar_habilitados_por_processos_e_classificacoes.side_effect = (  # noqa: E501
-        lambda **kwargs: (
-            _Resp(
-                [
-                    {
-                        "uuid": "faltante_nna",
-                        "categoria_efetiva": "NNA",
-                        "classificacao_nna": 2,
-                        "classificacao": 99,
-                        "candidato": {"nome": "Faltante NNA"},
-                    }
-                ]
-            )
-            if "classificacao_nna" in kwargs
-            else _Resp([])
+        lambda **kwargs: _Resp(
+            [
+                {
+                    "uuid": "faltante_nna",
+                    "categoria_efetiva": "NNA",
+                    "classificacao_nna": 2,
+                    "classificacao": 99,
+                    "candidato": {"nome": "Faltante NNA"},
+                }
+            ]
         )
+        if "classificacao_nna" in kwargs
+        else _Resp([])
     )
-
     resultado = service.processar_ata_escolha(processo_uuid="proc-status")
     candidatos_todos = [
         c
         for sessao in resultado["cargos"][0]["sessoes"]
         for c in sessao["candidatos"]
     ]
-
     candidato_faltante = next(
         c for c in candidatos_todos if c["uuid"] == "faltante_nna"
     )
@@ -709,8 +717,8 @@ def test_processar_ata_escolha_ordem_escolha_com_status_especial(
     )
 
 
-def test_processar_ata_escolha_request_exception(service):
-    """Testa tratamento de exceção RequestException."""
+def test_processar_ata_escolha_request_exception(service: Any) -> None:
+    """Verifica processar ata escolha request exception."""
     service.agendas_service.buscar_agendas.side_effect = RequestException(
         "falhou"
     )
@@ -768,9 +776,9 @@ def test_processar_ata_escolha_request_exception(service):
     ],
 )
 def test_processar_ata_escolha_formatos_resposta(
-    service, agendas_payload, candidatos_payload
-):
-    """Testa processamento com diferentes formatos de resposta (dict/list)."""
+    service: Any, agendas_payload: Any, candidatos_payload: Any
+) -> None:
+    """Verifica processar ata escolha formatos resposta."""
     candidatos_list = (
         candidatos_payload.get("results", [])
         if isinstance(candidatos_payload, dict)
@@ -792,24 +800,19 @@ def test_processar_ata_escolha_formatos_resposta(
         {"concurso_uuid": None}
     )
     service.escolhas_service.buscar_escolhas_por_candidatos.return_value = []
-
     resultado = service.processar_ata_escolha(processo_uuid="proc-dict")
-
     assert resultado["total_cargos"] == 1
     assert len(resultado["cargos"]) == 1
 
 
 @pytest.mark.parametrize(
     "hora_inicio,hora_fim,esperado",
-    [
-        ("09:00", "10:00", "09:00 às 10:00"),
-        ("", "", "Não informado"),
-    ],
+    [("09:00", "10:00", "09:00 às 10:00"), ("", "", "Não informado")],
 )
 def test_processar_ata_escolha_horario_formatado(
-    service, hora_inicio, hora_fim, esperado
-):
-    """Testa formatação de horário nas sessões."""
+    service: Any, hora_inicio: Any, hora_fim: Any, esperado: Any
+) -> None:
+    """Verifica processar ata escolha horario formatado."""
     agenda = {
         "cargo_nome": "Professor",
         "cargo_codigo": "123",
@@ -825,7 +828,6 @@ def test_processar_ata_escolha_horario_formatado(
         "candidato": {"nome": "Candidato A"},
     }
     _setup_processamento_basico(service, [agenda], [candidato])
-
     resultado = service.processar_ata_escolha(processo_uuid="proc-horario")
     assert (
         resultado["cargos"][0]["sessoes"][0]["horario_formatado"] == esperado

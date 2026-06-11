@@ -1,5 +1,5 @@
-"""
-Configuração específica para testes de services.
+"""Configuração específica para testes de services.
+
 Mocka dependências opcionais antes dos imports.
 """
 

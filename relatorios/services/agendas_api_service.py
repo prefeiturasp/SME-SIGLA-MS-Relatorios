@@ -1,6 +1,6 @@
-"""
-Serviços para integração com API de agendas.
-"""
+"""Serviços para integração com API de agendas."""
+
+from __future__ import annotations
 
 import logging
 
@@ -13,19 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 class AgendasService:
-    """
-    Service para integração com API de agendas.
-    """
+    """Service para integração com API de agendas."""
 
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
-    ):
-        """'123456789-=
-        Inicializa o serviço de agendas.
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
-            base_url: URL base da API de agendas
-            timeout_seconds: Timeout em segundos para as requisições
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -40,22 +37,17 @@ class AgendasService:
         page: int = 1,
         page_size: int = 100,
     ) -> requests.Response:
-        """
-        Busca agendas por processo_convocacao_uuid com paginação.
+        """Busca agendas.
 
         Args:
-            processo_convocacao_uuid: UUID do processo de convocação
-            page: Número da página (padrão: 1)
-            page_size: Tamanho da página (padrão: 100)
+            processo_convocacao_uuid: UUID de processo convocacao.
+            page: Page.
+            page_size: Page size.
 
         Returns:
-            Response da API com as agendas
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/agendas/"
-
         params = {
             "page": page,
             "page_size": page_size,
@@ -86,7 +78,6 @@ class AgendasService:
                 exc,
             )
             raise
-
         logger.info(
             "Agendas buscadas com sucesso",
             extra={
@@ -97,20 +88,16 @@ class AgendasService:
                 "headers": self._default_headers,
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_agenda_por_uuid(self, agenda_uuid: str) -> requests.Response:
-        """
-        Busca uma agenda específica pelo UUID.
+        """Busca agenda por uuid.
 
         Args:
-            agenda_uuid: UUID da agenda
+            agenda_uuid: UUID de agenda.
 
         Returns:
-            Response da API com os dados da agenda
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}/"
         logger.info(
@@ -150,4 +137,4 @@ class AgendasService:
                 "headers": self._default_headers,
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]

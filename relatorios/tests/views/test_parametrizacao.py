@@ -1,6 +1,8 @@
-"""
-Testes unitários para o ViewSet ParametrizacaoViewSet usando pytest.
-"""
+"""Testes unitários para o ViewSet ParametrizacaoViewSet usando pytest."""
+
+from __future__ import annotations
+
+from typing import Any
 
 import pytest
 from django.urls import reverse
@@ -13,21 +15,19 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def client():
+def client() -> Any:
     """Fixture para APIClient."""
     return APIClient()
 
 
 @pytest.fixture
-def parametrizacao():
+def parametrizacao() -> Any:
     """Cria uma Parametrizacao de teste."""
-    return Parametrizacao.objects.create(
-        cabecalho="<h1>Cabeçalho Teste</h1>",
-    )
+    return Parametrizacao.objects.create(cabecalho="<h1>Cabeçalho Teste</h1>")
 
 
 @pytest.fixture
-def parametrizacoes_multiplas():
+def parametrizacoes_multiplas() -> Any:
     """Cria múltiplas Parametrizacoes de teste (mais recente primeiro)."""
     itens = []
     import time
@@ -35,10 +35,10 @@ def parametrizacoes_multiplas():
     for i in range(3):
         itens.append(
             Parametrizacao.objects.create(
-                cabecalho=f"<h1>Cabeçalho {i+1}</h1>",
+                cabecalho=f"<h1>Cabeçalho {i + 1}</h1>"
             )
         )
-        if i < 2:  # Pequeno delay para garantir timestamps diferentes
+        if i < 2:
             time.sleep(0.01)
     return itens
 
@@ -46,163 +46,143 @@ def parametrizacoes_multiplas():
 class TestParametrizacaoViewSet:
     """Testes para o ViewSet ParametrizacaoViewSet."""
 
-    def test_list_parametrizacao(self, client, parametrizacao):
-        """Testa listagem de Parametrizacao."""
+    def test_list_parametrizacao(
+        self, client: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica list parametrizacao."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, list)
-        # Há um registro inicial criado pela migration, então esperamos pelo menos 2  # noqa: E501
         assert len(response.data) >= 1
-        # Verifica que o registro criado está na lista
         uuids = [item["uuid"] for item in response.data]
         assert str(parametrizacao.uuid) in uuids
 
     def test_list_parametrizacao_multiple(
-        self, client, parametrizacoes_multiplas
-    ):
-        """Testa listagem com múltiplas Parametrizacoes."""
+        self, client: Any, parametrizacoes_multiplas: Any
+    ) -> None:
+        """Verifica list parametrizacao multiple."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
-        # Há um registro inicial criado pela migration, então esperamos pelo menos 4  # noqa: E501
         assert len(response.data) >= 3
-        # Verifica ordenação (mais recente primeiro)
         timestamps = [item["criado_em"] for item in response.data]
         assert timestamps == sorted(timestamps, reverse=True)
 
-    def test_list_parametrizacao_empty(self, client):
-        """Testa listagem quando não há Parametrizacoes criadas pelo teste."""
-        # Não deleta o registro inicial da migration para evitar problemas
-        # Apenas verifica que a listagem funciona
+    def test_list_parametrizacao_empty(self, client: Any) -> None:
+        """Verifica list parametrizacao empty."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, list)
 
-    def test_retrieve_parametrizacao(self, client, parametrizacao):
-        """Testa recuperação de Parametrizacao específica."""
+    def test_retrieve_parametrizacao(
+        self, client: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica retrieve parametrizacao."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
         assert response.data["uuid"] == str(parametrizacao.uuid)
         assert response.data["cabecalho"] == parametrizacao.cabecalho
         assert "criado_em" in response.data
         assert "atualizado_em" in response.data
 
-    def test_retrieve_most_recent(self, client, parametrizacoes_multiplas):
-        """Testa que get_object sempre retorna o mais recente."""
-        # Pega qualquer UUID, mas deve retornar o mais recente
-        most_recent = parametrizacoes_multiplas[-1]  # Último criado
+    def test_retrieve_most_recent(
+        self, client: Any, parametrizacoes_multiplas: Any
+    ) -> None:
+        """Verifica retrieve most recent."""
+        most_recent = parametrizacoes_multiplas[-1]
         url = reverse(
             "parametrizacao-detail", args=[parametrizacoes_multiplas[0].uuid]
         )
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
-        # Deve retornar o mais recente, não o UUID especificado
         assert response.data["uuid"] == str(most_recent.uuid)
         assert response.data["cabecalho"] == most_recent.cabecalho
 
-    def test_update_parametrizacao(self, client, parametrizacao):
-        """Testa atualização de Parametrizacao."""
+    def test_update_parametrizacao(
+        self, client: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica update parametrizacao."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         data = {"cabecalho": "<h1>Cabeçalho Atualizado</h1>"}
         response = client.patch(url, data, format="json")
-
         assert response.status_code == status.HTTP_200_OK
         assert response.data["cabecalho"] == "<h1>Cabeçalho Atualizado</h1>"
-
-        # Verifica no banco
         parametrizacao.refresh_from_db()
         assert parametrizacao.cabecalho == "<h1>Cabeçalho Atualizado</h1>"
 
-    def test_update_most_recent(self, client, parametrizacoes_multiplas):
-        """Testa que update sempre atualiza o mais recente."""
+    def test_update_most_recent(
+        self, client: Any, parametrizacoes_multiplas: Any
+    ) -> None:
+        """Verifica update most recent."""
         most_recent = parametrizacoes_multiplas[-1]
         old_cabecalho_first = parametrizacoes_multiplas[0].cabecalho
-
-        # Tenta atualizar usando UUID de outro registro
         url = reverse(
             "parametrizacao-detail", args=[parametrizacoes_multiplas[0].uuid]
         )
         data = {"cabecalho": "<h1>Atualizado via outro UUID</h1>"}
         response = client.patch(url, data, format="json")
-
         assert response.status_code == status.HTTP_200_OK
-        # Deve ter atualizado o mais recente (não o UUID usado na URL)
         most_recent.refresh_from_db()
         assert most_recent.cabecalho == "<h1>Atualizado via outro UUID</h1>"
-        # O primeiro não deve ter sido alterado
         parametrizacoes_multiplas[0].refresh_from_db()
         assert parametrizacoes_multiplas[0].cabecalho == old_cabecalho_first
 
-    def test_update_put_method(self, client, parametrizacao):
-        """Testa atualização usando PUT."""
+    def test_update_put_method(self, client: Any, parametrizacao: Any) -> None:
+        """Verifica update put method."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         data = {"cabecalho": "<h1>PUT Update</h1>"}
         response = client.put(url, data, format="json")
-
         assert response.status_code == status.HTTP_200_OK
         parametrizacao.refresh_from_db()
         assert parametrizacao.cabecalho == "<h1>PUT Update</h1>"
 
-    def test_create_not_allowed(self, client):
-        """Testa que criação (POST) não é permitida."""
+    def test_create_not_allowed(self, client: Any) -> None:
+        """Verifica create not allowed."""
         initial_count = Parametrizacao.objects.count()
         url = reverse("parametrizacao-list")
         data = {"cabecalho": "<h1>Novo</h1>"}
         response = client.post(url, data, format="json")
-
         assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
         assert 'Method "POST" not allowed' in response.data["detail"]
-        # Nenhum novo registro deve ter sido criado
         assert Parametrizacao.objects.count() == initial_count
 
-    def test_delete_not_allowed(self, client, parametrizacao):
-        """
-        Testa que deleção não é permitida (ViewSet não tem DestroyModelMixin).
-        """
+    def test_delete_not_allowed(
+        self, client: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica delete not allowed."""
         initial_count = Parametrizacao.objects.count()
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         response = client.delete(url)
-
-        # Como não tem DestroyModelMixin, deve retornar 405
         assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
-        # Nenhum registro deve ter sido deletado
         assert Parametrizacao.objects.count() == initial_count
 
-    def test_permission_allow_any(self, client, parametrizacao):
-        """Testa que permissões AllowAny estão configuradas."""
+    def test_permission_allow_any(
+        self, client: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica permission allow any."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
-
-        # Se AllowAny estiver configurado, deve funcionar sem autenticação
         assert response.status_code == status.HTTP_200_OK
 
-    def test_pagination_none(self, client, parametrizacoes_multiplas):
-        """Testa que paginação está desabilitada."""
+    def test_pagination_none(
+        self, client: Any, parametrizacoes_multiplas: Any
+    ) -> None:
+        """Verifica pagination none."""
         url = reverse("parametrizacao-list")
         response = client.get(url)
-
-        # Com pagination_class = None, deve retornar lista direta, não objeto com 'results'  # noqa: E501
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, list)
         assert "results" not in response.data
-        # Há um registro inicial criado pela migration, então esperamos pelo menos 4  # noqa: E501
         assert len(response.data) >= 3
 
-    def test_response_fields(self, client, parametrizacao):
-        """Testa que resposta contém todos os campos esperados."""
+    def test_response_fields(self, client: Any, parametrizacao: Any) -> None:
+        """Verifica response fields."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
-        # O serializer retorna 'id' automaticamente (primary key do Django)
         expected_fields = {
             "id",
             "uuid",
@@ -213,57 +193,49 @@ class TestParametrizacaoViewSet:
         }
         assert set(response.data.keys()) == expected_fields
 
-    def test_update_partial_fields(self, client, parametrizacao):
-        """Testa atualização parcial de campos."""
-
+    def test_update_partial_fields(
+        self, client: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica update partial fields."""
         url = reverse("parametrizacao-detail", args=[parametrizacao.uuid])
         data = {"cabecalho": "<h1>Parcial</h1>"}
         response = client.patch(url, data, format="json")
-
         assert response.status_code == status.HTTP_200_OK
         parametrizacao.refresh_from_db()
         assert parametrizacao.cabecalho == "<h1>Parcial</h1>"
-        # UUID não deve mudar
         assert parametrizacao.uuid == parametrizacao.uuid
 
-    def test_get_object_returns_first(self, client, parametrizacoes_multiplas):
-        """Testa que get_object retorna o primeiro do queryset ordenado."""
-        # get_object usa queryset.first(), que deve ser o mais recente
+    def test_get_object_returns_first(
+        self, client: Any, parametrizacoes_multiplas: Any
+    ) -> None:
+        """Verifica get object returns first."""
         most_recent = (
             Parametrizacao.objects.all().order_by("-criado_em").first()
         )
-
         url = reverse(
             "parametrizacao-detail", args=[parametrizacoes_multiplas[0].uuid]
         )
         response = client.get(url)
-
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["uuid"] == str(most_recent.uuid)
+        assert response.data["uuid"] == str(most_recent.uuid)  # type: ignore[union-attr]
 
-    def test_retrieve_when_no_records(self, client):
-        """Testa retrieve quando não há registros correspondentes ao UUID."""
-        # Cria um UUID válido mas sem registro correspondente
+    def test_retrieve_when_no_records(self, client: Any) -> None:
+        """Verifica retrieve when no records."""
         import uuid
 
         fake_uuid = uuid.uuid4()
         url = reverse("parametrizacao-detail", args=[fake_uuid])
         response = client.get(url)
-
-        # get_object() sempre retorna o mais recente, então não retorna 404
-        # Mas verifica que retorna algum registro (o mais recente)
         assert response.status_code == status.HTTP_200_OK
         assert "uuid" in response.data
 
-    def test_update_when_no_records(self, client):
-        """Testa update quando não há registros correspondentes ao UUID."""
+    def test_update_when_no_records(self, client: Any) -> None:
+        """Verifica update when no records."""
         import uuid
 
         fake_uuid = uuid.uuid4()
         url = reverse("parametrizacao-detail", args=[fake_uuid])
         data = {"cabecalho": "<h1>Teste</h1>"}
         response = client.patch(url, data, format="json")
-
-        # get_object() sempre retorna o mais recente, então atualiza o mais recente  # noqa: E501
         assert response.status_code == status.HTTP_200_OK
         assert response.data["cabecalho"] == "<h1>Teste</h1>"

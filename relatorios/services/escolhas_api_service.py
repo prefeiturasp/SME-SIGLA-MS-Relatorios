@@ -1,6 +1,6 @@
-"""
-Serviços para integração com API de escolhas.
-"""
+"""Serviços para integração com API de escolhas."""
+
+from __future__ import annotations
 
 import logging
 
@@ -13,9 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class EscolhasService:
+    """Serviço para operações de escolhas."""
+
     def __init__(
         self, base_url: str = "https://example.com", timeout_seconds: int = 30
-    ):
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            base_url: URL base do serviço remoto.
+            timeout_seconds: Tempo máximo de espera, em segundos.
+        """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self._default_headers = {
@@ -24,24 +32,16 @@ class EscolhasService:
         }
 
     def buscar_vagas_escolas(self, processo_uuid: str) -> requests.Response:
-        """
-        Busca vagas de escolas por processo_uuid.
+        """Busca vagas escolas.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            headers: Headers HTTP opcionais para a requisição
+            processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Response da API com as vagas das escolas
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/vagas-escolas/"
-
-        params = {
-            "processo_uuid": processo_uuid,
-        }
+        params = {"processo_uuid": processo_uuid}
         logger.info(
             "Buscando vagas de escolas",
             extra={
@@ -64,7 +64,6 @@ class EscolhasService:
         except RequestException as exc:
             logger.error("Erro ao buscar vagas de escolas: %s", exc)
             raise
-
         logger.info(
             "Vagas de escolas encontradas",
             extra={
@@ -78,31 +77,22 @@ class EscolhasService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def buscar_escolhas_por_candidatos(
         self, candidato_uuids: list, situacao: str = "nao-escolha"
     ) -> list:
-        """
-        Busca escolhas por lista de candidato_uuids filtrando por situação.
+        """Busca escolhas por candidatos.
 
         Args:
-            candidato_uuids: Lista de UUIDs dos candidatos
-            situacao: Situação da escolha (padrão: 'nao-escolha'). Se None,
-            retorna todas as escolhas.
+            candidato_uuids: UUIDs dos candidatos consultados.
+            situacao: Situacao.
 
         Returns:
-            Lista de escolhas filtradas por situação (ou todas se
-            situacao=None)
-
-        Raises:
-            RequestException: Em caso de erro na requisição
+            Lista com os registros obtidos.
         """
         url = f"{self.base_url}/api/v1/escolhas/busca/"
-
-        data = {
-            "candidato_uuid": candidato_uuids,
-        }
+        data = {"candidato_uuid": candidato_uuids}
         logger.info(
             "Buscando escolhas por candidatos",
             extra={
@@ -125,8 +115,6 @@ class EscolhasService:
         except RequestException as exc:
             logger.error("Erro ao buscar escolhas: %s", exc)
             raise
-
-        # A resposta pode ser uma lista ou um dict com 'results'
         escolhas_data = response.json()
         if isinstance(escolhas_data, list):
             escolhas = escolhas_data
@@ -134,17 +122,14 @@ class EscolhasService:
             escolhas = escolhas_data.get("results", [])
         else:
             escolhas = []
-
-        # Filtrar por situação apenas se situacao não for None
         if situacao is None:
             escolhas_filtradas = escolhas
         else:
             escolhas_filtradas = [
                 e for e in escolhas if e.get("situacao") == situacao
             ]
-
         logger.info(
-            "Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)",  # noqa: E501
+            "Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)",
             len(candidato_uuids),
             situacao,
             len(escolhas_filtradas),
