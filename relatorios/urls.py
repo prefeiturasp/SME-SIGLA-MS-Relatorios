@@ -6,6 +6,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    ExtracaoDadosViewSet,
     ParametrizacaoViewSet,
     PersonalizacaoViewSet,
     RelatorioViewSet,
@@ -18,6 +19,9 @@ router.register(
 )
 router.register(
     r"personalizacao", PersonalizacaoViewSet, basename="personalizacao"
+)
+router.register(
+    r"extracao-dados", ExtracaoDadosViewSet, basename="extracao-dados"
 )
 
 urlpatterns = [

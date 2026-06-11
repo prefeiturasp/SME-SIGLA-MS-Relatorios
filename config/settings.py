@@ -224,6 +224,9 @@ CONVOCACAO_API_URL = os.environ.get(
 CANDIDATOS_API_URL = os.environ.get(
     "CANDIDATOS_API_URL", "http://localhost:8002"
 )
+CONCURSOS_API_URL = os.environ.get(
+    "CONCURSOS_API_URL", "http://localhost:8001"
+)
 AGENDAS_API_URL = os.environ.get("AGENDAS_API_URL", "http://localhost:8005")
 
 # Relatórios configuration

@@ -141,3 +141,63 @@ def test_buscar_escolhas_por_candidatos_request_exception(mock_post):
     svc = _svc()
     with pytest.raises(requests.RequestException):
         svc.buscar_escolhas_por_candidatos(candidato_uuids=["a"])
+
+
+# ---------- buscar_extracao_dados ----------
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_extracao_dados_success(mock_post):
+    filtros = [
+        {
+            "ano": 2026,
+            "processo_uuids": ["a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"],
+        }
+    ]
+    mock_post.return_value = _Resp(payload={"escolhas": {"total": 100}})
+    svc = _svc(timeout=5)
+    resp = svc.buscar_extracao_dados(
+        concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        filtros=filtros,
+    )
+    assert resp == {"escolhas": {"total": 100}}
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/extracao-dados/",
+        json={
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "filtros": filtros,
+        },
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_extracao_dados_sem_parametros(mock_post):
+    mock_post.return_value = _Resp(payload={"2026": {"escolha": 1000}})
+    svc = _svc(timeout=5)
+    resp = svc.buscar_extracao_dados()
+    assert resp == {"2026": {"escolha": 1000}}
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/extracao-dados/",
+        json={},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_extracao_dados_http_error(mock_post):
+    mock_post.return_value = _Resp(None, status_code=500)
+    svc = _svc()
+    with pytest.raises(requests.HTTPError):
+        svc.buscar_extracao_dados(
+            concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            filtros=[{"ano": 2026, "processo_uuids": ["p1"]}],
+        )

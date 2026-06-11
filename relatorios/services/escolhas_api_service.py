@@ -150,3 +150,71 @@ class EscolhasService:
             len(escolhas_filtradas),
         )
         return escolhas_filtradas
+
+    def buscar_extracao_dados(
+        self,
+        concurso_uuid: str | None = None,
+        filtros: list[dict] | None = None,
+    ) -> dict:
+        """
+        Busca dados agregados de extração por concurso e processos/ano.
+
+        Endpoint esperado do ms-escolhas:
+            POST /api/v1/escolhas/extracao-dados/
+
+        Args:
+            concurso_uuid: UUID do concurso (opcional)
+            filtros: Lista de filtros com ano e processo_uuids (opcional)
+
+        Returns:
+            Dados da API com extração
+
+        Raises:
+            RequestException: Em caso de erro na requisição
+        """
+        url = f"{self.base_url}/api/v1/extracao-dados/"
+        payload = {}
+        if concurso_uuid is not None:
+            payload["concurso_uuid"] = concurso_uuid
+        if filtros is not None:
+            payload["filtros"] = filtros
+        logger.info(
+            "Buscando extração de dados em escolhas",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "url": url,
+                "headers": self._default_headers,
+                "payload": payload,
+            },
+        )
+        try:
+            response = http_client.post(
+                url,
+                json=payload,
+                headers=self._default_headers,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+        except RequestException as exc:
+            logger.error(
+                "Erro ao buscar extração de dados em escolhas "
+                "(concurso_uuid=%s): %s",
+                concurso_uuid,
+                exc,
+            )
+            raise
+
+        logger.info(
+            "Extração de dados em escolhas buscada com sucesso",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "url": url,
+                "headers": self._default_headers,
+                "payload": payload,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
+        return response.json()
