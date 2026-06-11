@@ -47,8 +47,7 @@ class LaudaVagas(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -66,15 +65,14 @@ class LaudaVagas(RelatorioBase):
         """Gera o relatório de Lauda de Vagas.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório.
         """
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(
@@ -130,11 +128,10 @@ class LaudaVagas(RelatorioBase):
         """Agrupa vagas por cargo_codigo e depois por DRE codigo.
 
         Args:
-            self: Instância do objeto.
-            vagas: Vagas utilizado na operação.
+            vagas: Vagas.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
@@ -151,8 +148,7 @@ class LaudaVagas(RelatorioBase):
         """Prepara a estrutura de dados para o template.
 
         Args:
-            self: Instância do objeto.
-            vagas_agrupadas: Vagas agrupadas utilizado na operação.
+            vagas_agrupadas: Vagas agrupadas.
 
         Returns:
             Lista com os registros obtidos.
@@ -190,18 +186,17 @@ class LaudaVagas(RelatorioBase):
     def render_to_xls(
         self, context: Any = None, filename: Any = "relatorio.xlsx"
     ) -> Any:
-        """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if context is None:
             context = {}
@@ -389,20 +384,19 @@ class LaudaVagas(RelatorioBase):
         texto_final: Any,
         filename: Any = "relatorio_vagas.docx",
     ) -> Any:
-        """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            context: Contexto de serialização ou renderização.
-            texto_final: Texto final utilizado na operação.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            context: Dados de contexto usados na renderização.
+            texto_final: Texto de encerramento do relatório.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(

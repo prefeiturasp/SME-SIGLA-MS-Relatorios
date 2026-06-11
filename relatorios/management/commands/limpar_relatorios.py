@@ -15,16 +15,7 @@ class Command(BaseCommand):
     help = "Remove todos os registros da tabela de relatórios"
 
     def handle(self, *args: Any, **options: Any) -> None:
-        """A lógica principal do comando.
-
-        Args:
-            self: Instância do objeto.
-            *args: Argumentos posicionais variáveis.
-            **options: Opções do comando de management.
-
-        Returns:
-            Nenhum valor.
-        """
+        """Roda a lógica principal do comando."""
         total = Relatorio.objects.count()
         self.stdout.write(
             self.style.SUCCESS(f"Removendo {total} relatórios...")

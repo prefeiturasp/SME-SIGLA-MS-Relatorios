@@ -40,10 +40,10 @@ class RelatorioFactory:
         """Obtém relatorio.
 
         Args:
-            tipo_slug: Tipo slug utilizado na operação.
+            tipo_slug: Tipo slug.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Dicionário com os dados consultados.
 
         Raises:
             ValueError: Se os dados informados forem inválidos.

@@ -30,12 +30,11 @@ class LaudaConvocacaoService:
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            candidatos_base_url: Candidatos base url utilizado na operação.
-            processo_base_url: Processo base url utilizado na operação.
-            agendas_base_url: Agendas base url utilizado na operação.
-            escolhas_base_url: Escolhas base url utilizado na operação.
-            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
+            candidatos_base_url: Candidatos base url.
+            processo_base_url: Processo base url.
+            agendas_base_url: Agendas base url.
+            escolhas_base_url: Escolhas base url.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.candidatos_service = CandidatosService(
             base_url=candidatos_base_url, timeout_seconds=timeout_seconds
@@ -54,8 +53,7 @@ class LaudaConvocacaoService:
         """Identifica lacunas em uma lista de classificações.
 
         Args:
-            self: Instância do objeto.
-            classificacoes: Classificacoes utilizado na operação.
+            classificacoes: Classificacoes.
 
         Returns:
             Lista com os registros obtidos.
@@ -81,11 +79,10 @@ class LaudaConvocacaoService:
         """Separa candidatos por categoria_efetiva (GERAL, NNA e PCD).
 
         Args:
-            self: Instância do objeto.
-            candidatos: Candidatos utilizado na operação.
+            candidatos: Candidatos habilitados retornados pela API.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         separados = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -104,9 +101,8 @@ class LaudaConvocacaoService:
         """Extrai classificações de uma lista de candidatos.
 
         Args:
-            self: Instância do objeto.
-            candidatos: Candidatos utilizado na operação.
-            campo: Campo utilizado na operação.
+            candidatos: Candidatos habilitados retornados pela API.
+            campo: Campo.
 
         Returns:
             Lista com os registros obtidos.
@@ -125,16 +121,15 @@ class LaudaConvocacaoService:
         """Busca candidatos faltantes em outros processos do concurso.
 
         Args:
-            self: Instância do objeto.
             outros_processos_uuid: UUID de outros processos.
-            lacunas_geral: Lacunas geral utilizado na operação.
-            lacunas_nna: Lacunas nna utilizado na operação.
-            lacunas_pcd: Lacunas pcd utilizado na operação.
-            codigo_cargo: Codigo cargo utilizado na operação.
-            ordering: Ordering utilizado na operação.
+            lacunas_geral: Lacunas geral.
+            lacunas_nna: Lacunas nna.
+            lacunas_pcd: Lacunas pcd.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
@@ -333,11 +328,10 @@ class LaudaConvocacaoService:
         """Insere, dentro de lista_segmento, candidatos reclassificados.
 
         Args:
-            self: Instância do objeto.
-            lista_segmento: Lista segmento utilizado na operação.
-            reclassificados: Reclassificados utilizado na operação.
-            cargo_codigo: Cargo codigo utilizado na operação.
-            classificacao_attr: Classificacao attr utilizado na operação.
+            lista_segmento: Lista segmento.
+            reclassificados: Reclassificados.
+            cargo_codigo: Código numérico do cargo.
+            classificacao_attr: Nome do atributo de classificação consultado.
 
         Returns:
             Nenhum valor.
@@ -401,11 +395,10 @@ class LaudaConvocacaoService:
         """Insere candidatos eliminados na lista do segmento.
 
         Args:
-            self: Instância do objeto.
-            lista_segmento: Lista segmento utilizado na operação.
-            eliminados: Eliminados utilizado na operação.
-            cargo_codigo: Cargo codigo utilizado na operação.
-            classificacao_attr: Classificacao attr utilizado na operação.
+            lista_segmento: Lista segmento.
+            eliminados: Eliminados.
+            cargo_codigo: Código numérico do cargo.
+            classificacao_attr: Nome do atributo de classificação consultado.
 
         Returns:
             Nenhum valor.
@@ -475,12 +468,11 @@ class LaudaConvocacaoService:
         """Processa lauda convocacao.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            ordering: Ordering utilizado na operação.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         try:
             logger.info(
@@ -707,26 +699,12 @@ class LaudaConvocacaoService:
                                 )
 
                     def key_ranking_escolha(item: Any) -> Any:
-                        """Key ranking escolha.
-
-                        Args:
-                            item: Item utilizado na operação.
-
-                        Returns:
-                            Valor calculado conforme a regra aplicada.
-                        """
+                        """Ordena pelo ranking de escolha."""
                         val = item.get("ranking_escolha")
                         return val if val is not None else float("inf")
 
                     def key_classificacao(item: Any) -> Any:
-                        """Key classificacao.
-
-                        Args:
-                            item: Item utilizado na operação.
-
-                        Returns:
-                            Valor calculado conforme a regra aplicada.
-                        """
+                        """Retorna chave de ordenação por classificação."""
                         val = item.get("classificacao")
                         return val if val is not None else float("inf")
 
@@ -738,14 +716,7 @@ class LaudaConvocacaoService:
                         def indices_lacunas_classificacao(
                             classificacoes_ordenadas: Any,
                         ) -> Any:
-                            """Mapeia lacunas de classificação.
-
-                            Args:
-                                classificacoes_ordenadas: Classificações.
-
-                            Returns:
-                                Valor calculado conforme a regra aplicada.
-                            """
+                            """Mapeia lacunas na lista de classificações."""
                             gaps = {}  # type: ignore[var-annotated]
                             cont = 0
                             if not classificacoes_ordenadas:
@@ -768,14 +739,7 @@ class LaudaConvocacaoService:
                             return gaps
 
                         def _classificacao_para_gap(item: Any) -> Any:
-                            """Classificacao para gap.
-
-                            Args:
-                                item: Item utilizado na operação.
-
-                            Returns:
-                                Valor calculado conforme a regra aplicada.
-                            """
+                            """Obtém classificação para detectar lacunas."""
                             return (
                                 9999999
                                 if item.get("categoria_efetiva") != "GERAL"

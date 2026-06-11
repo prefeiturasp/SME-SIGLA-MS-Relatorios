@@ -27,10 +27,9 @@ class RelatorioBase(ABC):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            configuracao: Configuracao utilizado na operação.
-            parametrizacao: Parametrizacao utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            configuracao: Configuracao.
+            parametrizacao: Parametrizacao.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         self.configuracao = configuracao
         self.parametrizacao = parametrizacao
@@ -63,11 +62,10 @@ class RelatorioBase(ABC):
         """Método abstrato que deve ser implementado por todas as classes.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            formato: Formato.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
             Nenhum valor.
@@ -80,13 +78,12 @@ class RelatorioBase(ABC):
         """Renderiza um template HTML para PDF usando WeasyPrint.
 
         Args:
-            self: Instância do objeto.
-            template_name: Template name utilizado na operação.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            template_name: Template name.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
         """
         try:
             html_string = render_to_string(template_name, context)
@@ -112,10 +109,10 @@ class RelatorioBase(ABC):
         """Processa cabecalho html.
 
         Args:
-            cabecalho: Cabecalho utilizado na operação.
+            cabecalho: Cabecalho.
 
         Returns:
-            Texto resultante da operação.
+            Conteúdo textual gerado.
         """
         if not cabecalho:
             return ""

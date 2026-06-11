@@ -39,18 +39,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_tipo(self, value: Any) -> Any:
-        """Valida se o tipo do relatório é válido.
-
-        Args:
-            self: Instância do objeto.
-            value: Valor recebido para validação.
-
-        Returns:
-            Valor validado do campo tipo.
-
-        Raises:
-            ValidationError: Se os dados não passarem na validação.
-        """
+        """Valida tipo."""
         tipos_validos = [choice[0] for choice in TIPOS_RELATORIOS]
         if value not in tipos_validos:
             raise serializers.ValidationError(
@@ -59,15 +48,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_cabecalho(self, value: str) -> str:
-        """Retorna vazio se o cabeçalho tiver só tags HTML sem texto.
-
-        Args:
-            self: Instância do objeto.
-            value: Valor recebido para validação.
-
-        Returns:
-            Texto resultante da operação.
-        """
+        """Valida cabecalho."""
         try:
             from django.utils.html import strip_tags as _strip
 
@@ -79,16 +60,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
             return value
 
     def save(self, dados: Any = None, **kwargs: Any) -> Any:
-        """Salva o relatório no banco de dados.
-
-        Args:
-            self: Instância do objeto.
-            dados: Dados utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
-
-        Returns:
-            Valor calculado conforme a regra aplicada.
-        """
+        """Persiste o relatório e atualiza os dados quando informados."""
         relatorio = super().save(**kwargs)
         if dados is not None:
             relatorio.dados = dados

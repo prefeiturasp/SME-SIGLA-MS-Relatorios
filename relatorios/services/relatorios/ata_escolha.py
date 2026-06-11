@@ -55,8 +55,7 @@ class AtaEscolha(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.ata_service = AtaEscolhaService(
@@ -67,27 +66,11 @@ class AtaEscolha(RelatorioBase):
         )
 
     def _preencher_template(self, cabecalho_capa: Any, dados: Any) -> Any:
-        """Preencher template.
-
-        Args:
-            self: Instância do objeto.
-            cabecalho_capa: Cabecalho capa utilizado na operação.
-            dados: Dados utilizado na operação.
-
-        Returns:
-            Valor calculado conforme a regra aplicada.
-        """
+        """Preenche template com os dados informados."""
         pattern = re.compile("\\[\\[(.*?)\\]\\]")
 
         def replace_func(match: Any) -> Any:
-            """Replace func.
-
-            Args:
-                match: Match utilizado na operação.
-
-            Returns:
-                Valor calculado conforme a regra aplicada.
-            """
+            """Substitui placeholders pelos valores correspondentes."""
             chave = match.group(1)
             return str(dados.get(chave, f"[[ERRO: {chave} NÃO ENCONTRADO]]"))
 
@@ -105,16 +88,15 @@ class AtaEscolha(RelatorioBase):
         """Gera o relatório de Ata de Escolha para um único cargo.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
-            cargo_codigo: Cargo codigo utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            cargo_codigo: Código numérico do cargo.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório processado.
         """
         try:
             dados_ata = self.ata_service.processar_ata_escolha(
@@ -205,19 +187,18 @@ class AtaEscolha(RelatorioBase):
         context: Any,
         filename: Any = "ata_escolha.docx",
     ) -> Any:
-        """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
@@ -452,15 +433,14 @@ class AtaEscolha(RelatorioBase):
         """Gera um arquivo Excel (XLSX) com a estrutura da Ata de Escolha.
 
         Args:
-            self: Instância do objeto.
-            context_data: Context data utilizado na operação.
-            filename: Filename utilizado na operação.
+            context_data: Context data.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not OPENPYXL_AVAILABLE:
             raise ImportError(

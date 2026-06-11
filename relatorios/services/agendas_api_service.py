@@ -21,9 +21,8 @@ class AgendasService:
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
             base_url: URL base do serviço remoto.
-            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -41,13 +40,12 @@ class AgendasService:
         """Busca agendas.
 
         Args:
-            self: Instância do objeto.
             processo_convocacao_uuid: UUID de processo convocacao.
-            page: Page utilizado na operação.
-            page_size: Page size utilizado na operação.
+            page: Page.
+            page_size: Page size.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/agendas/"
         params = {
@@ -96,11 +94,10 @@ class AgendasService:
         """Busca agenda por uuid.
 
         Args:
-            self: Instância do objeto.
             agenda_uuid: UUID de agenda.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}/"
         logger.info(

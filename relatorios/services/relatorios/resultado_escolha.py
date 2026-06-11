@@ -51,9 +51,8 @@ class ResultadoEscolha(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            tipo: Tipo utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            tipo: Tipo.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -82,16 +81,15 @@ class ResultadoEscolha(RelatorioBase):
         """Gera o relatório de Resultado da Escolha SIM.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
+            formato: Formato.
+            cabecalho: Cabecalho.
             agenda_uuid: UUID de agenda.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório.
         """
         cargos_map = {}
         try:
@@ -441,11 +439,10 @@ class ResultadoEscolha(RelatorioBase):
         """Extrai o número da sessão, removendo o prefixo 'Sessão'.
 
         Args:
-            self: Instância do objeto.
-            sessao: Sessao utilizado na operação.
+            sessao: Sessao.
 
         Returns:
-            Texto resultante da operação.
+            Conteúdo textual gerado.
         """
         if not sessao or sessao == "-":
             return "-"
@@ -463,8 +460,7 @@ class ResultadoEscolha(RelatorioBase):
         """Agrupa escolhas por cargo da agenda e depois por agenda.
 
         Args:
-            self: Instância do objeto.
-            escolhas: Escolhas utilizado na operação.
+            escolhas: Escolhas.
 
         Returns:
             Lista com os registros obtidos.
@@ -541,8 +537,7 @@ class ResultadoEscolha(RelatorioBase):
         """Agrupa escolhas por cargo, tipo de escolha e agenda.
 
         Args:
-            self: Instância do objeto.
-            escolhas: Escolhas utilizado na operação.
+            escolhas: Escolhas.
 
         Returns:
             Lista com os registros obtidos.
@@ -650,12 +645,11 @@ class ResultadoEscolha(RelatorioBase):
         escolhas_com_candidatos: list,
         processo_uuid: str,
     ) -> list:
-        """Adiciona ao cargos_list o resumo DRE > ESCOLA com qtd de vagas e.
+        """Adiciona ao cargos_list o resumo DRE > ESCOLA com vagas e escolhas.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            escolhas_com_candidatos: Escolhas já enriquecidas com candidatos.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            escolhas_com_candidatos: Escolhas com candidatos.
             processo_uuid: UUID do processo de convocação.
 
         Returns:
@@ -788,20 +782,19 @@ class ResultadoEscolha(RelatorioBase):
         cabecalho: Any,
         filename: Any = "resultado_escolha.xlsx",
     ) -> Any:
-        """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            cabecalho_padrao: Cabecalho padrao utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho_padrao: Cabecalho padrao.
+            cabecalho: Cabecalho.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not OPENPYXL_AVAILABLE:
             raise ImportError(
@@ -1205,20 +1198,19 @@ class ResultadoEscolha(RelatorioBase):
         texto_final: Any = None,
         filename: Any = "resultado_escolha.docx",
     ) -> Any:
-        """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            cabecalho: Cabecalho utilizado na operação.
-            texto_final: Texto final utilizado na operação.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho: Cabecalho.
+            texto_final: Texto de encerramento do relatório.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(

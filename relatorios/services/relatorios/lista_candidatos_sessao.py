@@ -46,8 +46,7 @@ class ListaCandidatosSessao(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.candidatos_service = CandidatosService(
@@ -63,9 +62,8 @@ class ListaCandidatosSessao(RelatorioBase):
         """Fetch candidatos.
 
         Args:
-            self: Instância do objeto.
-            candidatos_uuids: Candidatos uuids utilizado na operação.
-            order_by: Order by utilizado na operação.
+            candidatos_uuids: Candidatos uuids.
+            order_by: Order by.
 
         Returns:
             Lista com os registros obtidos.
@@ -87,10 +85,10 @@ class ListaCandidatosSessao(RelatorioBase):
         """Flatten candidato.
 
         Args:
-            item: Item utilizado na operação.
+            item: Item individual da lista processada.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         cand = item.get("candidato") or {}
         return {
@@ -108,12 +106,11 @@ class ListaCandidatosSessao(RelatorioBase):
         """Monta context.
 
         Args:
-            self: Instância do objeto.
-            candidatos: Candidatos utilizado na operação.
-            agenda_data: Agenda data utilizado na operação.
+            candidatos: Candidatos habilitados retornados pela API.
+            agenda_data: Agenda data.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         linhas = [self._flatten_candidato(c) for c in candidatos]
         return {
@@ -130,15 +127,14 @@ class ListaCandidatosSessao(RelatorioBase):
         """Render xls.
 
         Args:
-            self: Instância do objeto.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not OPENPYXL_AVAILABLE:
             raise ImportError(
@@ -234,14 +230,7 @@ class ListaCandidatosSessao(RelatorioBase):
         row_idx += 2
 
         def _fmt_data(date_str: str) -> str:
-            """Fmt data.
-
-            Args:
-                date_str: Date str utilizado na operação.
-
-            Returns:
-                Texto resultante da operação.
-            """
+            """Fmt data."""
             return (
                 f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}"
                 if len(date_str) >= 10
@@ -249,14 +238,7 @@ class ListaCandidatosSessao(RelatorioBase):
             )
 
         def _fmt_hora(time_str: str) -> str:
-            """Fmt hora.
-
-            Args:
-                time_str: Time str utilizado na operação.
-
-            Returns:
-                Texto resultante da operação.
-            """
+            """Fmt hora."""
             return time_str[:5] if len(time_str) >= 5 else time_str
 
         sections = context.get("agendas") or []
@@ -406,15 +388,14 @@ class ListaCandidatosSessao(RelatorioBase):
         """Render docx.
 
         Args:
-            self: Instância do objeto.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
@@ -440,14 +421,7 @@ class ListaCandidatosSessao(RelatorioBase):
                 doc.add_paragraph()
 
         def _fmt_data(date_str: str) -> str:
-            """Fmt data.
-
-            Args:
-                date_str: Date str utilizado na operação.
-
-            Returns:
-                Texto resultante da operação.
-            """
+            """Fmt data."""
             return (
                 f"{date_str[8:10]}/{date_str[5:7]}/{date_str[:4]}"
                 if len(date_str) >= 10
@@ -455,14 +429,7 @@ class ListaCandidatosSessao(RelatorioBase):
             )
 
         def _fmt_hora(time_str: str) -> str:
-            """Fmt hora.
-
-            Args:
-                time_str: Time str utilizado na operação.
-
-            Returns:
-                Texto resultante da operação.
-            """
+            """Fmt hora."""
             return time_str[:5] if len(time_str) >= 5 else time_str
 
         sections_list = context.get("agendas") or []
@@ -592,13 +559,12 @@ class ListaCandidatosSessao(RelatorioBase):
         """Gera a lista de candidatos por sessão a partir de UUIDs.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
+            formato: Formato.
+            cabecalho: Cabecalho.
             agenda_uuid: UUID de agenda.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
             Tupla com os objetos criados ou atualizados.

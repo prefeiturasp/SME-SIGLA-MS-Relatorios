@@ -21,9 +21,8 @@ class ProcessoConvocacaoService:
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
             base_url: URL base do serviço remoto.
-            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -38,11 +37,10 @@ class ProcessoConvocacaoService:
         """Busca processo convocacao.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/"
         logger.info(
@@ -89,11 +87,10 @@ class ProcessoConvocacaoService:
         """Busca processos por concurso.
 
         Args:
-            self: Instância do objeto.
             concurso_uuid: UUID do concurso relacionado.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/"
         params = {"concurso_uuid": concurso_uuid}
@@ -142,8 +139,7 @@ class ProcessoConvocacaoService:
         """Separa processo principal e demais do mesmo concurso.
 
         Args:
-            self: Instância do objeto.
-            processo_data: Processo data utilizado na operação.
+            processo_data: Processo data.
 
         Returns:
             Tupla com os objetos criados ou atualizados.

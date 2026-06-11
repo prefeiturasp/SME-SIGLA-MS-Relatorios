@@ -25,9 +25,8 @@ class CargoObrigatorioError(Exception):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            cargos: Cargos utilizado na operação.
-            message: Message utilizado na operação.
+            cargos: Cargos.
+            message: Message.
         """
         self.cargos = cargos
         self.message = message
@@ -55,12 +54,11 @@ class AtaEscolhaService:
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            candidatos_base_url: Candidatos base url utilizado na operação.
-            processo_base_url: Processo base url utilizado na operação.
-            agendas_base_url: Agendas base url utilizado na operação.
-            escolhas_base_url: Escolhas base url utilizado na operação.
-            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
+            candidatos_base_url: Candidatos base url.
+            processo_base_url: Processo base url.
+            agendas_base_url: Agendas base url.
+            escolhas_base_url: Escolhas base url.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.candidatos_service = CandidatosService(
             base_url=candidatos_base_url, timeout_seconds=timeout_seconds
@@ -79,8 +77,7 @@ class AtaEscolhaService:
         """Identifica lacunas em uma lista de classificações.
 
         Args:
-            self: Instância do objeto.
-            classificacoes: Classificacoes utilizado na operação.
+            classificacoes: Classificacoes.
 
         Returns:
             Lista com os registros obtidos.
@@ -106,11 +103,10 @@ class AtaEscolhaService:
         """Separa candidatos por categoria_efetiva (GERAL, NNA e PCD).
 
         Args:
-            self: Instância do objeto.
-            candidatos: Candidatos utilizado na operação.
+            candidatos: Candidatos habilitados retornados pela API.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         separados = {"pcd": [], "geral": [], "nna": []}  # type: ignore[var-annotated]
         for candidato in candidatos:
@@ -129,9 +125,8 @@ class AtaEscolhaService:
         """Extrai classificações de uma lista de candidatos.
 
         Args:
-            self: Instância do objeto.
-            candidatos: Candidatos utilizado na operação.
-            campo: Campo utilizado na operação.
+            candidatos: Candidatos habilitados retornados pela API.
+            campo: Campo.
 
         Returns:
             Lista com os registros obtidos.
@@ -150,16 +145,15 @@ class AtaEscolhaService:
         """Busca candidatos faltantes em outros processos do concurso.
 
         Args:
-            self: Instância do objeto.
             outros_processos_uuid: UUID de outros processos.
-            lacunas_geral: Lacunas geral utilizado na operação.
-            lacunas_nna: Lacunas nna utilizado na operação.
-            lacunas_pcd: Lacunas pcd utilizado na operação.
-            codigo_cargo: Codigo cargo utilizado na operação.
-            ordering: Ordering utilizado na operação.
+            lacunas_geral: Lacunas geral.
+            lacunas_nna: Lacunas nna.
+            lacunas_pcd: Lacunas pcd.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
@@ -269,11 +263,10 @@ class AtaEscolhaService:
         """Busca escolhas por lista de candidato_uuids e retorna um mapa.
 
         Args:
-            self: Instância do objeto.
-            candidato_uuids: Candidato uuids utilizado na operação.
+            candidato_uuids: UUIDs dos candidatos consultados.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         escolhas_map = {}  # type: ignore[var-annotated]
         if not candidato_uuids:
@@ -301,11 +294,10 @@ class AtaEscolhaService:
         """Extrai dados da escola escolhida de uma escolha.
 
         Args:
-            self: Instância do objeto.
-            escolha: Escolha utilizado na operação.
+            escolha: Escolha.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         vaga_escola = escolha.get("vaga_escola", {})
         escola = (
@@ -355,11 +347,10 @@ class AtaEscolhaService:
         """Conta quantas escolhas existem por situação.
 
         Args:
-            self: Instância do objeto.
-            escolhas: Escolhas utilizado na operação.
+            escolhas: Escolhas.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         contadores = {"escolha": 0, "nao_escolha": 0, "reconvocacao": 0}
         normalizar = {
@@ -387,12 +378,11 @@ class AtaEscolhaService:
         """Conta as escolhas por situação separadas por tipo de candidato.
 
         Args:
-            self: Instância do objeto.
-            candidatos_sep_cargo: Candidatos sep cargo utilizado na operação.
-            escolhas_map: Escolhas map utilizado na operação.
+            candidatos_sep_cargo: Candidatos sep cargo.
+            escolhas_map: Escolhas map.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         resultado: dict[str, dict[str, int]] = {}
         normalizar = {
@@ -433,16 +423,15 @@ class AtaEscolhaService:
         """Processa ata escolha.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            cargo_codigo: Cargo codigo utilizado na operação.
-            ordering: Ordering utilizado na operação.
+            cargo_codigo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
 
         Raises:
-            CargoObrigatorioError: Se ocorrer erro nesta operação.
+            CargoObrigatorioError: Quando o cargo obrigatório não é informado.
             ValueError: Se os dados informados forem inválidos.
         """
         try:
@@ -650,26 +639,12 @@ class AtaEscolhaService:
                             faltantes_todos.extend(candidatos_faltantes["nna"])
 
                 def key_ranking_escolha(item: Any) -> Any:
-                    """Key ranking escolha.
-
-                    Args:
-                        item: Item utilizado na operação.
-
-                    Returns:
-                        Valor calculado conforme a regra aplicada.
-                    """
+                    """Ordena pelo ranking de escolha."""
                     val = item.get("ranking_escolha")
                     return val if val is not None else float("inf")
 
                 def key_categoria_efetiva(item: Any) -> Any:
-                    """Key categoria efetiva.
-
-                    Args:
-                        item: Item utilizado na operação.
-
-                    Returns:
-                        Valor calculado conforme a regra aplicada.
-                    """
+                    """Ordena pela categoria efetiva do candidato."""
                     categoria = item.get("categoria_efetiva", "")
                     if categoria == "PCD":
                         return 0
@@ -680,14 +655,7 @@ class AtaEscolhaService:
                     return 3
 
                 def key_classificacao(item: Any) -> Any:
-                    """Key classificacao.
-
-                    Args:
-                        item: Item utilizado na operação.
-
-                    Returns:
-                        Valor calculado conforme a regra aplicada.
-                    """
+                    """Ordena pela classificação do candidato."""
                     val = item.get("classificacao")
                     return val if val is not None else float("inf")
 
@@ -703,14 +671,7 @@ class AtaEscolhaService:
                     def indices_lacunas_classificacao(
                         classificacoes_ordenadas: Any,
                     ) -> Any:
-                        """Mapeia lacunas de classificação para inserção.
-
-                        Args:
-                            classificacoes_ordenadas: Classificações ordenadas.
-
-                        Returns:
-                            Valor calculado conforme a regra aplicada.
-                        """
+                        """Mapeia lacunas na lista de classificações."""
                         gaps = {}  # type: ignore[var-annotated]
                         cont = 0
                         if not classificacoes_ordenadas:
@@ -733,14 +694,7 @@ class AtaEscolhaService:
                         return gaps
 
                     def _classificacao_para_gap(item: Any) -> Any:
-                        """Classificacao para gap.
-
-                        Args:
-                            item: Item utilizado na operação.
-
-                        Returns:
-                            Valor calculado conforme a regra aplicada.
-                        """
+                        """Obtém classificação para detectar lacunas."""
                         return (
                             9999999
                             if item.get("categoria_efetiva") != "GERAL"

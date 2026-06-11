@@ -46,8 +46,7 @@ class LaudaConvocacao(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.lauda_service = LaudaConvocacaoService(
@@ -68,15 +67,14 @@ class LaudaConvocacao(RelatorioBase):
         """Gera o relatório de Lauda de Convocação.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório.
         """
         try:
             dados_lauda = self.lauda_service.processar_lauda_convocacao(
@@ -139,20 +137,19 @@ class LaudaConvocacao(RelatorioBase):
         texto_final: Any,
         filename: Any = "lauda_convocacao.docx",
     ) -> Any:
-        """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            context: Contexto de serialização ou renderização.
-            texto_final: Texto final utilizado na operação.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            context: Dados de contexto usados na renderização.
+            texto_final: Texto de encerramento do relatório.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
@@ -345,16 +342,15 @@ class LaudaConvocacao(RelatorioBase):
         """Gera planilha XLSX da lauda de convocação.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if context is None:
             context = {}

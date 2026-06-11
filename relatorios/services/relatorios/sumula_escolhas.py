@@ -48,8 +48,7 @@ class SumulaEscolhas(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -73,15 +72,14 @@ class SumulaEscolhas(RelatorioBase):
         """Gera o relatório de Súmula de Escolhas.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório.
         """
         cargos_map = {}
         try:
@@ -291,8 +289,7 @@ class SumulaEscolhas(RelatorioBase):
         """Agrupa escolhas por cargo, depois por DRE e depois por Unidade.
 
         Args:
-            self: Instância do objeto.
-            escolhas: Escolhas utilizado na operação.
+            escolhas: Escolhas.
 
         Returns:
             Lista com os registros obtidos.
@@ -393,18 +390,17 @@ class SumulaEscolhas(RelatorioBase):
         context: Any = None,
         filename: Any = "relatorio_sumula_escolhas.xlsx",
     ) -> Any:
-        """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if context is None:
             context = {}
@@ -608,19 +604,18 @@ class SumulaEscolhas(RelatorioBase):
         cabecalho: Any,
         filename: Any = "relatorio_sumula_escolhas.docx",
     ) -> Any:
-        """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            cabecalho: Cabecalho utilizado na operação.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho: Cabecalho.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(

@@ -11,10 +11,10 @@ def ajustar_logo_caminho(logo: Any) -> Any:
     """Ajustar logo caminho.
 
     Args:
-        logo: Logo utilizado na operação.
+        logo: Logo.
 
     Returns:
-        Valor calculado conforme a regra aplicada.
+        Quantidade ou código numérico resultante.
     """
     if logo and isinstance(logo, str):
         if settings.DJANGO_ENVIRONMENT != "local":

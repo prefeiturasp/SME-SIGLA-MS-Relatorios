@@ -25,11 +25,10 @@ class CustomPagination(PageNumberPagination):
         """Retorna paginated response.
 
         Args:
-            self: Instância do objeto.
-            data: Dados de entrada.
+            data: Data.
 
         Returns:
-            Valor calculado para o campo ou propriedade.
+            Valor do campo serializado.
         """
         return Response(
             {
@@ -48,14 +47,7 @@ class CustomPagination(PageNumberPagination):
 
 
 def convert_uuids_to_strings(obj: Any) -> Any:
-    """Converte recursivamente todos os objetos UUID para strings em uma.
-
-    Args:
-        obj: Obj utilizado na operação.
-
-    Returns:
-        Valor calculado conforme a regra aplicada.
-    """
+    """Converte UUIDs recursivamente para strings na estrutura informada."""
     if isinstance(obj, uuid.UUID):
         return str(obj)
     elif isinstance(obj, dict):

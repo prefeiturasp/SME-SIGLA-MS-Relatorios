@@ -41,10 +41,9 @@ class RelatorioViewSet(viewsets.ModelViewSet):
         """Create.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
-            *args: Argumentos posicionais variáveis.
-            **kwargs: Argumentos nomeados variáveis.
+            *args: Argumentos posicionais repassados ao comando.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
             Resposta HTTP com os dados serializados.

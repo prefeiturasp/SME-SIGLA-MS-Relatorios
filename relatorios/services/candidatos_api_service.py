@@ -21,9 +21,8 @@ class CandidatosService:
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
             base_url: URL base do serviço remoto.
-            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -41,13 +40,12 @@ class CandidatosService:
         """Busca habilitados.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
-            codigo_cargo: Codigo cargo utilizado na operação.
-            ordering: Ordering utilizado na operação.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/"
         params = {"processo_uuid": processo_uuid, "ordering": ordering}
@@ -114,15 +112,14 @@ class CandidatosService:
         """Busca habilitados por processos e classificacoes.
 
         Args:
-            self: Instância do objeto.
-            processo_uuids: Processo uuids utilizado na operação.
-            classificacao: Classificacao utilizado na operação.
-            classificacao_nna: Classificacao nna utilizado na operação.
-            codigo_cargo: Codigo cargo utilizado na operação.
-            ordering: Ordering utilizado na operação.
+            processo_uuids: Processo uuids.
+            classificacao: Classificacao.
+            classificacao_nna: Classificacao nna.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/"
         if isinstance(processo_uuids, list):
@@ -228,12 +225,11 @@ class CandidatosService:
         """Busca por uuids.
 
         Args:
-            self: Instância do objeto.
-            uuids: Uuids utilizado na operação.
-            order_by: Order by utilizado na operação.
+            uuids: Uuids.
+            order_by: Order by.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/buscar-por-uuids/"
         params = {"order_by": order_by}
@@ -289,12 +285,11 @@ class CandidatosService:
         """Busca candidatos por agendas.
 
         Args:
-            self: Instância do objeto.
-            agendas_response: Agendas response utilizado na operação.
-            order_by: Order by utilizado na operação.
+            agendas_response: Agendas response.
+            order_by: Order by.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         try:
             agendas_data = agendas_response.json()
@@ -368,11 +363,10 @@ class CandidatosService:
         """Busca concurso candidatos por processo.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/habilitados/"
         params = {"processo_uuid": processo_uuid, "page_size": 10000}
@@ -417,12 +411,11 @@ class CandidatosService:
         """Busca reclassificados por concurso.
 
         Args:
-            self: Instância do objeto.
             concurso_uuid: UUID do concurso relacionado.
             processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/reclassificados/"
         params = {
@@ -478,14 +471,13 @@ class CandidatosService:
         """Busca eliminados por concurso.
 
         Args:
-            self: Instância do objeto.
             concurso_uuid: UUID do concurso relacionado.
             processo_uuid: UUID do processo de convocação.
-            classificacao_max: Classificacao max utilizado na operação.
-            classificacao_min: Classificacao min utilizado na operação.
+            classificacao_max: Classificacao max.
+            classificacao_min: Classificacao min.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/eliminados/"
         params = {

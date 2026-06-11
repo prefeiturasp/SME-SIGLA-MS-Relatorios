@@ -31,11 +31,8 @@ class ParametrizacaoViewSet(
     def get_object(self) -> Any:
         """Retorna object.
 
-        Args:
-            self: Instância do objeto.
-
         Returns:
-            Valor calculado para o campo ou propriedade.
+            Resposta HTTP com os dados solicitados.
         """
         return self.queryset.first()
 
@@ -43,10 +40,9 @@ class ParametrizacaoViewSet(
         """Create.
 
         Args:
-            self: Instância do objeto.
             request: Requisição HTTP recebida.
-            *args: Argumentos posicionais variáveis.
-            **kwargs: Argumentos nomeados variáveis.
+            *args: Argumentos posicionais repassados ao comando.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
             Resposta HTTP com os dados serializados.

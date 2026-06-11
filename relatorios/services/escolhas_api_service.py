@@ -21,9 +21,8 @@ class EscolhasService:
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
             base_url: URL base do serviço remoto.
-            timeout_seconds: Tempo máximo de espera pela resposta, em segundos.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -36,11 +35,10 @@ class EscolhasService:
         """Busca vagas escolas.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
 
         Returns:
-            Resposta HTTP com o resultado da operação.
+            Resposta HTTP com o arquivo para download.
         """
         url = f"{self.base_url}/api/v1/vagas-escolas/"
         params = {"processo_uuid": processo_uuid}
@@ -87,9 +85,8 @@ class EscolhasService:
         """Busca escolhas por candidatos.
 
         Args:
-            self: Instância do objeto.
-            candidato_uuids: Candidato uuids utilizado na operação.
-            situacao: Situacao utilizado na operação.
+            candidato_uuids: UUIDs dos candidatos consultados.
+            situacao: Situacao.
 
         Returns:
             Lista com os registros obtidos.

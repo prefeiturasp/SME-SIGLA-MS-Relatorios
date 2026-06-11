@@ -19,11 +19,7 @@ class LaudaVagasService:
     TEMPLATE_NAME = "relatorios/vagas_escolas.html"
 
     def __init__(self) -> None:
-        """Inicializa a instância com os parâmetros informados.
-
-        Args:
-            self: Instância do objeto.
-        """
+        """Inicializa a instância com os parâmetros informados."""
         self.escolhas_service = EscolhasService(
             base_url=settings.ESCOLHAS_API_URL
         )
@@ -32,12 +28,11 @@ class LaudaVagasService:
         """Gera relatorio.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório.
         """
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(
@@ -58,11 +53,10 @@ class LaudaVagasService:
         """Agrupa vagas por cargo_codigo e depois por DRE codigo.
 
         Args:
-            self: Instância do objeto.
-            vagas: Vagas utilizado na operação.
+            vagas: Vagas.
 
         Returns:
-            Dicionário com os dados retornados pela operação.
+            Dicionário com os dados processados.
         """
         vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
@@ -79,8 +73,7 @@ class LaudaVagasService:
         """Prepara a estrutura de dados para o template.
 
         Args:
-            self: Instância do objeto.
-            vagas_agrupadas: Vagas agrupadas utilizado na operação.
+            vagas_agrupadas: Vagas agrupadas.
 
         Returns:
             Lista com os registros obtidos.

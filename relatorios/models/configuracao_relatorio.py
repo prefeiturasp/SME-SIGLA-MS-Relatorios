@@ -45,14 +45,7 @@ class ConfiguracaoRelatorio(BaseModel):
         db_table = "relatorios_configuracao"
 
     def __str__(self) -> Any:
-        """Retorna representação textual do registro.
-
-        Args:
-            self: Instância do objeto.
-
-        Returns:
-            Valor calculado conforme a regra aplicada.
-        """
+        """Retorna representação textual do registro."""
         return f"Configuração - {self.get_tipo_display()}"
 
 

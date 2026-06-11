@@ -48,8 +48,7 @@ class SumulaReconvocacao(RelatorioBase):
         """Inicializa a instância com os parâmetros informados.
 
         Args:
-            self: Instância do objeto.
-            **kwargs: Argumentos nomeados variáveis.
+            **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
@@ -73,15 +72,14 @@ class SumulaReconvocacao(RelatorioBase):
         """Gera o relatório de Reconvocados.
 
         Args:
-            self: Instância do objeto.
             processo_uuid: UUID do processo de convocação.
             request: Requisição HTTP recebida.
-            formato: Formato utilizado na operação.
-            cabecalho: Cabecalho utilizado na operação.
-            **kwargs: Argumentos nomeados variáveis.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Tupla com resposta HTTP e dados do relatório.
         """
         cargos_map = {}
         try:
@@ -231,8 +229,7 @@ class SumulaReconvocacao(RelatorioBase):
         """Agrupa candidatos por cargo.
 
         Args:
-            self: Instância do objeto.
-            candidatos: Candidatos utilizado na operação.
+            candidatos: Candidatos habilitados retornados pela API.
 
         Returns:
             Lista com os registros obtidos.
@@ -270,18 +267,17 @@ class SumulaReconvocacao(RelatorioBase):
         context: Any = None,
         filename: Any = "relatorio_reconvocacao.xlsx",
     ) -> Any:
-        """Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            context: Contexto de serialização ou renderização.
-            filename: Filename utilizado na operação.
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if context is None:
             context = {}
@@ -455,20 +451,19 @@ class SumulaReconvocacao(RelatorioBase):
         texto_final: Any,
         filename: Any = "relatorio_reconvocacao.docx",
     ) -> Any:
-        """Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do.
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            self: Instância do objeto.
-            cargos_list: Lista de cargos do processo.
-            cabecalho: Cabecalho utilizado na operação.
-            texto_final: Texto final utilizado na operação.
-            filename: Filename utilizado na operação.
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho: Cabecalho.
+            texto_final: Texto de encerramento do relatório.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            Valor calculado conforme a regra aplicada.
+            Conteúdo textual gerado.
 
         Raises:
-            ImportError: Se ocorrer erro nesta operação.
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
