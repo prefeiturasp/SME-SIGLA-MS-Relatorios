@@ -131,7 +131,7 @@ class ProcessoConvocacaoService:
                 "response": str(response.json())[:100],
             },
         )
-        return response  # type: ignore[no-any-return]
+        return response
 
     def separar_processos_por_principal(
         self, processo_data: dict
