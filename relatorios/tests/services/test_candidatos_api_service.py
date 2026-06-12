@@ -246,6 +246,76 @@ def test_buscar_por_uuids_http_error(mock_post: Any) -> None:
         svc.buscar_por_uuids(uuids=["u1"])
 
 
+@patch("relatorios.services.candidatos_api_service.http_client.post")
+def test_buscar_extracao_dados_success(mock_post):
+    mock_resp = _Resp(
+        {
+            "habilitados": {"total": 100, "pcd": 5, "nna": 10, "geral": 85},
+            "2026": {"convocados": 30, "nao-convocados": 20},
+        }
+    )
+    mock_post.return_value = mock_resp
+    svc = _svc()
+    filtros = [
+        {
+            "ano": 2026,
+            "processo_uuids": [
+                "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            ],
+        }
+    ]
+    payload_esperado = {
+        "habilitados": {"total": 100, "pcd": 5, "nna": 10, "geral": 85},
+        "2026": {"convocados": 30, "nao-convocados": 20},
+    }
+    resp = svc.buscar_extracao_dados(
+        concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        filtros=filtros,
+    )
+    assert resp == payload_esperado
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/habilitados/extracao-dados/",
+        json={
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "filtros": filtros,
+        },
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.candidatos_api_service.http_client.post")
+def test_buscar_extracao_dados_sem_parametros(mock_post):
+    mock_post.return_value = _Resp({"habilitados": {"total": 50000}})
+    svc = _svc()
+    resp = svc.buscar_extracao_dados()
+    assert resp == {"habilitados": {"total": 50000}}
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/habilitados/extracao-dados/",
+        json={},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.candidatos_api_service.http_client.post")
+def test_buscar_extracao_dados_http_error(mock_post):
+    mock_resp = _Resp(None, status_code=500)
+    mock_post.return_value = mock_resp
+    svc = _svc()
+    with pytest.raises(requests.HTTPError):
+        svc.buscar_extracao_dados(
+            concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            filtros=[{"ano": 2026, "processo_uuids": ["p1"]}],
+        )
+
+
 def test_buscar_candidatos_por_agendas_success_extracts_both_formats(
     monkeypatch: Any,
 ) -> Any:
