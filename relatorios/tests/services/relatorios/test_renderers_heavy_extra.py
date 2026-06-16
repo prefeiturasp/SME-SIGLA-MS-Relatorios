@@ -1,3 +1,8 @@
+"""Módulo tests/services/relatorios/test_renderers_heavy_extra."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,12 +19,14 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def parametrizacao():
+def parametrizacao() -> Any:
+    """Parametrizacao."""
     return Parametrizacao.objects.get_or_create(cabecalho="CAB PADRAO")[0]
 
 
 @pytest.fixture
-def cfgs():
+def cfgs() -> Any:
+    """Cfgs."""
     return {
         "nao": ConfiguracaoRelatorio.objects.get_or_create(
             tipo="SUMULA_NAO_ESCOLHAS"
@@ -39,7 +46,8 @@ def cfgs():
     }
 
 
-def _cargos_candidatos():
+def _cargos_candidatos() -> Any:
+    """Cargos candidatos."""
     return [
         {
             "codigo": "101",
@@ -56,7 +64,8 @@ def _cargos_candidatos():
     ]
 
 
-def _cargos_dres_vagas():
+def _cargos_dres_vagas() -> Any:
+    """Cargos dres vagas."""
     return [
         {
             "codigo": "101",
@@ -86,7 +95,8 @@ def _cargos_dres_vagas():
     ]
 
 
-def _cargos_lauda_conv():
+def _cargos_lauda_conv() -> Any:
+    """Cargos lauda conv."""
     return [
         {
             "cargo_nome": "Professor",
@@ -110,7 +120,8 @@ def _cargos_lauda_conv():
     ]
 
 
-def test_sumula_nao_escolhas_renderers(cfgs, parametrizacao):
+def test_sumula_nao_escolhas_renderers(cfgs: Any, parametrizacao: Any) -> None:
+    """Verifica sumula nao escolhas renderers."""
     svc = SumulaNaoEscolhas(
         configuracao=cfgs["nao"], parametrizacao=parametrizacao
     )
@@ -125,7 +136,8 @@ def test_sumula_nao_escolhas_renderers(cfgs, parametrizacao):
     assert "nao.docx" in docx["Content-Disposition"]
 
 
-def test_sumula_reconvocacao_renderers(cfgs, parametrizacao):
+def test_sumula_reconvocacao_renderers(cfgs: Any, parametrizacao: Any) -> None:
+    """Verifica sumula reconvocacao renderers."""
     svc = SumulaReconvocacao(
         configuracao=cfgs["reco"], parametrizacao=parametrizacao
     )
@@ -140,7 +152,8 @@ def test_sumula_reconvocacao_renderers(cfgs, parametrizacao):
     assert "reco.docx" in docx["Content-Disposition"]
 
 
-def test_relacao_vagas_renderers(cfgs, parametrizacao):
+def test_relacao_vagas_renderers(cfgs: Any, parametrizacao: Any) -> None:
+    """Verifica relacao vagas renderers."""
     svc = RelacaoVagas(
         configuracao=cfgs["relacao"], parametrizacao=parametrizacao
     )
@@ -155,7 +168,8 @@ def test_relacao_vagas_renderers(cfgs, parametrizacao):
     assert "relacao.docx" in docx["Content-Disposition"]
 
 
-def test_lauda_vagas_renderers(cfgs, parametrizacao):
+def test_lauda_vagas_renderers(cfgs: Any, parametrizacao: Any) -> None:
+    """Verifica lauda vagas renderers."""
     svc = LaudaVagas(
         configuracao=cfgs["lauda_vagas"], parametrizacao=parametrizacao
     )
@@ -170,7 +184,8 @@ def test_lauda_vagas_renderers(cfgs, parametrizacao):
     assert "lauda-vagas.docx" in docx["Content-Disposition"]
 
 
-def test_lauda_convocacao_renderers(cfgs, parametrizacao):
+def test_lauda_convocacao_renderers(cfgs: Any, parametrizacao: Any) -> None:
+    """Verifica lauda convocacao renderers."""
     svc = LaudaConvocacao(
         configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao
     )
@@ -187,7 +202,10 @@ def test_lauda_convocacao_renderers(cfgs, parametrizacao):
     assert "lauda-conv.docx" in docx["Content-Disposition"]
 
 
-def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
+def test_renderers_logo_fetch_error_paths(
+    cfgs: Any, parametrizacao: Any
+) -> None:
+    """Verifica renderers logo fetch error paths."""
     nao = SumulaNaoEscolhas(
         configuracao=cfgs["nao"], parametrizacao=parametrizacao
     )
@@ -198,7 +216,6 @@ def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
             "logo_url": "http://x/logo.png",
         }
     )
-
     reco = SumulaReconvocacao(
         configuracao=cfgs["reco"], parametrizacao=parametrizacao
     )
@@ -209,7 +226,6 @@ def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
             "logo_url": "http://x/logo.png",
         }
     )
-
     relacao = RelacaoVagas(
         configuracao=cfgs["relacao"], parametrizacao=parametrizacao
     )
@@ -220,7 +236,6 @@ def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
             "logo_url": "http://x/logo.png",
         }
     )
-
     lauda_vagas = LaudaVagas(
         configuracao=cfgs["lauda_vagas"], parametrizacao=parametrizacao
     )
@@ -231,14 +246,12 @@ def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
             "logo_url": "http://x/logo.png",
         }
     )
-
     lauda_conv = LaudaConvocacao(
         configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao
     )
     lauda_conv.context.update(
         {"usar_logotipo": True, "logo_url": "http://x/logo.png"}
     )
-
     with patch(
         "relatorios.services.relatorios.nao_escolhas.requests.get",
         side_effect=RuntimeError("img err"),
@@ -272,7 +285,10 @@ def test_renderers_logo_fetch_error_paths(cfgs, parametrizacao):
         )
 
 
-def test_gerar_else_json_path_lauda_convocacao(cfgs, parametrizacao):
+def test_gerar_else_json_path_lauda_convocacao(
+    cfgs: Any, parametrizacao: Any
+) -> None:
+    """Verifica gerar else json path lauda convocacao."""
     svc = LaudaConvocacao(
         configuracao=cfgs["lauda_conv"], parametrizacao=parametrizacao
     )

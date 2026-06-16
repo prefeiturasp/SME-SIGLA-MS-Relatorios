@@ -1,21 +1,35 @@
+"""Módulo utils."""
+
+from __future__ import annotations
+
 import logging
 import uuid
+from typing import Any
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
-
 DEFAULT_PAGE = 1
 DEFAULT_PAGE_SIZE = 10
 
 
 class CustomPagination(PageNumberPagination):
-    page = DEFAULT_PAGE
+    """Representa CustomPagination."""
+
+    page = DEFAULT_PAGE  # type: ignore[assignment]
     page_size = DEFAULT_PAGE_SIZE
     page_size_query_param = "page_size"
 
-    def get_paginated_response(self, data):
+    def get_paginated_response(self, data: Any) -> Any:
+        """Retorna paginated response.
+
+        Args:
+            data: Data.
+
+        Returns:
+            Valor do campo serializado.
+        """
         return Response(
             {
                 "links": {
@@ -29,20 +43,11 @@ class CustomPagination(PageNumberPagination):
                 ),
                 "results": data,
             }
-        )
+        )  # type: ignore[has-type,union-attr]
 
 
-def convert_uuids_to_strings(obj):
-    """
-    Converte recursivamente todos os objetos UUID para strings em uma estrutura
-    de dados.
-
-    Args:
-        obj: Objeto (dict, list, UUID, etc.) a ser processado
-
-    Returns:
-        Objeto com todos os UUIDs convertidos para strings
-    """
+def convert_uuids_to_strings(obj: Any) -> Any:
+    """Converte UUIDs recursivamente para strings na estrutura informada."""
     if isinstance(obj, uuid.UUID):
         return str(obj)
     elif isinstance(obj, dict):

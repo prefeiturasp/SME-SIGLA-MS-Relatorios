@@ -1,8 +1,9 @@
-"""
-Serviço para geração de lauda de convocação.
-"""
+"""Serviço para geração de lauda de convocação."""
+
+from __future__ import annotations
 
 import logging
+from typing import Any
 
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
@@ -16,13 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class LaudaConvocacaoService:
-    """
-    Serviço para geração de lauda de convocação.
-    Processa por cargo (cargo_codigo) de forma independente: busca habilitados
-    filtrando por cargo,
-    organiza sessões conforme agendas do cargo e consolida o resultado por
-    cargo.
-    """
+    """Serviço para geração de lauda de convocação."""
 
     def __init__(
         self,
@@ -31,15 +26,15 @@ class LaudaConvocacaoService:
         agendas_base_url: str = "https://example.com",
         escolhas_base_url: str = "https://example.com",
         timeout_seconds: int = 30,
-    ):
-        """
-        Inicializa o serviço de lauda de convocação.
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
-            candidatos_base_url: URL base da API de candidatos
-            processo_base_url: URL base da API de processos de convocação
-            agendas_base_url: URL base da API de agendas
-            timeout_seconds: Timeout em segundos para as requisições
+            candidatos_base_url: Candidatos base url.
+            processo_base_url: Processo base url.
+            agendas_base_url: Agendas base url.
+            escolhas_base_url: Escolhas base url.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.candidatos_service = CandidatosService(
             base_url=candidatos_base_url, timeout_seconds=timeout_seconds
@@ -55,16 +50,14 @@ class LaudaConvocacaoService:
         )
 
     def _identificar_lacunas(self, classificacoes: list[int]) -> list[int]:
-        """
-        Identifica lacunas em uma lista de classificações.
-        Exemplo: [1, 2, 3, 6, 7] -> retorna [4, 5]
+        """Identifica lacunas em uma lista de classificações.
+
         Args:
-            classificacoes: Lista de classificações (pode conter None)
+            classificacoes: Classificacoes.
 
         Returns:
-            Lista de classificações faltantes (lacunas)
+            Lista com os registros obtidos.
         """
-        # Remove None e valores inválidos, ordena e remove duplicatas
         classificacoes_validas = sorted(
             set(
                 c
@@ -72,70 +65,49 @@ class LaudaConvocacaoService:
                 if c is not None and isinstance(c, int)
             )
         )
-
         if not classificacoes_validas:
             return []
-
-        # Encontra o mínimo e máximo
         min_class = min(classificacoes_validas)
         max_class = max(classificacoes_validas)
-
-        # Cria um conjunto com todas as classificações esperadas
         todas_classificacoes = set(range(min_class, max_class + 1))
-
-        # Identifica as lacunas (classificações esperadas que não existem)
         lacunas = sorted(todas_classificacoes - set(classificacoes_validas))
-
         return lacunas
 
     def _separar_por_tipo(
         self, candidatos: list[dict]
     ) -> dict[str, list[dict]]:
-        """
-        Separa candidatos por tipo usando o campo categoria_efetiva: GERAL, NNA
-        e PCD.
+        """Separa candidatos por categoria_efetiva (GERAL, NNA e PCD).
 
         Args:
-            candidatos: Lista de candidatos retornados da API
+            candidatos: Candidatos habilitados retornados pela API.
 
         Returns:
-            Dicionário com candidatos separados por tipo:
-            {
-                'geral': [candidatos com categoria_efetiva='GERAL'],
-                'nna': [candidatos com categoria_efetiva='NNA'],
-                'pcd': [candidatos com categoria_efetiva='PCD']
-            }
+            Dicionário com os dados processados.
         """
-        separados = {"geral": [], "nna": [], "pcd": []}
-
+        separados = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         for candidato in candidatos:
             categoria_efetiva = candidato.get("categoria_efetiva")
-
-            # Separa por categoria_efetiva
             if categoria_efetiva == "GERAL":
                 separados["geral"].append(candidato)
             elif categoria_efetiva == "NNA":
                 separados["nna"].append(candidato)
             elif categoria_efetiva == "PCD":
                 separados["pcd"].append(candidato)
-
         return separados
 
     def _extrair_classificacoes(
         self, candidatos: list[dict], campo: str
     ) -> list[int]:
-        """
-        Extrai classificações de uma lista de candidatos.
+        """Extrai classificações de uma lista de candidatos.
 
         Args:
-            candidatos: Lista de candidatos
-            campo: Nome do campo de classificação ('classificacao',
-            'classificacao_nna', 'classificacao_pcd')
+            candidatos: Candidatos habilitados retornados pela API.
+            campo: Campo.
 
         Returns:
-            Lista de classificações (pode conter None)
+            Lista com os registros obtidos.
         """
-        return [candidato.get(campo) for candidato in candidatos]
+        return [candidato.get(campo) for candidato in candidatos]  # type: ignore[misc]
 
     def _buscar_candidatos_faltantes(
         self,
@@ -146,30 +118,23 @@ class LaudaConvocacaoService:
         codigo_cargo: list[str] | str | None = None,
         ordering: str = "ranking_escolha",
     ) -> dict[str, list[dict]]:
-        """
-        Busca candidatos faltantes nos outros processos do mesmo concurso,
-        filtrando por cargo quando informado.
+        """Busca candidatos faltantes em outros processos do concurso.
 
         Args:
-            outros_processos_uuid: Lista de UUIDs dos outros processos
-            lacunas_geral: Lista de classificações faltantes (Geral)
-            lacunas_nna: Lista de classificações faltantes (NNA)
-            lacunas_pcd: Lista de classificações faltantes (PCD)
-            codigo_cargo: Código(s) do cargo para filtrar (opcional)
-            ordering: Campo para ordenação
+            outros_processos_uuid: UUID de outros processos.
+            lacunas_geral: Lacunas geral.
+            lacunas_nna: Lacunas nna.
+            lacunas_pcd: Lacunas pcd.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com candidatos faltantes por tipo. Cada lista é uma
-            lista de dicts diretamente
-            e os itens são anotados com 'status_especial' para diferenciar já
-            classificados/convocados.
+            Dicionário com os dados processados.
         """
-        candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}
-
+        candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
             return candidatos_faltantes
         try:
-            # Buscar candidatos Gerais faltantes
             if lacunas_geral:
                 logger.info(
                     "Buscando candidatos Gerais faltantes (classificações: %s) nos processos: %s",  # noqa: E501
@@ -183,14 +148,10 @@ class LaudaConvocacaoService:
                     ordering=ordering,
                 )
                 candidatos_geral_data = response_geral.json()
-
-                # candidatos_geral_data é uma lista de dicts diretamente
                 if isinstance(candidatos_geral_data, list):
                     candidatos_faltantes["geral"] = candidatos_geral_data
                 else:
                     candidatos_faltantes["geral"] = []
-
-                # Buscar escolhas do tipo "reconvocacao" para complementar o status_especial  # noqa: E501
                 candidatos_uuids = [
                     str(c.get("uuid"))
                     for c in candidatos_faltantes["geral"]
@@ -206,10 +167,9 @@ class LaudaConvocacaoService:
                     )
                     reconvocacao_uuids = set(
                         str(e.get("candidato_uuid"))
-                        for e in (escolhas_reconvocacao or [])
+                        for e in escolhas_reconvocacao or []
                         if e.get("candidato_uuid") is not None
                     )
-
                 for candidato in candidatos_faltantes["geral"]:
                     status_especial = (
                         "JÁ CONVOCADO - LEI 13.398/02"
@@ -225,13 +185,10 @@ class LaudaConvocacaoService:
                             else "OPTOU POR RECONVOCAÇÃO"
                         )
                     candidato["status_especial"] = status_especial
-
                 logger.info(
                     "Encontrados %d candidatos Gerais faltantes",
                     len(candidatos_faltantes["geral"]),
                 )
-
-            # Buscar candidatos NNA faltantes
             if lacunas_nna:
                 logger.info(
                     "Buscando candidatos NNA faltantes (classificações: %s) nos processos: %s",  # noqa: E501
@@ -245,20 +202,16 @@ class LaudaConvocacaoService:
                     ordering=ordering,
                 )
                 candidatos_nna_data = response_nna.json()
-
-                # candidatos_nna_data é uma lista de dicts diretamente
                 if isinstance(candidatos_nna_data, list):
                     candidatos_faltantes["nna"] = candidatos_nna_data
                 else:
                     candidatos_faltantes["nna"] = []
-
-                # Buscar escolhas do tipo "reconvocacao" para complementar o status_especial  # noqa: E501
                 candidatos_uuids = [
                     str(c.get("uuid"))
                     for c in candidatos_faltantes["nna"]
                     if c.get("uuid") is not None
                 ]
-                reconvocacao_uuids: set[str] = set()
+                reconvocacao_uuids: set[str] = set()  # type: ignore[no-redef]
                 if candidatos_uuids:
                     try:
                         escolhas_reconvocacao = self.escolhas_service.buscar_escolhas_por_candidatos(  # noqa: E501
@@ -267,7 +220,7 @@ class LaudaConvocacaoService:
                         )
                         reconvocacao_uuids = set(
                             str(e.get("candidato_uuid"))
-                            for e in (escolhas_reconvocacao or [])
+                            for e in escolhas_reconvocacao or []
                             if e.get("candidato_uuid") is not None
                         )
                     except RequestException:
@@ -280,8 +233,6 @@ class LaudaConvocacaoService:
                                 ),
                             },
                         )
-
-                # Marcar candidatos como "CANDIDATOS JÁ CLASSIFICADO."
                 for candidato in candidatos_faltantes["nna"]:
                     status_especial = "CANDIDATOS JÁ CLASSIFICADO."
                     if str(candidato.get("uuid")) in reconvocacao_uuids:
@@ -289,23 +240,16 @@ class LaudaConvocacaoService:
                             f"{status_especial} - OPTOU POR RECONVOCAÇÃO"
                         )
                     candidato["status_especial"] = status_especial
-
                 logger.info(
                     "Encontrados %d candidatos NNA faltantes",
                     len(candidatos_faltantes["nna"]),
                 )
-
-            # Buscar candidatos PCD faltantes
-            # Nota: O método atual não suporta classificacao_pcd diretamente,
-            # então vamos buscar todos os candidatos dos outros processos e filtrar  # noqa: E501
             if lacunas_pcd:
                 logger.info(
                     "Buscando candidatos PCD faltantes (classificações: %s) nos processos: %s",  # noqa: E501
                     lacunas_pcd,
                     outros_processos_uuid,
                 )
-
-                # Buscar todos os candidatos dos outros processos (sem filtro de classificação)  # noqa: E501
                 todos_candidatos_pcd = []
                 for processo_uuid in outros_processos_uuid:
                     try:
@@ -315,8 +259,6 @@ class LaudaConvocacaoService:
                             )
                         )
                         candidatos_pcd_data = response_pcd.json()
-
-                        # candidatos_pcd_data é uma lista de dicts diretamente
                         if isinstance(candidatos_pcd_data, list):
                             todos_candidatos_pcd.extend(candidatos_pcd_data)
                     except RequestException as exc:
@@ -325,22 +267,18 @@ class LaudaConvocacaoService:
                             processo_uuid,
                             exc,
                         )
-
-                # Filtrar apenas candidatos PCD com classificações nas lacunas
                 candidatos_faltantes["pcd"] = [
                     c
                     for c in todos_candidatos_pcd
                     if c.get("classificacao_pcd") is not None
                     and c.get("classificacao_pcd") in lacunas_pcd
                 ]
-
-                # Buscar escolhas do tipo "reconvocacao" para complementar o status_especial  # noqa: E501
                 candidatos_uuids = [
                     str(c.get("uuid"))
                     for c in candidatos_faltantes["pcd"]
                     if c.get("uuid") is not None
                 ]
-                reconvocacao_uuids: set[str] = set()
+                reconvocacao_uuids: set[str] = set()  # type: ignore[no-redef]
                 if candidatos_uuids:
                     try:
                         escolhas_reconvocacao = self.escolhas_service.buscar_escolhas_por_candidatos(  # noqa: E501
@@ -349,7 +287,7 @@ class LaudaConvocacaoService:
                         )
                         reconvocacao_uuids = set(
                             str(e.get("candidato_uuid"))
-                            for e in (escolhas_reconvocacao or [])
+                            for e in escolhas_reconvocacao or []
                             if e.get("candidato_uuid") is not None
                         )
                     except RequestException:
@@ -362,8 +300,6 @@ class LaudaConvocacaoService:
                                 ),
                             },
                         )
-
-                # Marcar candidatos como "CANDIDATOS JÁ CLASSIFICADO."
                 for candidato in candidatos_faltantes["pcd"]:
                     status_especial = "CANDIDATOS JÁ CLASSIFICADO."
                     if str(candidato.get("uuid")) in reconvocacao_uuids:
@@ -371,46 +307,42 @@ class LaudaConvocacaoService:
                             f"{status_especial} - OPTOU POR RECONVOCAÇÃO"
                         )
                     candidato["status_especial"] = status_especial
-
                 logger.info(
                     "Encontrados %d candidatos PCD faltantes",
                     len(candidatos_faltantes["pcd"]),
                 )
-
         except RequestException as exc:
             logger.warning(
                 "Erro ao buscar candidatos faltantes nos outros processos: %s",
                 exc,
             )
-            # Não levanta exceção, apenas retorna o que conseguiu buscar
-
         return candidatos_faltantes
 
     def _inserir_reclassificados_em_segmento(
         self,
         lista_segmento: list[dict],
         reclassificados: list[dict],
-        cargo_codigo,
+        cargo_codigo: Any,
         classificacao_attr: str,
     ) -> None:
-        """
-        Insere, dentro de lista_segmento, candidatos reclassificados (GERAL)
-        antes dos candidatos
-        do mesmo tipo (NNA/PCD) quando a classificação do reclassificado for
-        menor.
-        - Evita duplicar pelo uuid
-        - Mantém ordenação por classificação do respectivo atributo
-        (classificacao_nna/pcd)
-        - Anota 'status_especial' = 'Utilizar classificação GERAL'
+        """Insere, dentro de lista_segmento, candidatos reclassificados.
+
+        Args:
+            lista_segmento: Lista segmento.
+            reclassificados: Reclassificados.
+            cargo_codigo: Código numérico do cargo.
+            classificacao_attr: Nome do atributo de classificação consultado.
+
+        Returns:
+            Nenhum valor.
         """
         try:
             if (
                 not isinstance(reclassificados, list)
                 or not reclassificados
-                or not lista_segmento
+                or (not lista_segmento)
             ):
                 return
-            # Considerar apenas reclassificados do cargo atual e com classificação inteira válida  # noqa: E501
             reclass_filtrados = [
                 r
                 for r in reclassificados
@@ -419,7 +351,6 @@ class LaudaConvocacaoService:
             ]
             if not reclass_filtrados:
                 return
-            # Mapa para não duplicar por uuid
             existentes: set[str] = set(
                 [
                     str(item.get("uuid"))
@@ -432,17 +363,15 @@ class LaudaConvocacaoService:
                 cand = lista_segmento[j]
                 cand_class = cand.get(classificacao_attr)
                 if isinstance(cand_class, int):
-                    # Reclassificados com classificação menor que o candidato atual  # noqa: E501
                     candidatos_para_inserir = [
                         r
                         for r in reclass_filtrados
                         if r.get(classificacao_attr) < cand_class
                         and str(r.get("uuid")) not in existentes
-                    ]
-                    # Inserir ordenado por classificação do atributo
+                    ]  # type: ignore[operator]
                     candidatos_para_inserir.sort(
                         key=lambda x: x.get(classificacao_attr)
-                    )
+                    )  # type: ignore[arg-type,return-value]
                     for r in candidatos_para_inserir:
                         copia = dict(r)
                         copia["status_especial"] = (
@@ -451,54 +380,49 @@ class LaudaConvocacaoService:
                         copia["foi_reclassificado"] = True
                         lista_segmento.insert(j, copia)
                         existentes.add(str(r.get("uuid")))
-                        j += 1  # posiciona após o inserido
+                        j += 1
                 j += 1
         except Exception:
-            # Em caso de qualquer problema, segue sem a inserção de reclassificados  # noqa: E501
             return
 
     def _inserir_eliminados_em_segmento(
         self,
         lista_segmento: list[dict],
         eliminados: list[dict],
-        cargo_codigo,
+        cargo_codigo: Any,
         classificacao_attr: str,
     ) -> None:
-        """
-        Insere, dentro de lista_segmento, candidatos ELIMINADOS antes dos
-        candidatos do segmento,
-        considerando a classificação indicada por classificacao_attr
-        (classificacao, classificacao_nna, classificacao_pcd).
-        Para cada item da lista, insere eliminados cuja classificação (no
-        atributo indicado) seja menor que a do item atual.
-        - Evita duplicar pelo uuid
-        - Ordena inserções por valor crescente do atributo indicado
-        - Anota 'status_especial' = 'eliminado do certame'
+        """Insere candidatos eliminados na lista do segmento.
+
+        Args:
+            lista_segmento: Lista segmento.
+            eliminados: Eliminados.
+            cargo_codigo: Código numérico do cargo.
+            classificacao_attr: Nome do atributo de classificação consultado.
+
+        Returns:
+            Nenhum valor.
         """
         try:
             if (
                 not isinstance(eliminados, list)
                 or not eliminados
-                or not lista_segmento
+                or (not lista_segmento)
             ):
                 return
-            # Considerar apenas eliminados do cargo atual e com classificação inteira válida  # noqa: E501
             elim_filtrados = []
             for r in eliminados:
                 if str(r.get("codigo_cargo")) != str(cargo_codigo):
                     continue
-                # Para 'classificacao' (GERAL), considerar somente quem NÃO tem classificacao_nna/pcd  # noqa: E501
-                if classificacao_attr == "classificacao":  # noqa: SIM102
-                    if (
-                        r.get("classificacao_nna") is not None
-                        or r.get("classificacao_pcd") is not None
-                    ):
-                        continue
+                if classificacao_attr == "classificacao" and (
+                    r.get("classificacao_nna") is not None
+                    or r.get("classificacao_pcd") is not None
+                ):
+                    continue
                 if isinstance(r.get(classificacao_attr), int):
                     elim_filtrados.append(r)
             if not elim_filtrados:
                 return
-            # Mapa para não duplicar por uuid
             existentes: set[str] = set(
                 [
                     str(item.get("uuid"))
@@ -518,91 +442,39 @@ class LaudaConvocacaoService:
                     if (
                         r.get("categoria_efetiva")
                         == cand.get("categoria_efetiva")
-                        and not cand.get("foi_reclassificado", False)
-                        and not r.get("foi_eliminado", False)
-                        and r.get(classificacao_attr) < cand_class
-                        and str(r.get("uuid")) not in existentes
-                    ):
+                        and (not cand.get("foi_reclassificado", False))
+                        and (not r.get("foi_eliminado", False))
+                        and (r.get(classificacao_attr) < cand_class)
+                        and (str(r.get("uuid")) not in existentes)
+                    ):  # type: ignore[operator]
                         r["foi_eliminado"] = True
                         candidatos_para_inserir.append(r)
                 candidatos_para_inserir.sort(
                     key=lambda x: x.get(classificacao_attr)
-                )
+                )  # type: ignore[arg-type,return-value]
                 for r in candidatos_para_inserir:
                     copia = dict(r)
                     copia["status_especial"] = "Eliminado do certame"
                     lista_segmento.insert(j, copia)
                     existentes.add(str(r.get("uuid")))
-                    j += 1  # posiciona após o inserido
+                    j += 1
                 j += 1
         except Exception:
-            # Em caso de qualquer problema, segue sem a inserção de eliminados
             return
 
     def processar_lauda_convocacao(
         self, processo_uuid: str, ordering: str = "ranking_escolha"
     ) -> dict:
-        """
-        Processa a lauda de convocação para um processo.
-
-        Passos (por cargo):
-        1. Busca candidatos habilitados do processo filtrando por cargo
-        (buscar_habilitados com codigo_cargo)
-        2. Separa candidatos por tipo (GERAL, NNA, PCD)
-        3. Identifica lacunas nas classificações de cada tipo no contexto do
-        cargo
-        4. Busca detalhes do processo para obter concurso_uuid (uma vez) e os
-        outros processos do concurso
-        5. Busca candidatos faltantes nos outros processos (do mesmo cargo) e
-        mescla na base do cargo
-           respeitando lacunas de classificação
-        6. Divide os candidatos do cargo em sessões com base nas agendas do
-        cargo
-        7. Gera campo 'ordem_escolha' por cargo e retorna a estrutura final
-        agregada por cargos
+        """Processa lauda convocacao.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
+            processo_uuid: UUID do processo de convocação.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com os dados processados:
-            {
-                'processo_uuid': str,
-                'concurso_uuid': str,
-                'todos_processos_uuid': List[str],
-                'outros_processos_uuid': List[str],
-                'total_cargos': int,
-                'cargos': [
-                    {
-                        'cargo_nome': str,
-                        'cargo_codigo': str,
-                        'numero_sessoes': int,
-                        'sessoes': [
-                            {
-                                'numero_sessao': int,
-                                'hora_convocacao_inicio': str,
-                                'hora_convocacao_fim': str,
-                                'horario_formatado': str,
-                                'total_candidatos': int,
-                                'candidatos': List[Dict]
-                            },
-                            ...
-                        ]
-                    },
-                    ...
-                ]
-            }
-
-            Nota: Candidatos faltantes (encontrados em outros processos) terão
-            o campo
-            'status_especial' = 'CANDIDATOS JÁ CLASSIFICADO.'
-
-        Raises:
-            RequestException: Em caso de erro nas requisições
+            Dicionário com os dados processados.
         """
         try:
-            # 1. Buscar agendas do processo
             logger.info(
                 "Buscando agendas para processo_uuid=%s", processo_uuid
             )
@@ -611,8 +483,6 @@ class LaudaConvocacaoService:
                 page=1,
                 page_size=1000000,
             )
-
-            # Extrair códigos de cargo das agendas
             agendas_data_temp = response_agendas.json()
             if (
                 isinstance(agendas_data_temp, dict)
@@ -623,46 +493,32 @@ class LaudaConvocacaoService:
                 agendas_temp = agendas_data_temp
             else:
                 agendas_temp = []
-
-            # Extrair códigos únicos de cargo
             codigos_cargo = []
             for agenda in agendas_temp:
                 cargo_codigo = agenda.get("cargo_codigo")
                 if cargo_codigo and cargo_codigo not in codigos_cargo:
                     codigos_cargo.append(cargo_codigo)
-
-            # Converter para string única se houver apenas um, ou lista se houver múltiplos  # noqa: E501
             codigo_cargo_param = (
                 codigos_cargo[0]
                 if len(codigos_cargo) == 1
-                else (codigos_cargo if codigos_cargo else None)
+                else codigos_cargo
+                if codigos_cargo
+                else None
             )
-
             logger.info(
                 "Códigos de cargo extraídos das agendas: %s",
                 codigo_cargo_param,
             )
-
-            # Inicializar resultado e metadados globais (apenas cabeçalhos)
-            resultado = {
-                "processo_uuid": processo_uuid,
-                "concurso_uuid": None,
-            }
+            resultado = {"processo_uuid": processo_uuid, "concurso_uuid": None}
             processo_uuid_principal = None
-            outros_processos_uuid = []
-
-            # Processar agendas para separar candidatos
+            outros_processos_uuid = []  # type: ignore[var-annotated]
             agendas_data = response_agendas.json()
-
-            # Extrair lista de agendas
             if isinstance(agendas_data, dict) and "results" in agendas_data:
                 agendas = agendas_data["results"]
             elif isinstance(agendas_data, list):
                 agendas = agendas_data
             else:
                 agendas = []
-
-            # 1. Agrupar agendas por cargo_nome e salvar cargo_codigo
             agendas_por_cargo = {}
             for agenda in agendas:
                 cargo_nome = agenda.get("cargo_nome", "Sem Cargo")
@@ -674,7 +530,6 @@ class LaudaConvocacaoService:
                         "agendas": [],
                     }
                 agendas_por_cargo[cargo_codigo]["agendas"].append(agenda)
-                # Garantir que cargo_codigo seja atualizado se não estava definido  # noqa: E501
                 if (
                     not agendas_por_cargo[cargo_codigo]["cargo_codigo"]
                     and cargo_codigo
@@ -682,7 +537,6 @@ class LaudaConvocacaoService:
                     agendas_por_cargo[cargo_codigo]["cargo_codigo"] = (
                         cargo_codigo
                     )
-
             logger.info(
                 "Agendas agrupadas por cargo: %s",
                 {
@@ -690,15 +544,10 @@ class LaudaConvocacaoService:
                     for cargo, info in agendas_por_cargo.items()
                 },
             )
-
-            # Buscar reclassificados por concurso
-            # 2. Processar cada cargo e separar por sessões/agendas
             response_processo = (
                 self.processo_service.buscar_processo_convocacao(processo_uuid)
             )
             processo_data = response_processo.json()
-
-            # Buscar reclassificados por concurso
             response_reclassificados = (
                 self.candidatos_service.buscar_reclassificados_por_concurso(
                     concurso_uuid=processo_data.get("concurso_uuid"),
@@ -706,7 +555,6 @@ class LaudaConvocacaoService:
                 )
             )
             reclassificados_data = response_reclassificados.json()
-            # Buscar eliminados por concurso
             cargos_com_sessoes = []
             classificacao_max = 0
             classificacao_min = 0
@@ -721,7 +569,7 @@ class LaudaConvocacaoService:
                     cargo_nome,
                     numero_sessoes,
                 )
-                sessoes_cargo = []
+                sessoes_cargo = []  # type: ignore[var-annotated]
                 for agenda in agendas_cargo:
                     response_candidatos = (
                         self.candidatos_service.buscar_por_uuids(
@@ -763,8 +611,6 @@ class LaudaConvocacaoService:
                     )
                     classificacao_min = classificacao_max
                     eliminados_data = response_eliminados.json()
-
-                    # Separar por tipo e identificar lacunas por cargo
                     candidatos_sep_cargo = self._separar_por_tipo(
                         candidatos_result
                     )
@@ -792,8 +638,6 @@ class LaudaConvocacaoService:
                         lacunas_pcd = self._identificar_lacunas(
                             classificacoes_pcd
                         )
-
-                    # Buscar e inserir faltantes deste cargo (se houver lacunas)  # noqa: E501
                     faltantes_todos = []
                     if lacunas_geral or lacunas_nna or lacunas_pcd:
                         if resultado.get("concurso_uuid") is None:
@@ -816,9 +660,9 @@ class LaudaConvocacaoService:
                                 )
                                 resultado["todos_processos_uuid"] = [
                                     processo_uuid_principal
-                                ] + outros_processos_uuid
+                                ] + outros_processos_uuid  # type: ignore[assignment]
                                 resultado["outros_processos_uuid"] = (
-                                    outros_processos_uuid
+                                    outros_processos_uuid  # type: ignore[assignment]
                                 )
                         if outros_processos_uuid:
                             candidatos_faltantes = self._buscar_candidatos_faltantes(  # noqa: E501
@@ -854,12 +698,13 @@ class LaudaConvocacaoService:
                                     candidatos_faltantes["pcd"]
                                 )
 
-                    # Ordenar base por ranking_escolha e inserir faltantes por classificacao  # noqa: E501
-                    def key_ranking_escolha(item):
+                    def key_ranking_escolha(item: Any) -> Any:
+                        """Ordena pelo ranking de escolha."""
                         val = item.get("ranking_escolha")
                         return val if val is not None else float("inf")
 
-                    def key_classificacao(item):
+                    def key_classificacao(item: Any) -> Any:
+                        """Retorna chave de ordenação por classificação."""
                         val = item.get("classificacao")
                         return val if val is not None else float("inf")
 
@@ -867,15 +712,12 @@ class LaudaConvocacaoService:
                         candidatos_result, key=key_ranking_escolha
                     )
                     if faltantes_todos:
-                        # Helpers para encontrar lacunas e índices de inserção
+
                         def indices_lacunas_classificacao(
-                            classificacoes_ordenadas,
-                        ):
-                            """
-                            Retorna mapa {valor_faltante: indice_insercao} sem
-                            repetir índice para lacunas múltiplas.
-                            """
-                            gaps = {}
+                            classificacoes_ordenadas: Any,
+                        ) -> Any:
+                            """Mapeia lacunas na lista de classificações."""
+                            gaps = {}  # type: ignore[var-annotated]
                             cont = 0
                             if not classificacoes_ordenadas:
                                 return gaps
@@ -887,10 +729,8 @@ class LaudaConvocacaoService:
                                 if (
                                     isinstance(a, int)
                                     and isinstance(b, int)
-                                    and b - a > 1
+                                    and (b - a > 1)
                                 ):
-                                    # números faltantes entre a e b
-                                    # cada número faltante avança o índice de inserção  # noqa: E501
                                     for offset, missing in enumerate(
                                         range(a + 1, b), start=1
                                     ):
@@ -898,8 +738,8 @@ class LaudaConvocacaoService:
                                     cont += 1
                             return gaps
 
-                        # Construir lista de classificações ordenadas a partir da base  # noqa: E501
-                        def _classificacao_para_gap(item):
+                        def _classificacao_para_gap(item: Any) -> Any:
+                            """Obtém classificação para detectar lacunas."""
                             return (
                                 9999999
                                 if item.get("categoria_efetiva") != "GERAL"
@@ -914,15 +754,12 @@ class LaudaConvocacaoService:
                         mapa_lacunas = indices_lacunas_classificacao(
                             classifs_base
                         )
-
                         for faltante in faltantes_todos:
                             cls_f = faltante.get("classificacao")
                             if cls_f in mapa_lacunas:
                                 pos = mapa_lacunas[cls_f]
                                 candidatos_base_ordenados.insert(pos, faltante)
                             else:
-                                # Caso não exista lacuna correspondente, insere por ordem de classificação  # noqa: E501
-                                # na posição ordenada padrão (bisect-like)
                                 pos = 0
                                 while (
                                     pos < len(candidatos_base_ordenados)
@@ -933,8 +770,6 @@ class LaudaConvocacaoService:
                                 ):
                                     pos += 1
                                 candidatos_base_ordenados.insert(pos, faltante)
-
-                    # Inserir reclassificados PCD e NNA (GERAL) antes dos respectivos tipos  # noqa: E501
                     reclass_pcd = (
                         (reclassificados_data or {}).get("pcd", [])
                         if reclassificados_data
@@ -981,14 +816,12 @@ class LaudaConvocacaoService:
                         cargo_codigo=cargo_codigo,
                         classificacao_attr="classificacao",
                     )
-                    # Obter horários da agenda correspondente (índice da sessão)  # noqa: E501
                     numero_sessao = len(sessoes_cargo) + 1
                     agenda_sessao = (
                         agendas_cargo[numero_sessao - 1]
                         if numero_sessao - 1 < len(agendas_cargo)
                         else {}
                     )
-
                     sessoes_cargo.append(
                         {
                             "numero_sessao": numero_sessao,
@@ -1001,8 +834,6 @@ class LaudaConvocacaoService:
                             "candidatos": candidatos_base_ordenados,
                         }
                     )
-
-                # Adicionar estrutura do cargo com suas sessões
                 cargos_com_sessoes.append(
                     {
                         "cargo_nome": cargo_nome,
@@ -1011,25 +842,16 @@ class LaudaConvocacaoService:
                         "sessoes": sessoes_cargo,
                     }
                 )
-            # Adicionar campo "ordem_escolha" aos candidatos
-            # A ordem é contínua entre sessões do mesmo cargo, mas reinicia para cada novo cargo  # noqa: E501
-            # Candidatos com status_especial não são contados na ordem
             for cargo_info in cargos_com_sessoes:
-                ordem_escolha_contador = 0  # Reinicia para cada cargo
-
+                ordem_escolha_contador = 0
                 for sessao in cargo_info["sessoes"]:
                     candidatos_sessao = sessao.get("candidatos", [])
-
                     for candidato in candidatos_sessao:
-                        # Se o candidato não tiver status_especial, adicionar ordem_escolha  # noqa: E501
                         if not candidato.get("status_especial"):
                             ordem_escolha_contador += 1
                             candidato["ordem_escolha"] = ordem_escolha_contador
                         else:
-                            # Candidatos com status_especial não recebem ordem_escolha  # noqa: E501
                             candidato["ordem_escolha"] = None
-
-            # A estrutura principal será organizada por cargos e sessões
             resultado_estruturado = {
                 "processo_uuid": resultado.get("processo_uuid"),
                 "concurso_uuid": resultado.get("concurso_uuid"),
@@ -1039,8 +861,7 @@ class LaudaConvocacaoService:
                 ),
                 "total_cargos": len(cargos_com_sessoes),
                 "cargos": [],
-            }
-
+            }  # type: ignore[var-annotated]
             for cargo_info in cargos_com_sessoes:
                 cargo_estruturado = {
                     "cargo_nome": cargo_info["cargo_nome"],
@@ -1048,18 +869,14 @@ class LaudaConvocacaoService:
                     "numero_sessoes": cargo_info["numero_sessoes"],
                     "sessoes": [],
                 }
-
                 for sessao in cargo_info["sessoes"]:
                     hora_inicio = sessao.get("hora_convocacao_inicio", "")
                     hora_fim = sessao.get("hora_convocacao_fim", "")
                     candidatos_sessao = sessao.get("candidatos", [])
-
-                    # Formatar horário
                     if hora_inicio and hora_fim:
                         horario_formatado = f"{hora_inicio} às {hora_fim}"
                     else:
                         horario_formatado = "Não informado"
-
                     sessao_estruturada = {
                         "numero_sessao": sessao["numero_sessao"],
                         "hora_convocacao_inicio": hora_inicio,
@@ -1069,12 +886,8 @@ class LaudaConvocacaoService:
                         "candidatos": candidatos_sessao,
                     }
                     cargo_estruturado["sessoes"].append(sessao_estruturada)
-
-                resultado_estruturado["cargos"].append(cargo_estruturado)
-
-            # Retornar a estrutura organizada conforme os prints
+                resultado_estruturado["cargos"].append(cargo_estruturado)  # type: ignore[union-attr]
             return resultado_estruturado
-
         except RequestException as exc:
             logger.error(
                 "Erro ao processar lauda de convocação (processo_uuid=%s): %s",

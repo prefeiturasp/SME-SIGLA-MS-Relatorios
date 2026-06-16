@@ -1,3 +1,8 @@
+"""Módulo tests/services/relatorios/test_ata_escolha."""
+
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -15,7 +20,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def configuracao_relatorio():
+def configuracao_relatorio() -> Any:
     """Fixture que cria uma ConfiguracaoRelatorio para testes."""
     return ConfiguracaoRelatorio.objects.get_or_create(
         tipo="ATA_ESCOLHA",
@@ -29,7 +34,7 @@ def configuracao_relatorio():
 
 
 @pytest.fixture
-def parametrizacao():
+def parametrizacao() -> Any:
     """Fixture que cria uma Parametrizacao para testes."""
     return Parametrizacao.objects.create(
         cabecalho="Cabeçalho Padrão Teste", logo=None
@@ -37,7 +42,7 @@ def parametrizacao():
 
 
 @pytest.fixture
-def settings_config(settings):
+def settings_config(settings: Any) -> Any:
     """Configuração padrão de settings para os testes."""
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.CONVOCACAO_API_URL = "http://processos"
@@ -48,7 +53,9 @@ def settings_config(settings):
 
 
 @pytest.fixture
-def service(settings_config, configuracao_relatorio, parametrizacao):
+def service(
+    settings_config: Any, configuracao_relatorio: Any, parametrizacao: Any
+) -> Any:
     """Fixture para criar instância de AtaEscolha."""
     return AtaEscolha(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
@@ -56,14 +63,14 @@ def service(settings_config, configuracao_relatorio, parametrizacao):
 
 
 @pytest.fixture
-def service_mocked(service):
+def service_mocked(service: Any) -> Any:
     """Fixture para criar serviço com mock do ata_service."""
     service.ata_service = Mock()
     return service
 
 
 @pytest.fixture
-def dados_ata():
+def dados_ata() -> Any:
     """Dados de exemplo para a ata de escolha."""
     return {
         "processo_uuid": "proc-123",
@@ -137,12 +144,12 @@ def dados_ata():
 
 
 @pytest.fixture
-def request_obj():
+def request_obj() -> Any:
     """Fixture para criar objeto de request."""
     return RequestFactory().get("/relatorios/ata-escolha/")
 
 
-def _make_cargo_list(**kwargs):
+def _make_cargo_list(**kwargs: Any) -> Any:
     """Helper para criar lista de cargos com diferentes variações."""
     cargo_base = {
         "cargo_nome": kwargs.get("cargo_nome", "Professor"),
@@ -180,8 +187,10 @@ def _make_cargo_list(**kwargs):
     )
 
 
-def test_init(settings_config, configuracao_relatorio, parametrizacao):
-    """Testa inicialização da classe AtaEscolha."""
+def test_init(
+    settings_config: Any, configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica init."""
     svc = AtaEscolha(
         configuracao=configuracao_relatorio, parametrizacao=parametrizacao
     )
@@ -220,19 +229,18 @@ def test_init(settings_config, configuracao_relatorio, parametrizacao):
     ],
 )
 def test_gerar_formatos(
-    settings_config,
-    service_mocked,
-    dados_ata,
-    request_obj,
-    formato,
-    cabecalho,
-    expected_method,
-    expected_content_type,
-    expected_filename,
-):
-    """Testa geração de relatório em diferentes formatos."""
+    settings_config: Any,
+    service_mocked: Any,
+    dados_ata: Any,
+    request_obj: Any,
+    formato: Any,
+    cabecalho: Any,
+    expected_method: Any,
+    expected_content_type: Any,
+    expected_filename: Any,
+) -> None:
+    """Verifica gerar formatos."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
-
     if formato == "html":
         with patch(
             "relatorios.services.relatorios.ata_escolha.render",
@@ -252,11 +260,9 @@ def test_gerar_formatos(
             else m_render.call_args[1].get("context")
         )
         assert context["cargos"] == dados_ata["cargos"]
-        # O cabeçalho é processado pelo método gerar
         if cabecalho and cabecalho.strip():
             assert context["cabecalho"] == cabecalho.strip()
         else:
-            # Usa cabeçalho padrão se vazio
             assert (
                 context["cabecalho"] == ""
                 or context["cabecalho"] == "CABECALHO_PADRAO"
@@ -320,13 +326,10 @@ def test_gerar_formatos(
                 cabecalho=cabecalho,
             )
         m_xls.assert_called_once()
-        # _render_xls recebe context_data como primeiro argumento
         context_passed = m_xls.call_args[0][0]
         assert context_passed["cargos"] == dados_ata["cargos"]
-        # Verificar se o cabeçalho está no contexto
         if cabecalho and cabecalho.strip():
             assert context_passed["cabecalho"] == cabecalho.strip()
-        # Verificar filename
         if expected_filename:
             assert (
                 m_xls.call_args[1]["filename"] == expected_filename
@@ -340,18 +343,14 @@ def test_gerar_formatos(
             cabecalho=cabecalho,
         )
         assert isinstance(response, JsonResponse)
-
     assert isinstance(response, HttpResponse)
     assert dados == dados_ata
 
 
 def test_gerar_html_uses_cabecalho_padrao_quando_vazio(
-    settings_config, service_mocked, dados_ata, request_obj
-):
-    """
-    Testa que usa cabecalho_padrao da Parametrizacao quando cabecalho está
-    vazio.
-    """
+    settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any
+) -> None:
+    """Verifica gerar html uses cabecalho padrao quando vazio."""
     service_mocked.context["cabecalho_padrao"] = "CABECALHO_PADRAO"
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch(
@@ -374,23 +373,17 @@ def test_gerar_html_uses_cabecalho_padrao_quando_vazio(
 
 @pytest.mark.parametrize(
     "cabecalho,esperado",
-    [
-        ("  CABECALHO  ", "CABECALHO"),
-        (None, "Cabeçalho Padrão Teste"),
-    ],
+    [("  CABECALHO  ", "CABECALHO"), (None, "Cabeçalho Padrão Teste")],
 )
 def test_gerar_cabecalho_tratamento(
-    settings_config,
-    service_mocked,
-    dados_ata,
-    request_obj,
-    cabecalho,
-    esperado,
-):
-    """
-    Testa tratamento de cabeçalho (stripped) e uso de cabecalho_padrao quando
-    vazio.
-    """
+    settings_config: Any,
+    service_mocked: Any,
+    dados_ata: Any,
+    request_obj: Any,
+    cabecalho: Any,
+    esperado: Any,
+) -> None:
+    """Verifica gerar cabecalho tratamento."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch(
         "relatorios.services.relatorios.ata_escolha.render",
@@ -414,9 +407,9 @@ def test_gerar_cabecalho_tratamento(
 
 
 def test_gerar_raises_exception_on_service_failure(
-    settings_config, service_mocked, request_obj
-):
-    """Testa que exceção é levantada quando o serviço falha."""
+    settings_config: Any, service_mocked: Any, request_obj: Any
+) -> None:
+    """Verifica gerar raises exception on service failure."""
     service_mocked.ata_service.processar_ata_escolha.side_effect = Exception(
         "Falha no serviço"
     )
@@ -430,9 +423,9 @@ def test_gerar_raises_exception_on_service_failure(
 
 
 def test_gerar_processo_uuid_none(
-    settings_config, service_mocked, dados_ata, request_obj
-):
-    """Testa geração com processo_uuid None."""
+    settings_config: Any, service_mocked: Any, dados_ata: Any, request_obj: Any
+) -> None:
+    """Verifica gerar processo uuid none."""
     service_mocked.ata_service.processar_ata_escolha.return_value = dados_ata
     with patch(
         "relatorios.services.relatorios.ata_escolha.render",
@@ -442,8 +435,7 @@ def test_gerar_processo_uuid_none(
             processo_uuid=None, request=request_obj, formato="html"
         )
     service_mocked.ata_service.processar_ata_escolha.assert_called_once_with(
-        processo_uuid="",
-        cargo_codigo=None,
+        processo_uuid="", cargo_codigo=None
     )
 
 
@@ -453,7 +445,7 @@ def test_gerar_processo_uuid_none(
 @pytest.mark.parametrize(
     "cabecalho,cargos_list",
     [
-        ("CABECALHO TESTE", None),  # None usa dados_ata['cargos']
+        ("CABECALHO TESTE", None),
         ("", None),
         (
             "CABECALHO",
@@ -543,11 +535,15 @@ def test_gerar_processo_uuid_none(
     ],
 )
 def test_render_to_docx_variacoes(
-    settings_config, service, dados_ata, cabecalho, cargos_list
-):
-    """Testa geração de DOCX com diferentes variações de dados."""
+    settings_config: Any,
+    service: Any,
+    dados_ata: Any,
+    cabecalho: Any,
+    cargos_list: Any,
+) -> None:
+    """Verifica render to docx variacoes."""
     cargos = (
-        _make_cargo_list(**(cargos_list or {}))
+        _make_cargo_list(**cargos_list or {})
         if cargos_list
         else dados_ata["cargos"]
     )
@@ -569,11 +565,9 @@ def test_render_to_docx_variacoes(
 
 @pytest.mark.skipif(DOCX_AVAILABLE, reason="python-docx está instalado")
 def test_render_to_docx_raises_import_error_when_not_available(
-    configuracao_relatorio, parametrizacao
-):
-    """
-    Testa que ImportError é levantado quando python-docx não está disponível.
-    """
+    configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica render to docx raises import error when not available."""
     with patch(
         "relatorios.services.relatorios.ata_escolha.DOCX_AVAILABLE", False
     ):
@@ -684,18 +678,18 @@ def test_render_to_docx_raises_import_error_when_not_available(
         ("CABECALHO", {"horario_formatado": "", "candidatos": []}, False),
         ("CABECALHO", {"candidatos": []}, False),
         ("CABECALHO", {"sessoes": []}, False),
-        ("CABECALHO", "empty_list", False),  # Lista vazia de cargos
+        ("CABECALHO", "empty_list", False),
     ],
 )
 def test_render_xls_variacoes(
-    settings_config,
-    service,
-    dados_ata,
-    cabecalho,
-    cargos_list,
-    check_content_type,
-):
-    """Testa geração de XLSX com diferentes variações de dados."""
+    settings_config: Any,
+    service: Any,
+    dados_ata: Any,
+    cabecalho: Any,
+    cargos_list: Any,
+    check_content_type: Any,
+) -> None:
+    """Verifica render xls variacoes."""
     if cargos_list == "empty_list":
         cargos = []
     elif cargos_list == {"sessoes": []}:
@@ -705,9 +699,7 @@ def test_render_xls_variacoes(
     elif cargos_list is None:
         cargos = dados_ata["cargos"]
     else:
-        cargos = _make_cargo_list(**(cargos_list or {}))
-
-    # _render_xls recebe context_data como primeiro argumento
+        cargos = _make_cargo_list(**cargos_list or {})
     context_data = service.context.copy()
     context_data["cargos"] = cargos
     context_data["cabecalho"] = cabecalho
@@ -727,11 +719,9 @@ def test_render_xls_variacoes(
 
 @pytest.mark.skipif(OPENPYXL_AVAILABLE, reason="openpyxl está instalado")
 def test_render_xls_raises_import_error_when_not_available(
-    configuracao_relatorio, parametrizacao
-):
-    """
-    Testa que ImportError é levantado quando openpyxl não está disponível.
-    """
+    configuracao_relatorio: Any, parametrizacao: Any
+) -> None:
+    """Verifica render xls raises import error when not available."""
     with patch(
         "relatorios.services.relatorios.ata_escolha.OPENPYXL_AVAILABLE", False
     ):
@@ -749,30 +739,36 @@ def test_render_xls_raises_import_error_when_not_available(
     not DOCX_AVAILABLE, reason="python-docx não está instalado"
 )
 def test_render_to_docx_exception_handling(
-    settings_config, service, dados_ata
-):
-    """Testa tratamento de exceção em render_to_docx."""
-    with patch(  # noqa: SIM117
-        "relatorios.services.relatorios.ata_escolha.Document",
-        side_effect=Exception("Erro ao criar documento"),
+    settings_config: Any, service: Any, dados_ata: Any
+) -> None:
+    """Verifica render to docx exception handling."""
+    with (
+        patch(
+            "relatorios.services.relatorios.ata_escolha.Document",
+            side_effect=Exception("Erro ao criar documento"),
+        ),
+        pytest.raises(Exception, match="Erro ao criar documento"),
     ):
-        with pytest.raises(Exception, match="Erro ao criar documento"):
-            service.render_to_docx(
-                dados_ata["cargos"], "CABECALHO", filename="test.docx"
-            )
+        service.render_to_docx(
+            dados_ata["cargos"], "CABECALHO", filename="test.docx"
+        )
 
 
 @pytest.mark.skipif(
     not OPENPYXL_AVAILABLE, reason="openpyxl não está instalado"
 )
-def test_render_xls_exception_handling(settings_config, service, dados_ata):
-    """Testa tratamento de exceção em _render_xls."""
+def test_render_xls_exception_handling(
+    settings_config: Any, service: Any, dados_ata: Any
+) -> None:
+    """Verifica render xls exception handling."""
     context_data = service.context.copy()
     context_data["cargos"] = dados_ata["cargos"]
     context_data["cabecalho"] = "CABECALHO"
-    with patch(  # noqa: SIM117
-        "relatorios.services.relatorios.ata_escolha.Workbook",
-        side_effect=Exception("Erro ao criar workbook"),
+    with (
+        patch(
+            "relatorios.services.relatorios.ata_escolha.Workbook",
+            side_effect=Exception("Erro ao criar workbook"),
+        ),
+        pytest.raises(Exception, match="Erro ao criar workbook"),
     ):
-        with pytest.raises(Exception, match="Erro ao criar workbook"):
-            service._render_xls(context_data, filename="test.xlsx")
+        service._render_xls(context_data, filename="test.xlsx")

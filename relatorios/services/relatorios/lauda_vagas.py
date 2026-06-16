@@ -1,11 +1,12 @@
-"""
-Implementação concreta do relatório de Lauda de Vagas.
-"""
+"""Implementação concreta do relatório de Lauda de Vagas."""
+
+from __future__ import annotations
 
 import logging
 import os
 import tempfile
 from io import BytesIO
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -24,7 +25,6 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-
 try:
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -35,19 +35,20 @@ try:
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 
 class LaudaVagas(RelatorioBase):
-    """
-    Classe concreta responsável por gerar o relatório de Lauda de Vagas.
-    """
+    """Classe concreta responsável por gerar o relatório de Lauda de Vagas."""
 
     TEMPLATE_NAME = "relatorios/vagas_escolas.html"
 
-    def __init__(self, **kwargs):
-        """Inicializa o service com as dependências necessárias."""
+    def __init__(self, **kwargs: Any) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            **kwargs: Argumentos nomeados repassados ao comando.
+        """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
             base_url=settings.ESCOLHAS_API_URL
@@ -56,62 +57,49 @@ class LaudaVagas(RelatorioBase):
     def gerar(
         self,
         processo_uuid: str,
-        request,
+        request: Any,
         formato: str = "html",
         cabecalho: str = "",
-        **kwargs,
-    ):
-        """
-        Gera o relatório de Lauda de Vagas.
+        **kwargs: Any,
+    ) -> Any:
+        """Gera o relatório de Lauda de Vagas.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            request: Objeto request do Django
-            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx')
-            cabecalho: Texto do cabeçalho do relatório (opcional)
+            processo_uuid: UUID do processo de convocação.
+            request: Requisição HTTP recebida.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou
-            DOCX)
-            - dados: estrutura de dados do relatório (cargos_list) para salvar
-            no banco
+            Tupla com resposta HTTP e dados do relatório.
         """
-        # Buscar vagas das escolas do microserviço de escolhas
         try:
             vagas_escolas = self.escolhas_service.buscar_vagas_escolas(
-                processo_uuid=str(processo_uuid) if processo_uuid else "",
+                processo_uuid=str(processo_uuid) if processo_uuid else ""
             )
-
         except Exception as exc:
             logger.error(
                 "Falha ao buscar vagas de escolas da API externa: %s", exc
             )
             raise
-
         vagas = vagas_escolas.json().get("vagas", [])
         vagas_agrupadas = self._agrupar_vagas(vagas)
         cargos_list = self._preparar_dados_template(vagas_agrupadas)
-        # Converter todos os UUIDs para strings para garantir serialização JSON
         cargos_list = convert_uuids_to_strings(cargos_list)
         logo_url = (
             request.build_absolute_uri(self.context.get("logo_url", ""))
             if self.context.get("logo_url")
             else ""
         )
-        self.context.update(
-            {
-                "logo_url": logo_url,
-                "cargos": cargos_list,
-            }
-        )
+        self.context.update({"logo_url": logo_url, "cargos": cargos_list})
         if formato == "xls" or formato == "csv":
             filename = f"relatorio_vagas_{processo_uuid}.xlsx"
             logger.info("Gerando Excel: %s", filename)
             response = self.render_to_xls(
                 context=self.context, filename=filename
             )
-            return response, cargos_list
+            return (response, cargos_list)
         elif formato == "docx" or formato == "doc":
             filename = f"relatorio_vagas_{processo_uuid}.docx"
             logger.info("Gerando Word: %s", filename)
@@ -121,69 +109,57 @@ class LaudaVagas(RelatorioBase):
                 self.context["texto_final"],
                 filename=filename,
             )
-            return response, cargos_list
+            return (response, cargos_list)
         elif formato == "pdf":
             filename = f"relatorio_vagas_{processo_uuid}.pdf"
             logger.info("Gerando PDF: %s", filename)
-            self.context.update(
-                {
-                    "is_pdf": True,
-                    "cargos": cargos_list,
-                }
-            )
+            self.context.update({"is_pdf": True, "cargos": cargos_list})
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME, self.context, filename=filename
             )
-            return response, cargos_list
+            return (response, cargos_list)
         else:
             logger.info("Gerando HTML")
             self.context["cargos"] = cargos_list
             response = render(request, self.TEMPLATE_NAME, self.context)
-            return response, cargos_list
+            return (response, cargos_list)
 
     def _agrupar_vagas(self, vagas: list) -> dict:
-        """
-        Agrupa vagas por cargo_codigo e depois por DRE codigo.
+        """Agrupa vagas por cargo_codigo e depois por DRE codigo.
 
         Args:
-            vagas: Lista de vagas
+            vagas: Vagas.
 
         Returns:
-            Dicionário agrupado por cargo e DRE
+            Dicionário com os dados processados.
         """
-        vagas_agrupadas = {}
+        vagas_agrupadas = {}  # type: ignore[var-annotated]
         for vaga in vagas:
             cargo_codigo = vaga.get("cargo_codigo")
             dre_codigo = vaga.get("escola", {}).get("dre", {}).get("codigo")
-
             if cargo_codigo not in vagas_agrupadas:
                 vagas_agrupadas[cargo_codigo] = {}
-
             if dre_codigo not in vagas_agrupadas[cargo_codigo]:
                 vagas_agrupadas[cargo_codigo][dre_codigo] = []
-
             vagas_agrupadas[cargo_codigo][dre_codigo].append(vaga)
-
         return vagas_agrupadas
 
     def _preparar_dados_template(self, vagas_agrupadas: dict) -> list:
-        """
-        Prepara a estrutura de dados para o template.
+        """Prepara a estrutura de dados para o template.
 
         Args:
-            vagas_agrupadas: Dicionário com vagas agrupadas por cargo e DRE
+            vagas_agrupadas: Vagas agrupadas.
 
         Returns:
-            Lista de cargos com suas DREs e vagas
+            Lista com os registros obtidos.
         """
         cargos_list = []
         for cargo_codigo, dres in vagas_agrupadas.items():
             primeira_vaga = None
-            for dre_codigo, vagas_list in dres.items():  # noqa: B007
+            for dre_codigo, vagas_list in dres.items():
                 if vagas_list:
                     primeira_vaga = vagas_list[0]
                     break
-
             if primeira_vaga:
                 dres_list = []
                 for dre_codigo, vagas_list in dres.items():
@@ -198,7 +174,6 @@ class LaudaVagas(RelatorioBase):
                                 "vagas": vagas_list,
                             }
                         )
-
                 cargos_list.append(
                     {
                         "codigo": cargo_codigo,
@@ -206,22 +181,22 @@ class LaudaVagas(RelatorioBase):
                         "dres": dres_list,
                     }
                 )
-
         return cargos_list
 
-    def render_to_xls(self, context=None, filename="relatorio.xlsx"):
-        """
-        Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
-        Formato baseado na estrutura de comunicado oficial.
+    def render_to_xls(
+        self, context: Any = None, filename: Any = "relatorio.xlsx"
+    ) -> Any:
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            cargos_list: Lista de cargos com suas DREs e vagas (estrutura
-            hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            filename: Nome do arquivo Excel gerado
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Excel gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if context is None:
             context = {}
@@ -229,12 +204,10 @@ class LaudaVagas(RelatorioBase):
             raise ImportError(
                 "openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0"  # noqa: E501
             )
-
         try:
             wb = Workbook()
             ws = wb.active
             ws.title = "Relatório de Vagas"
-
             cargo_fill = PatternFill(
                 start_color="667eea", end_color="667eea", fill_type="solid"
             )
@@ -260,10 +233,8 @@ class LaudaVagas(RelatorioBase):
                 horizontal="center", vertical="center", wrap_text=True
             )
             left_align = Alignment(horizontal="left", vertical="center")
-
             row = 1
             temp_image_paths = []
-            # Inserir logotipo no topo, se disponível
             logo_url = (
                 (context or self.context).get("logo_url")
                 if context or self.context
@@ -287,23 +258,17 @@ class LaudaVagas(RelatorioBase):
                         image_path = logo_url
                     if image_path:
                         img = XLImage(image_path)
-                        # opcional: ajustar tamanho
                         try:
-                            # Reduz o tamanho da imagem
                             img.width = 220
                             img.height = 90
                         except Exception:
                             pass
-                        # Aproxima o alinhamento central ancorando em uma coluna intermediária  # noqa: E501
-                        # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado  # noqa: E501
                         ws.add_image(img, "B1")
-                        # Avança algumas linhas para não sobrepor conteúdo
                         row = max(row, 8)
                 except Exception as exc:
                     logger.warning(
                         "Não foi possível inserir o logotipo no XLS: %s", exc
                     )
-
             cabecalho_padrao = self.context.get("cabecalho_padrao", "")
             if cabecalho_padrao:
                 ws.merge_cells(f"A{row}:D{row}")
@@ -321,10 +286,8 @@ class LaudaVagas(RelatorioBase):
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-
             for cargo in self.context["cargos"]:
                 cargo_descricao = cargo.get("descricao", "")
-
                 ws.merge_cells(f"A{row}:D{row}")
                 cell = ws[f"A{row}"]
                 cell.value = f"Cargo: {cargo_descricao}"
@@ -332,10 +295,8 @@ class LaudaVagas(RelatorioBase):
                 cell.fill = cargo_fill
                 cell.alignment = left_align
                 row += 1
-
                 for dre in cargo.get("dres", []):
                     dre_nome = dre.get("nome", "")
-
                     ws.merge_cells(f"A{row}:D{row}")
                     cell = ws[f"A{row}"]
                     cell.value = f"DRE - {dre_nome}"
@@ -343,7 +304,6 @@ class LaudaVagas(RelatorioBase):
                     cell.fill = dre_fill
                     cell.alignment = left_align
                     row += 1
-
                     headers = [
                         "Tipo de unidade",
                         "Unidade",
@@ -358,10 +318,8 @@ class LaudaVagas(RelatorioBase):
                         cell.alignment = center_align
                         cell.border = border
                     row += 1
-
                     for vaga in dre.get("vagas", []):
                         escola = vaga.get("escola", {})
-
                         ws.cell(row=row, column=1).value = escola.get(
                             "tipo_ue", "-"
                         )
@@ -374,7 +332,6 @@ class LaudaVagas(RelatorioBase):
                         ws.cell(row=row, column=4).value = vaga.get(
                             "vagas_precarias", 0
                         )
-
                         for col in range(1, 5):
                             cell = ws.cell(row=row, column=col)
                             cell.border = border
@@ -383,24 +340,12 @@ class LaudaVagas(RelatorioBase):
                                 cell.alignment = center_align
                             else:
                                 cell.alignment = left_align
-
                         row += 1
-
                     row += 1
-
                 row += 1
-
-            column_widths = {
-                "A": 20,  # Tipo de Unidade
-                "B": 60,  # Unidade
-                "C": 20,  # Vagas Definitivas
-                "D": 20,  # Vagas Precárias
-            }
-
+            column_widths = {"A": 20, "B": 60, "C": 20, "D": 20}
             for col_letter, width in column_widths.items():
                 ws.column_dimensions[col_letter].width = width
-
-            # Adiciona texto final ao término do relatório, se houver
             texto_final = self.context.get("texto_final")
             if texto_final:
                 row += 1
@@ -411,18 +356,15 @@ class LaudaVagas(RelatorioBase):
                 cell.alignment = Alignment(
                     horizontal="left", vertical="top", wrap_text=True
                 )
-
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
-            # Limpar temporários de imagem
             for p in temp_image_paths:
                 try:
                     if os.path.exists(p):
                         os.unlink(p)
                 except Exception:
                     pass
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -431,55 +373,46 @@ class LaudaVagas(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Excel: %s", exc, exc_info=True)
             raise
 
     def render_to_docx(
         self,
-        cargos_list,
-        context,
-        texto_final,
-        filename="relatorio_vagas.docx",
-    ):
-        """
-        Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
-        Formato baseado na estrutura de comunicado oficial - EXATAMENTE IGUAL
-        AO XLS.
+        cargos_list: Any,
+        context: Any,
+        texto_final: Any,
+        filename: Any = "relatorio_vagas.docx",
+    ) -> Any:
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            cargos_list: Lista de cargos com suas DREs e vagas (estrutura
-            hierárquica)
-            context: Contexto com os dados do relatório
-            texto_final: Texto final do relatório
-            filename: Nome do arquivo Word gerado
+            cargos_list: Lista de cargos agrupados para o relatório.
+            context: Dados de contexto usados na renderização.
+            texto_final: Texto de encerramento do relatório.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
                 "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"  # noqa: E501
             )
-
         try:
             doc = Document()
-
-            # Configurar margens da página
             sections = doc.sections
             for section in sections:
                 section.top_margin = Inches(1)
                 section.bottom_margin = Inches(1)
                 section.left_margin = Inches(1)
                 section.right_margin = Inches(1)
-
-            # Cores (em RGB)
-            RGBColor(102, 126, 234)  # #667eea
-            RGBColor(52, 73, 94)  # #34495e
-            RGBColor(236, 240, 241)  # #ECF0F1
-
-            # Cabeçalho padrao
+            RGBColor(102, 126, 234)
+            RGBColor(52, 73, 94)
+            RGBColor(236, 240, 241)
             if context.get("cabecalho_padrao"):
                 cabecalho_texto = self.processar_cabecalho_html(
                     context.get("cabecalho_padrao")
@@ -490,8 +423,6 @@ class LaudaVagas(RelatorioBase):
                 run.font.size = Pt(14)
                 run.font.bold = True
                 doc.add_paragraph()
-
-            # Cabeçalho
             if context.get("cabecalho"):
                 cabecalho_texto = self.processar_cabecalho_html(
                     context.get("cabecalho")
@@ -502,12 +433,8 @@ class LaudaVagas(RelatorioBase):
                 run.font.size = Pt(14)
                 run.font.bold = True
                 doc.add_paragraph()
-
-            # Processar cargos
             for cargo in cargos_list:
                 cargo_descricao = cargo.get("descricao", "")
-
-                # Título do cargo
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Cargo: {cargo_descricao}")
@@ -522,11 +449,8 @@ class LaudaVagas(RelatorioBase):
                 shading_elm.set(qn("w:fill"), "667eea")
                 shading_elm.set(qn("w:val"), "clear")
                 p_pr.append(shading_elm)
-
                 for dre in cargo.get("dres", []):
                     dre_nome = dre.get("nome", "")
-
-                    # Título da DRE
                     p = doc.add_paragraph()
                     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     run = p.add_run(f"DRE - {dre_nome}")
@@ -541,8 +465,6 @@ class LaudaVagas(RelatorioBase):
                     shading_elm.set(qn("w:fill"), "34495e")
                     shading_elm.set(qn("w:val"), "clear")
                     p_pr.append(shading_elm)
-
-                    # Criar tabela
                     headers = [
                         "Tipo de unidade",
                         "Unidade",
@@ -551,8 +473,6 @@ class LaudaVagas(RelatorioBase):
                     ]
                     table = doc.add_table(rows=1, cols=len(headers))
                     table.style = "Light Grid Accent 1"
-
-                    # Cabeçalho da tabela
                     header_cells = table.rows[0].cells
                     for i, header in enumerate(headers):
                         cell = header_cells[i]
@@ -570,20 +490,15 @@ class LaudaVagas(RelatorioBase):
                         shading_elm.set(qn("w:fill"), "ECF0F1")
                         shading_elm.set(qn("w:val"), "clear")
                         tc_pr.append(shading_elm)
-
-                    # Dados das vagas
                     for vaga in dre.get("vagas", []):
                         escola = vaga.get("escola", {})
                         row_cells = table.add_row().cells
-
                         row_cells[0].text = escola.get("tipo_ue", "-")
                         row_cells[1].text = escola.get("nome_oficial", "-")
                         row_cells[2].text = str(
                             vaga.get("vagas_definitivas", 0)
                         )
                         row_cells[3].text = str(vaga.get("vagas_precarias", 0))
-
-                        # Alinhamento
                         for i, cell in enumerate(row_cells):
                             if i in [2, 3]:
                                 cell.paragraphs[
@@ -594,21 +509,16 @@ class LaudaVagas(RelatorioBase):
                                     0
                                 ].alignment = WD_ALIGN_PARAGRAPH.LEFT
                             cell.paragraphs[0].runs[0].font.size = Pt(10)
-
                     doc.add_paragraph()
-
             if texto_final:
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(self.processar_cabecalho_html(texto_final))
                 run.font.size = Pt(10)
                 doc.add_paragraph()
-
-            # Salvar em buffer
             buffer = BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -617,7 +527,6 @@ class LaudaVagas(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Word: %s", exc, exc_info=True)
             raise

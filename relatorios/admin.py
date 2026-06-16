@@ -1,6 +1,4 @@
-"""
-Django admin configuration for the processes module.
-"""
+"""Django admin configuration for the processes module."""
 
 from django.contrib import admin
 

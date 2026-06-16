@@ -1,8 +1,9 @@
-"""
-Testes unitários para o serviço ResultadoEscolha.
-"""
+"""Testes unitários para o serviço ResultadoEscolha."""
+
+from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -15,7 +16,7 @@ from relatorios.services.relatorios.resultado_escolha import ResultadoEscolha
 pytestmark = pytest.mark.django_db
 
 
-def _make_request():
+def _make_request() -> Any:
     """Cria um request mock para os testes."""
     return RequestFactory().get("/relatorios/resultado-escolha/")
 
@@ -23,16 +24,18 @@ def _make_request():
 class _MockResponse:
     """Classe auxiliar para mockar respostas HTTP."""
 
-    def __init__(self, json_data, status_code=200):
+    def __init__(self, json_data: Any, status_code: Any = 200) -> None:
+        """Inicializa a instância com os parâmetros informados."""
         self._json_data = json_data
         self.status_code = status_code
 
-    def json(self):
+    def json(self) -> Any:
+        """Json."""
         return self._json_data
 
 
 @pytest.fixture
-def mock_cargos_response():
+def mock_cargos_response() -> Any:
     """Fixture com dados mockados de cargos."""
     return _MockResponse(
         [
@@ -46,7 +49,7 @@ def mock_cargos_response():
 
 
 @pytest.fixture
-def mock_agendas_response():
+def mock_agendas_response() -> Any:
     """Fixture com dados mockados de agendas."""
     return _MockResponse(
         {
@@ -76,7 +79,7 @@ def mock_agendas_response():
 
 
 @pytest.fixture
-def mock_candidatos_response():
+def mock_candidatos_response() -> Any:
     """Fixture com dados mockados de candidatos."""
     return _MockResponse(
         {
@@ -125,7 +128,7 @@ def mock_candidatos_response():
 
 
 @pytest.fixture
-def mock_escolhas_response():
+def mock_escolhas_response() -> Any:
     """Fixture com dados mockados de escolhas."""
     return [
         {"candidato_uuid": "candidato-uuid-1", "tipo_vaga": "definitiva"},
@@ -135,7 +138,7 @@ def mock_escolhas_response():
 
 
 @pytest.fixture
-def configuracao_relatorio():
+def configuracao_relatorio() -> Any:
     """Fixture que cria ou atualiza uma ConfiguracaoRelatorio para testes."""
     configuracao, _ = ConfiguracaoRelatorio.objects.update_or_create(
         tipo="RESULTADO_ESCOLHA",
@@ -150,7 +153,7 @@ def configuracao_relatorio():
 
 
 @pytest.fixture
-def parametrizacao():
+def parametrizacao() -> Any:
     """Fixture que cria uma Parametrizacao para testes."""
     return Parametrizacao.objects.create(
         cabecalho="Cabeçalho Padrão Teste", logo=None
@@ -159,27 +162,23 @@ def parametrizacao():
 
 @pytest.fixture
 def resultado_escolha_service(
-    settings, configuracao_relatorio, parametrizacao
-):
+    settings: Any, configuracao_relatorio: Any, parametrizacao: Any
+) -> Any:
     """Fixture que cria uma instância do serviço com mocks."""
     settings.ESCOLHAS_API_URL = "http://escolhas"
     settings.CANDIDATOS_API_URL = "http://candidatos"
     settings.PROCESSOS_API_URL = "http://processos"
     settings.AGENDAS_API_URL = "http://agendas"
     settings.RELATORIO_CABECALHO_PADRAO = "Cabeçalho Padrão"
-
     service = ResultadoEscolha(
         tipo="RESULTADO_ESCOLHA",
         configuracao=configuracao_relatorio,
         parametrizacao=parametrizacao,
     )
-
-    # Mockar os serviços
     service.processos_service = Mock()
     service.agendas_service = Mock()
     service.candidatos_service = Mock()
     service.escolhas_service = Mock()
-
     return service
 
 
@@ -187,21 +186,19 @@ class TestInit:
     """Testes para o método __init__."""
 
     def test_init_com_tipo(
-        self, settings, configuracao_relatorio, parametrizacao
-    ):
-        """Testa inicialização com tipo."""
+        self, settings: Any, configuracao_relatorio: Any, parametrizacao: Any
+    ) -> None:
+        """Verifica init com tipo."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
-
         service = ResultadoEscolha(
             tipo="RESULTADO_ESCOLHA",
             configuracao=configuracao_relatorio,
             parametrizacao=parametrizacao,
             extra_param="value",
         )
-
         assert service.tipo == "RESULTADO_ESCOLHA"
         assert service.escolhas_service is not None
         assert service.candidatos_service is not None
@@ -216,56 +213,64 @@ class TestExtrairNumeroSessao:
     """Testes para o método _extrair_numero_sessao."""
 
     def test_extrair_numero_sessao_com_sessao_4(
-        self, resultado_escolha_service
-    ):
-        """Testa extração de número quando vem 'Sessão 4'."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao com sessao 4."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "Sessão 4"
         )
         assert resultado == "4"
 
     def test_extrair_numero_sessao_com_sessao_minuscula(
-        self, resultado_escolha_service
-    ):
-        """Testa extração com 'sessão' em minúscula."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao com sessao minuscula."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "sessão 5"
         )
         assert resultado == "5"
 
     def test_extrair_numero_sessao_apenas_numero(
-        self, resultado_escolha_service
-    ):
-        """Testa quando já vem apenas o número."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao apenas numero."""
         resultado = resultado_escolha_service._extrair_numero_sessao("3")
         assert resultado == "3"
 
-    def test_extrair_numero_sessao_vazio(self, resultado_escolha_service):
-        """Testa quando a sessão está vazia."""
+    def test_extrair_numero_sessao_vazio(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao vazio."""
         resultado = resultado_escolha_service._extrair_numero_sessao("")
         assert resultado == "-"
 
-    def test_extrair_numero_sessao_hifen(self, resultado_escolha_service):
-        """Testa quando a sessão é '-'."""
+    def test_extrair_numero_sessao_hifen(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao hifen."""
         resultado = resultado_escolha_service._extrair_numero_sessao("-")
         assert resultado == "-"
 
-    def test_extrair_numero_sessao_none(self, resultado_escolha_service):
-        """Testa quando a sessão é None."""
+    def test_extrair_numero_sessao_none(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao none."""
         resultado = resultado_escolha_service._extrair_numero_sessao(None)
         assert resultado == "-"
 
     def test_extrair_numero_sessao_com_texto_extra(
-        self, resultado_escolha_service
-    ):
-        """Testa quando há texto extra além do número."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao com texto extra."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "Sessão 10 - Manhã"
         )
         assert resultado == "10"
 
-    def test_extrair_numero_sessao_sem_numero(self, resultado_escolha_service):
-        """Testa quando não há número na string."""
+    def test_extrair_numero_sessao_sem_numero(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica extrair numero sessao sem numero."""
         resultado = resultado_escolha_service._extrair_numero_sessao(
             "Sem número"
         )
@@ -276,9 +281,9 @@ class TestAgruparPorCargoEAgenda:
     """Testes para o método _agrupar_por_cargo_e_agenda."""
 
     def test_agrupar_por_cargo_e_agenda_basico(
-        self, resultado_escolha_service
-    ):
-        """Testa agrupamento básico por cargo e agenda."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo e agenda basico."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -301,11 +306,9 @@ class TestAgruparPorCargoEAgenda:
                 "nome": "Maria",
             },
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["codigo"] == "123"
         assert resultado[0]["descricao"] == "Professor"
@@ -313,9 +316,9 @@ class TestAgruparPorCargoEAgenda:
         assert len(resultado[0]["agendas"][0]["candidatos"]) == 2
 
     def test_agrupar_por_cargo_e_agenda_ordenacao_candidatos(
-        self, resultado_escolha_service
-    ):
-        """Testa que candidatos são ordenados por classificação geral."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo e agenda ordenacao candidatos."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -348,20 +351,18 @@ class TestAgruparPorCargoEAgenda:
                 "nome": "Segundo",
             },
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         candidatos = resultado[0]["agendas"][0]["candidatos"]
         assert candidatos[0]["classificacao_geral"] == 1
         assert candidatos[1]["classificacao_geral"] == 2
         assert candidatos[2]["classificacao_geral"] == 3
 
     def test_agrupar_por_cargo_e_agenda_sem_descricao_cargo(
-        self, resultado_escolha_service
-    ):
-        """Testa quando não há descrição do cargo."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo e agenda sem descricao cargo."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -374,17 +375,15 @@ class TestAgruparPorCargoEAgenda:
                 "nome": "João",
             }
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         assert resultado[0]["descricao"] == "Cargo 123"
 
     def test_agrupar_por_cargo_e_agenda_sem_codigo_cargo(
-        self, resultado_escolha_service
-    ):
-        """Testa quando não há código do cargo."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo e agenda sem codigo cargo."""
         escolhas = [
             {
                 "cargo_codigo": "",
@@ -397,17 +396,15 @@ class TestAgruparPorCargoEAgenda:
                 "nome": "João",
             }
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         assert resultado[0]["descricao"] == "Cargo não informado"
 
     def test_agrupar_por_cargo_e_agenda_processa_sessao(
-        self, resultado_escolha_service
-    ):
-        """Testa que a sessão é processada corretamente."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo e agenda processa sessao."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -420,11 +417,9 @@ class TestAgruparPorCargoEAgenda:
                 "nome": "João",
             }
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         assert resultado[0]["agendas"][0]["sessao"] == "4"
 
 
@@ -433,88 +428,86 @@ class TestGerar:
 
     def test_gerar_html_success(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração de relatório HTML com sucesso."""
-        # Configurar mocks
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar html success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ) as m_render:
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ) as m_render,
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                    cabecalho="Cabeçalho Teste",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+                cabecalho="Cabeçalho Teste",
+            )
         assert isinstance(response, HttpResponse)
         m_render.assert_called_once()
         assert len(dados) > 0
 
     def test_gerar_pdf_success(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração de relatório PDF com sucesso."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar pdf success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch.object(  # noqa: SIM117
-            resultado_escolha_service,
-            "render_to_pdf",
-            return_value=HttpResponse(
-                b"%PDF-1.4", content_type="application/pdf"
-            ),
-        ) as m_pdf:
-            with patch(
+        with (
+            patch.object(
+                resultado_escolha_service,
+                "render_to_pdf",
+                return_value=HttpResponse(
+                    b"%PDF-1.4", content_type="application/pdf"
+                ),
+            ) as m_pdf,
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="pdf",
-                    cabecalho="Cabeçalho Teste",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="pdf",
+                cabecalho="Cabeçalho Teste",
+            )
         assert isinstance(response, HttpResponse)
         assert response["Content-Type"] == "application/pdf"
         m_pdf.assert_called_once()
 
     def test_gerar_xls_success(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração de relatório XLS com sucesso."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar xls success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
         with patch.object(
             resultado_escolha_service,
             "render_to_xls",
@@ -529,24 +522,22 @@ class TestGerar:
                 formato="xls",
                 cabecalho="Cabeçalho Teste",
             )
-
         assert isinstance(response, HttpResponse)
         m_xls.assert_called_once()
 
     def test_gerar_docx_success(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração de relatório DOCX com sucesso."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar docx success."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
         with patch.object(
             resultado_escolha_service,
             "render_to_docx",
@@ -561,72 +552,65 @@ class TestGerar:
                 formato="docx",
                 cabecalho="Cabeçalho Teste",
             )
-
         assert isinstance(response, HttpResponse)
         m_docx.assert_called_once()
 
     def test_gerar_com_cabecalho_padrao(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa que usa cabeçalho padrão automaticamente quando preenchido."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar com cabecalho padrao."""
         resultado_escolha_service.context["cabecalho_padrao"] = (
             "Cabeçalho Padrão"
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ) as m_render:
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ) as m_render,
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                    cabecalho="",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+                cabecalho="",
+            )
         _, args, kwargs = m_render.mock_calls[0]
         context = args[2] if len(args) >= 3 else kwargs.get("context")
         assert context["cabecalho_padrao"] == "Cabeçalho Padrão"
 
     def test_gerar_tipo_resultado_escolha_unificado(
         self,
-        settings,
-        configuracao_relatorio,
-        parametrizacao,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """
-        Testa geração com tipo RESULTADO_ESCOLHA unificado (busca todas as
-        situações).
-        """
+        settings: Any,
+        configuracao_relatorio: Any,
+        parametrizacao: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar tipo resultado escolha unificado."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
         settings.RELATORIO_CABECALHO_PADRAO = "Padrão"
-
         service = ResultadoEscolha(
             tipo="RESULTADO_ESCOLHA",
             configuracao=configuracao_relatorio,
@@ -636,7 +620,6 @@ class TestGerar:
         service.agendas_service = Mock()
         service.candidatos_service = Mock()
         service.escolhas_service = Mock()
-
         service.processos_service.buscar_cargos_por_processo.return_value = (
             mock_cargos_response
         )
@@ -644,38 +627,34 @@ class TestGerar:
             mock_agendas_response
         )
         service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, busca todas as situações
-        # Adicionar 'situacao' aos dados mockados
         escolhas_com_situacao = [
             {**item, "situacao": "escolha"} if isinstance(item, dict) else item
             for item in mock_escolhas_response
         ]
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
-            escolhas_com_situacao,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            escolhas_com_situacao,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que busca todas as situações (escolha, nao-escolha, reconvocacao)  # noqa: E501
+            ),
+        ):
+            response, dados = service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert (
             service.escolhas_service.buscar_escolhas_por_candidatos.call_count
             == 3
         )
-        # Verificar que a estrutura tem tipos_escolha
         assert len(dados) > 0
         assert "tipos_escolha" in dados[0]
         tipos_encontrados = [
@@ -685,21 +664,20 @@ class TestGerar:
 
     def test_gerar_tipo_resultado_escolha_com_nao_escolha(
         self,
-        settings,
-        configuracao_relatorio,
-        parametrizacao,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração com tipo RESULTADO_ESCOLHA incluindo não escolha."""
+        settings: Any,
+        configuracao_relatorio: Any,
+        parametrizacao: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar tipo resultado escolha com nao escolha."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
         settings.RELATORIO_CABECALHO_PADRAO = "Padrão"
-
         service = ResultadoEscolha(
             tipo="RESULTADO_ESCOLHA",
             configuracao=configuracao_relatorio,
@@ -709,7 +687,6 @@ class TestGerar:
         service.agendas_service = Mock()
         service.candidatos_service = Mock()
         service.escolhas_service = Mock()
-
         service.processos_service.buscar_cargos_por_processo.return_value = (
             mock_cargos_response
         )
@@ -717,28 +694,26 @@ class TestGerar:
             mock_agendas_response
         )
         service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, busca todas as situações
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
-            [],  # escolha
-            mock_escolhas_response,  # nao-escolha
-            [],  # reconvocacao
+            [],
+            mock_escolhas_response,
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que busca todas as situações
+            ),
+        ):
+            response, dados = service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert (
             service.escolhas_service.buscar_escolhas_por_candidatos.call_count
             == 3
@@ -746,22 +721,19 @@ class TestGerar:
 
     def test_gerar_escolha_valor_r_reconvocacao(
         self,
-        settings,
-        configuracao_relatorio,
-        parametrizacao,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """
-        Testa que escolha valor é 'R' para reconvocação no tipo unificado.
-        """
+        settings: Any,
+        configuracao_relatorio: Any,
+        parametrizacao: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar escolha valor r reconvocacao."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
         settings.RELATORIO_CABECALHO_PADRAO = "Padrão"
-
         service = ResultadoEscolha(
             tipo="RESULTADO_ESCOLHA",
             configuracao=configuracao_relatorio,
@@ -771,7 +743,6 @@ class TestGerar:
         service.agendas_service = Mock()
         service.candidatos_service = Mock()
         service.escolhas_service = Mock()
-
         service.processos_service.buscar_cargos_por_processo.return_value = (
             mock_cargos_response
         )
@@ -779,33 +750,31 @@ class TestGerar:
             mock_agendas_response
         )
         service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para reconvocação, retorna escolha com situacao='reconvocacao'
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
-            [],  # escolha
-            [],  # nao-escolha
+            [],
+            [],
             [
                 {
                     "candidato_uuid": "candidato-uuid-1",
                     "situacao": "reconvocacao",
                 }
-            ],  # reconvocacao
+            ],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que a escolha é 'R' para reconvocação
+            ),
+        ):
+            response, dados = service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         cargos = dados
         for cargo in cargos:
             if "tipos_escolha" in cargo:
@@ -817,20 +786,19 @@ class TestGerar:
 
     def test_gerar_escolha_valor_n_nao_escolha(
         self,
-        settings,
-        configuracao_relatorio,
-        parametrizacao,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """Testa que escolha valor é 'N' para não escolha no tipo unificado."""
+        settings: Any,
+        configuracao_relatorio: Any,
+        parametrizacao: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar escolha valor n nao escolha."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
         settings.RELATORIO_CABECALHO_PADRAO = "Padrão"
-
         service = ResultadoEscolha(
             tipo="RESULTADO_ESCOLHA",
             configuracao=configuracao_relatorio,
@@ -840,7 +808,6 @@ class TestGerar:
         service.agendas_service = Mock()
         service.candidatos_service = Mock()
         service.escolhas_service = Mock()
-
         service.processos_service.buscar_cargos_por_processo.return_value = (
             mock_cargos_response
         )
@@ -848,33 +815,31 @@ class TestGerar:
             mock_agendas_response
         )
         service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para não escolha, retorna escolha com situacao='nao-escolha'
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
-            [],  # escolha
+            [],
             [
                 {
                     "candidato_uuid": "candidato-uuid-1",
                     "situacao": "nao-escolha",
                 }
-            ],  # nao-escolha
-            [],  # reconvocacao
+            ],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que a escolha é 'N' para não escolha
+            ),
+        ):
+            response, dados = service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         for cargo in dados:
             if "tipos_escolha" in cargo:
                 for tipo_escolha in cargo.get("tipos_escolha", []):
@@ -885,39 +850,35 @@ class TestGerar:
 
     def test_gerar_escolha_valor_s(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """Testa que escolha valor é 'S' para escolha sim no tipo unificado."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar escolha valor s."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para escolha, retorna escolha com situacao='escolha'
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            [
-                {"candidato_uuid": "candidato-uuid-1", "situacao": "escolha"}
-            ],  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            [{"candidato_uuid": "candidato-uuid-1", "situacao": "escolha"}],
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que a escolha é 'S' para escolha
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         for cargo in dados:
             if "tipos_escolha" in cargo:
                 for tipo_escolha in cargo.get("tipos_escolha", []):
@@ -928,17 +889,16 @@ class TestGerar:
 
     def test_gerar_erro_buscar_candidatos(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-    ):
-        """Testa que erro ao buscar candidatos é propagado."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+    ) -> None:
+        """Verifica gerar erro buscar candidatos."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro API"
         )
-
         with pytest.raises(Exception, match="Erro API"):
             resultado_escolha_service.gerar(
                 processo_uuid="proc-123",
@@ -948,80 +908,68 @@ class TestGerar:
 
     def test_gerar_erro_buscar_escolhas(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """
-        Testa que erro ao buscar escolhas é tratado e continua (para
-        RESULTADO_ESCOLHA).
-        """
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar erro buscar escolhas."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, erros em uma chamada não interrompem o processo  # noqa: E501
-        # Primeira chamada falha, outras retornam vazias
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            Exception("Erro Escolhas"),  # escolha - erro
-            [],  # nao-escolha
-            [],  # reconvocacao
+            Exception("Erro Escolhas"),
+            [],
+            [],
         ]
-
-        # Não deve levantar exceção, apenas logar warning e continuar
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve ter continuado mesmo com erro
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_sem_candidato_na_escolha(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """Testa que escolhas sem candidato_uuid são ignoradas."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar sem candidato na escolha."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas (uma para cada situação)
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            [
-                {"candidato_uuid": None},
-                {"candidato_uuid": "candidato-uuid-1"},
-            ],  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            [{"candidato_uuid": None}, {"candidato_uuid": "candidato-uuid-1"}],
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve processar apenas a escolha com candidato
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         total_candidatos = 0
         for cargo in dados:
             if "tipos_escolha" in cargo:
@@ -1035,39 +983,35 @@ class TestGerar:
 
     def test_gerar_candidato_nao_encontrado(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """Testa que escolhas com candidato não encontrado são ignoradas."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar candidato nao encontrado."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            [
-                {"candidato_uuid": "candidato-inexistente"}
-            ],  # escolha - candidato não está no mapa
-            [],  # nao-escolha
-            [],  # reconvocacao
+            [{"candidato_uuid": "candidato-inexistente"}],
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Não deve ter candidatos processados
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         total_candidatos = 0
         for cargo in dados:
             if "tipos_escolha" in cargo:
@@ -1081,132 +1025,122 @@ class TestGerar:
 
     def test_gerar_agenda_nao_encontrada_cria_vazia(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_candidatos_response,
-    ):
-        """Testa que quando agenda não é encontrada, cria uma vazia."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar agenda nao encontrada cria vazia."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = _MockResponse(  # noqa: E501
             {"results": []}
         )
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            [{"candidato_uuid": "candidato-uuid-1"}],  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            [{"candidato_uuid": "candidato-uuid-1"}],
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve ter criado uma agenda vazia (estrutura pode ter tipos_escolha ou agendas)  # noqa: E501
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert len(dados) > 0
         if "tipos_escolha" in dados[0]:
-            # Nova estrutura com tipos_escolha
             assert len(dados[0]["tipos_escolha"]) > 0
             assert len(dados[0]["tipos_escolha"][0]["agendas"]) > 0
             assert dados[0]["tipos_escolha"][0]["agendas"][0]["uuid"] is None
         else:
-            # Estrutura antiga
             assert dados[0]["agendas"][0]["uuid"] is None
 
     def test_gerar_erro_buscar_cargos_continua(
         self,
-        resultado_escolha_service,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa que erro ao buscar cargos não interrompe o processo."""
+        resultado_escolha_service: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar erro buscar cargos continua."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro Cargos"
         )
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve continuar mesmo com erro ao buscar cargos
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_erro_buscar_agendas_continua(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa que erro ao buscar agendas não interrompe o processo."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar erro buscar agendas continua."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.side_effect = Exception(  # noqa: E501
             "Erro Agendas"
         )
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve continuar mesmo com erro ao buscar agendas
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_candidatos_lista_direta(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_escolhas_response,
-    ):
-        """
-        Testa quando candidatos vem como lista direta (não dict com results).
-        """
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar candidatos lista direta."""
         candidatos_lista = [
             {
                 "uuid": "candidato-uuid-1",
@@ -1215,132 +1149,115 @@ class TestGerar:
                 "candidato": {"nome": "João", "rg": "123", "cpf": "123"},
             }
         ]
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = _MockResponse(  # noqa: E501
             candidatos_lista
         )
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_cargo_descricao_fallback(
         self,
-        resultado_escolha_service,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa fallback de descrição de cargo quando não encontrada."""
-        # Cargos sem descrição
+        resultado_escolha_service: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar cargo descricao fallback."""
         cargos_response = _MockResponse(
-            [
-                {
-                    "cargo_codigo": "123",
-                    "cargo_nome": "",  # Sem nome
-                }
-            ]
+            [{"cargo_codigo": "123", "cargo_nome": ""}]
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = _MockResponse(  # noqa: E501
             {"results": []}
         )
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_cargo_codigo_int(
         self,
-        resultado_escolha_service,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando código do cargo é inteiro."""
+        resultado_escolha_service: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar cargo codigo int."""
         cargos_response = _MockResponse(
-            [
-                {
-                    "cargo_codigo": 123,  # Inteiro
-                    "cargo_nome": "Professor",
-                }
-            ]
+            [{"cargo_codigo": 123, "cargo_nome": "Professor"}]
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_candidato_sem_candidato_obj(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando candidato não tem objeto candidato."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar candidato sem candidato obj."""
         candidatos_response = _MockResponse(
             {
                 "results": [
@@ -1348,47 +1265,44 @@ class TestGerar:
                         "uuid": "candidato-uuid-1",
                         "codigo_cargo": "123",
                         "classificacao": 1,
-                        "candidato": None,  # Sem objeto candidato
+                        "candidato": None,
                     }
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_agenda_encontrada_por_cargo(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando agenda é encontrada pelo cargo do candidato."""
-        # Agenda sem candidatos_uuids, mas com mesmo cargo_codigo
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar agenda encontrada por cargo."""
         agenda_response = _MockResponse(
             {
                 "results": [
@@ -1396,59 +1310,55 @@ class TestGerar:
                         "uuid": "agenda-uuid-1",
                         "cargo_codigo": "123",
                         "cargo_nome": "Professor",
-                        "candidatos_uuids": [],  # Sem candidatos
+                        "candidatos_uuids": [],
                         "escolha_em": "2026-01-05",
                         "sessao": "1",
                     }
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_formato_csv(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração com formato CSV (tratado como XLS)."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar formato csv."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
         with patch.object(
             resultado_escolha_service,
             "render_to_xls",
@@ -1462,29 +1372,26 @@ class TestGerar:
                 request=_make_request(),
                 formato="csv",
             )
-
         assert isinstance(response, HttpResponse)
         m_xls.assert_called_once()
 
     def test_gerar_formato_doc(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração com formato DOC (tratado como DOCX)."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar formato doc."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            mock_escolhas_response,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            mock_escolhas_response,
+            [],
+            [],
         ]
-
         with patch.object(
             resultado_escolha_service,
             "render_to_docx",
@@ -1498,28 +1405,25 @@ class TestGerar:
                 request=_make_request(),
                 formato="doc",
             )
-
         assert isinstance(response, HttpResponse)
         m_docx.assert_called_once()
 
     def test_gerar_tipo_invalido(
         self,
-        settings,
-        configuracao_relatorio,
-        parametrizacao,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa geração com tipo inválido (não RESULTADO_ESCOLHA)."""
+        settings: Any,
+        configuracao_relatorio: Any,
+        parametrizacao: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar tipo invalido."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
         settings.RELATORIO_CABECALHO_PADRAO = "Padrão"
-
-        # Criar configuracao para tipo inválido
         config_invalida = ConfiguracaoRelatorio.objects.create(
             tipo="TIPO_INVALIDO",
             usar_logotipo=False,
@@ -1527,7 +1431,6 @@ class TestGerar:
             texto_final="",
             cabecalho_capa_ata="",
         )
-
         service = ResultadoEscolha(
             tipo="TIPO_INVALIDO",
             configuracao=config_invalida,
@@ -1537,7 +1440,6 @@ class TestGerar:
         service.agendas_service = Mock()
         service.candidatos_service = Mock()
         service.escolhas_service = Mock()
-
         service.processos_service.buscar_cargos_por_processo.return_value = (
             mock_cargos_response
         )
@@ -1546,22 +1448,21 @@ class TestGerar:
         )
         service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que a escolha é '-' para tipo inválido (usa estrutura antiga)  # noqa: E501
+            ),
+        ):
+            response, dados = service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         for cargo in dados:
             for agenda in cargo.get("agendas", []):
                 for candidato in agenda.get("candidatos", []):
@@ -1569,18 +1470,18 @@ class TestGerar:
 
     def test_gerar_cargo_sem_descricao_sem_codigo(
         self,
-        resultado_escolha_service,
-        mock_agendas_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando candidato não tem descrição nem código de cargo."""
+        resultado_escolha_service: Any,
+        mock_agendas_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar cargo sem descricao sem codigo."""
         candidatos_response = _MockResponse(
             {
                 "results": [
                     {
                         "uuid": "candidato-uuid-1",
-                        "codigo_cargo": "",  # Sem código
-                        "descricao_cargo": "",  # Sem descrição
+                        "codigo_cargo": "",
+                        "descricao_cargo": "",
                         "classificacao": 1,
                         "candidato": {
                             "nome": "João",
@@ -1591,7 +1492,6 @@ class TestGerar:
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
@@ -1600,41 +1500,39 @@ class TestGerar:
         )
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve ter criado agenda com "Cargo não informado"
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert len(dados) > 0
         assert dados[0]["descricao"] == "Cargo não informado"
 
     def test_gerar_agenda_sem_descricao_busca_mapa(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando agenda não tem descrição e busca no mapa de cargos."""
-        # Agenda sem cargo_nome mas com cargo_codigo
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar agenda sem descricao busca mapa."""
         agenda_response = _MockResponse(
             {
                 "results": [
                     {
                         "uuid": "agenda-uuid-1",
                         "cargo_codigo": "123",
-                        "cargo_nome": "",  # Sem nome
+                        "cargo_nome": "",
                         "candidatos_uuids": ["candidato-uuid-1"],
                         "escolha_em": "2026-01-05",
                         "sessao": "1",
@@ -1642,43 +1540,41 @@ class TestGerar:
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
 
     def test_gerar_agenda_sem_descricao_sem_mapa(
         self,
-        resultado_escolha_service,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando agenda não tem descrição e não encontra no mapa."""
-        # Agenda sem cargo_nome e sem cargos no mapa
+        resultado_escolha_service: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar agenda sem descricao sem mapa."""
         agenda_response = _MockResponse(
             {
                 "results": [
                     {
                         "uuid": "agenda-uuid-1",
-                        "cargo_codigo": "999",  # Código que não está no mapa
-                        "cargo_nome": "",  # Sem nome
+                        "cargo_codigo": "999",
+                        "cargo_nome": "",
                         "candidatos_uuids": ["candidato-uuid-1"],
                         "escolha_em": "2026-01-05",
                         "sessao": "1",
@@ -1686,29 +1582,27 @@ class TestGerar:
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve usar fallback "Cargo 999"
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
         assert len(dados) > 0
         assert (
@@ -1718,19 +1612,18 @@ class TestGerar:
 
     def test_gerar_agenda_sem_descricao_sem_codigo(
         self,
-        resultado_escolha_service,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando agenda não tem descrição nem código."""
-        # Agenda sem cargo_nome e sem cargo_codigo
+        resultado_escolha_service: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica gerar agenda sem descricao sem codigo."""
         agenda_response = _MockResponse(
             {
                 "results": [
                     {
                         "uuid": "agenda-uuid-1",
-                        "cargo_codigo": "",  # Sem código
-                        "cargo_nome": "",  # Sem nome
+                        "cargo_codigo": "",
+                        "cargo_nome": "",
                         "candidatos_uuids": ["candidato-uuid-1"],
                         "escolha_em": "2026-01-05",
                         "sessao": "1",
@@ -1738,52 +1631,55 @@ class TestGerar:
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Deve usar fallback "Cargo não informado"
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
         assert len(dados) > 0
         assert dados[0]["descricao"] == "Cargo não informado"
 
-    def test_render_to_xls_exception(self, resultado_escolha_service):
-        """Testa tratamento de exceção no render_to_xls."""
+    def test_render_to_xls_exception(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls exception."""
         cargos_list = [{"descricao": "Professor", "agendas": []}]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.Workbook",
-            side_effect=Exception("Erro Excel"),
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.Workbook",
+                side_effect=Exception("Erro Excel"),
+            ),
+            pytest.raises(Exception, match="Erro Excel"),
         ):
-            with pytest.raises(Exception, match="Erro Excel"):
-                resultado_escolha_service.render_to_xls(
-                    cargos_list, "Cabeçalho", "", filename="test.xlsx"
-                )
+            resultado_escolha_service.render_to_xls(
+                cargos_list, "Cabeçalho", "", filename="test.xlsx"
+            )
 
 
 class TestRenderToXls:
     """Testes para o método render_to_xls."""
 
-    def test_render_to_xls_success(self, resultado_escolha_service):
-        """Testa geração de Excel com sucesso."""
+    def test_render_to_xls_success(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls success."""
         cargos_list = [
             {
                 "descricao": "Professor",
@@ -1805,11 +1701,9 @@ class TestRenderToXls:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho Teste", "", filename="test.xlsx"
         )
-
         assert isinstance(response, HttpResponse)
         assert (
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1818,18 +1712,20 @@ class TestRenderToXls:
         assert "attachment" in response["Content-Disposition"]
         assert "test.xlsx" in response["Content-Disposition"]
 
-    def test_render_to_xls_sem_cabecalho(self, resultado_escolha_service):
-        """Testa geração de Excel sem cabeçalho."""
+    def test_render_to_xls_sem_cabecalho(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls sem cabecalho."""
         cargos_list = [{"descricao": "Professor", "agendas": []}]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "", "", filename="test.xlsx"
         )
-
         assert isinstance(response, HttpResponse)
 
-    def test_render_to_xls_multiplos_cargos(self, resultado_escolha_service):
-        """Testa geração de Excel com múltiplos cargos."""
+    def test_render_to_xls_multiplos_cargos(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls multiplos cargos."""
         cargos_list = [
             {
                 "descricao": "Professor A",
@@ -1870,11 +1766,9 @@ class TestRenderToXls:
                 ],
             },
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho", "", filename="test.xlsx"
         )
-
         assert isinstance(response, HttpResponse)
 
     @patch(
@@ -1882,11 +1776,10 @@ class TestRenderToXls:
         False,
     )
     def test_render_to_xls_openpyxl_nao_disponivel(
-        self, resultado_escolha_service
-    ):
-        """Testa erro quando openpyxl não está disponível."""
-        cargos_list = []
-
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls openpyxl nao disponivel."""
+        cargos_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match="openpyxl"):
             resultado_escolha_service.render_to_xls(
                 cargos_list, "Cabeçalho", "", filename="test.xlsx"
@@ -1901,11 +1794,10 @@ class TestRenderToDocx:
         False,
     )
     def test_render_to_docx_python_docx_nao_disponivel(
-        self, resultado_escolha_service
-    ):
-        """Testa erro quando python-docx não está disponível."""
-        cargos_list = []
-
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to docx python docx nao disponivel."""
+        cargos_list = []  # type: ignore[var-annotated]
         with pytest.raises(ImportError, match="python-docx"):
             resultado_escolha_service.render_to_docx(
                 cargos_list, "Cabeçalho", "test.docx"
@@ -1942,27 +1834,22 @@ class TestRenderToDocx:
     @patch("relatorios.services.relatorios.resultado_escolha.BytesIO")
     def test_render_to_docx_completo_com_cabecalho(
         self,
-        mock_bytesio,
-        mock_timezone,
-        mock_oxml_element,
-        mock_qn,
-        mock_wd_align,
-        mock_rgb_color,
-        mock_pt,
-        mock_inches,
-        mock_document,
-        resultado_escolha_service,
-    ):
-        """Testa geração completa de Word com cabeçalho e dados."""
-        # Setup mocks
+        mock_bytesio: Any,
+        mock_timezone: Any,
+        mock_oxml_element: Any,
+        mock_qn: Any,
+        mock_wd_align: Any,
+        mock_rgb_color: Any,
+        mock_pt: Any,
+        mock_inches: Any,
+        mock_document: Any,
+        resultado_escolha_service: Any,
+    ) -> None:
+        """Verifica render to docx completo com cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
-
-        # Mock sections
         mock_section = MagicMock()
         mock_doc.sections = [mock_section]
-
-        # Mock paragraphs
         mock_paragraph = MagicMock()
         mock_run = MagicMock()
         mock_paragraph.add_run.return_value = mock_run
@@ -1970,8 +1857,6 @@ class TestRenderToDocx:
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
         mock_doc.add_paragraph.return_value = mock_paragraph
-
-        # Mock table
         mock_table = MagicMock()
         mock_header_row = MagicMock()
         mock_header_cells = []
@@ -1985,7 +1870,6 @@ class TestRenderToDocx:
             mock_header_cells.append(mock_cell)
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
-
         mock_data_row = MagicMock()
         mock_data_cells = []
         for _i in range(8):
@@ -1996,13 +1880,9 @@ class TestRenderToDocx:
         mock_data_row.cells = mock_data_cells
         mock_table.add_row.return_value = mock_data_row
         mock_doc.add_table.return_value = mock_table
-
-        # Mock BytesIO
         mock_buffer = MagicMock()
         mock_buffer.read.return_value = b"docx content"
         mock_bytesio.return_value = mock_buffer
-
-        # Mock constants
         mock_inches.return_value = MagicMock()
         mock_pt.return_value = MagicMock()
         mock_rgb_color.return_value = MagicMock()
@@ -2010,7 +1890,6 @@ class TestRenderToDocx:
         mock_wd_align.LEFT = "LEFT"
         mock_qn.return_value = "w:shd"
         mock_oxml_element.return_value = MagicMock()
-
         cargos_list = [
             {
                 "descricao": "Professor de Educação Infantil",
@@ -2032,39 +1911,26 @@ class TestRenderToDocx:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "<b>Cabeçalho Teste</b>", "test.docx"
         )
-
         assert isinstance(response, HttpResponse)
         assert (
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             in response["Content-Type"]
         )
         assert "attachment" in response["Content-Disposition"]
-        # O método pode usar o filename passado ou um padrão
         assert (
             "test.docx" in response["Content-Disposition"]
             or "resultado_escolha.docx" in response["Content-Disposition"]
         )
-
-        # Verificar que Document foi criado
         mock_document.assert_called_once()
-
-        # Verificar que margens foram configuradas
         assert mock_section.top_margin is not None
         assert mock_section.bottom_margin is not None
         assert mock_section.left_margin is not None
         assert mock_section.right_margin is not None
-
-        # Verificar que parágrafos foram adicionados (cabeçalho, título, data, cargo)  # noqa: E501
         assert mock_doc.add_paragraph.call_count >= 4
-
-        # Verificar que tabela foi criada
         mock_doc.add_table.assert_called_once()
-
-        # Verificar que documento foi salvo
         mock_doc.save.assert_called_once_with(mock_buffer)
 
     @patch(
@@ -2098,25 +1964,22 @@ class TestRenderToDocx:
     @patch("relatorios.services.relatorios.resultado_escolha.BytesIO")
     def test_render_to_docx_sem_cabecalho(
         self,
-        mock_bytesio,
-        mock_timezone,
-        mock_oxml_element,
-        mock_qn,
-        mock_wd_align,
-        mock_rgb_color,
-        mock_pt,
-        mock_inches,
-        mock_document,
-        resultado_escolha_service,
-    ):
-        """Testa geração de Word sem cabeçalho."""
-        # Setup mocks
+        mock_bytesio: Any,
+        mock_timezone: Any,
+        mock_oxml_element: Any,
+        mock_qn: Any,
+        mock_wd_align: Any,
+        mock_rgb_color: Any,
+        mock_pt: Any,
+        mock_inches: Any,
+        mock_document: Any,
+        resultado_escolha_service: Any,
+    ) -> None:
+        """Verifica render to docx sem cabecalho."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
-
         mock_section = MagicMock()
         mock_doc.sections = [mock_section]
-
         mock_paragraph = MagicMock()
         mock_run = MagicMock()
         mock_paragraph.add_run.return_value = mock_run
@@ -2124,7 +1987,6 @@ class TestRenderToDocx:
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
         mock_doc.add_paragraph.return_value = mock_paragraph
-
         mock_table = MagicMock()
         mock_header_row = MagicMock()
         mock_header_cells = []
@@ -2144,12 +2006,9 @@ class TestRenderToDocx:
             cell.paragraphs = [MagicMock()]
             cell.paragraphs[0].runs = [MagicMock()]
         mock_doc.add_table.return_value = mock_table
-
         mock_buffer = MagicMock()
         mock_buffer.read.return_value = b"docx content"
         mock_bytesio.return_value = mock_buffer
-
-        # Mock constants
         mock_inches.return_value = MagicMock()
         mock_pt.return_value = MagicMock()
         mock_rgb_color.return_value = MagicMock()
@@ -2157,18 +2016,11 @@ class TestRenderToDocx:
         mock_wd_align.LEFT = "LEFT"
         mock_qn.return_value = "w:shd"
         mock_oxml_element.return_value = MagicMock()
-
         cargos_list = [{"descricao": "Professor", "agendas": []}]
-
         response = resultado_escolha_service.render_to_docx(
-            cargos_list,
-            "",  # Sem cabeçalho
-            "test.docx",
+            cargos_list, "", "test.docx"
         )
-
         assert isinstance(response, HttpResponse)
-        # Verificar que não foi chamado processar_cabecalho_html (não há cabeçalho)  # noqa: E501
-        # Mas ainda deve ter criado o documento
         mock_document.assert_called_once()
 
     @patch(
@@ -2202,24 +2054,22 @@ class TestRenderToDocx:
     @patch("relatorios.services.relatorios.resultado_escolha.BytesIO")
     def test_render_to_docx_multiplos_cargos_e_candidatos(
         self,
-        mock_bytesio,
-        mock_timezone,
-        mock_oxml_element,
-        mock_qn,
-        mock_wd_align,
-        mock_rgb_color,
-        mock_pt,
-        mock_inches,
-        mock_document,
-        resultado_escolha_service,
-    ):
-        """Testa geração de Word com múltiplos cargos e candidatos."""
+        mock_bytesio: Any,
+        mock_timezone: Any,
+        mock_oxml_element: Any,
+        mock_qn: Any,
+        mock_wd_align: Any,
+        mock_rgb_color: Any,
+        mock_pt: Any,
+        mock_inches: Any,
+        mock_document: Any,
+        resultado_escolha_service: Any,
+    ) -> Any:
+        """Verifica render to docx multiplos cargos e candidatos."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
-
         mock_section = MagicMock()
         mock_doc.sections = [mock_section]
-
         mock_paragraph = MagicMock()
         mock_run = MagicMock()
         mock_paragraph.add_run.return_value = mock_run
@@ -2227,8 +2077,6 @@ class TestRenderToDocx:
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
         mock_doc.add_paragraph.return_value = mock_paragraph
-
-        # Mock table com múltiplas linhas
         mock_table = MagicMock()
         mock_header_row = MagicMock()
         mock_header_cells = []
@@ -2243,8 +2091,8 @@ class TestRenderToDocx:
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
 
-        # Mock para múltiplas linhas de dados
-        def create_data_row():
+        def create_data_row() -> Any:
+            """Create data row."""
             mock_row = MagicMock()
             mock_cells = []
             for _i in range(8):
@@ -2257,11 +2105,9 @@ class TestRenderToDocx:
 
         mock_table.add_row.side_effect = lambda: create_data_row()
         mock_doc.add_table.return_value = mock_table
-
         mock_buffer = MagicMock()
         mock_buffer.read.return_value = b"docx content"
         mock_bytesio.return_value = mock_buffer
-
         mock_inches.return_value = MagicMock()
         mock_pt.return_value = MagicMock()
         mock_rgb_color.return_value = MagicMock()
@@ -2269,7 +2115,6 @@ class TestRenderToDocx:
         mock_wd_align.LEFT = "LEFT"
         mock_qn.return_value = "w:shd"
         mock_oxml_element.return_value = MagicMock()
-
         cargos_list = [
             {
                 "descricao": "Professor A",
@@ -2319,13 +2164,10 @@ class TestRenderToDocx:
                 ],
             },
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "Cabeçalho", "test.docx"
         )
-
         assert isinstance(response, HttpResponse)
-        # Verificar que múltiplas tabelas foram criadas (uma por cargo)
         assert mock_doc.add_table.call_count == 2
 
     @patch(
@@ -2359,34 +2201,31 @@ class TestRenderToDocx:
     @patch("relatorios.services.relatorios.resultado_escolha.BytesIO")
     def test_render_to_docx_com_existing_shd(
         self,
-        mock_bytesio,
-        mock_timezone,
-        mock_oxml_element,
-        mock_qn,
-        mock_wd_align,
-        mock_rgb_color,
-        mock_pt,
-        mock_inches,
-        mock_document,
-        resultado_escolha_service,
-    ):
-        """Testa quando já existe shading element (existing_shd)."""
+        mock_bytesio: Any,
+        mock_timezone: Any,
+        mock_oxml_element: Any,
+        mock_qn: Any,
+        mock_wd_align: Any,
+        mock_rgb_color: Any,
+        mock_pt: Any,
+        mock_inches: Any,
+        mock_document: Any,
+        resultado_escolha_service: Any,
+    ) -> None:
+        """Verifica render to docx com existing shd."""
         mock_doc = MagicMock()
         mock_document.return_value = mock_doc
-
         mock_section = MagicMock()
         mock_doc.sections = [mock_section]
-
         mock_paragraph = MagicMock()
         mock_run = MagicMock()
         mock_paragraph.add_run.return_value = mock_run
         mock_paragraph._element = MagicMock()
         mock_p_pr = MagicMock()
-        mock_existing_shd = MagicMock()  # Simula que já existe shading
+        mock_existing_shd = MagicMock()
         mock_p_pr.find.return_value = mock_existing_shd
         mock_paragraph._element.get_or_add_pPr.return_value = mock_p_pr
         mock_doc.add_paragraph.return_value = mock_paragraph
-
         mock_table = MagicMock()
         mock_header_row = MagicMock()
         mock_header_cells = []
@@ -2396,9 +2235,7 @@ class TestRenderToDocx:
             mock_cell.paragraphs[0].runs = [MagicMock()]
             mock_cell._element = MagicMock()
             mock_tc_pr = MagicMock()
-            mock_existing_shd_cell = (
-                MagicMock()
-            )  # Simula que já existe shading na célula
+            mock_existing_shd_cell = MagicMock()
             mock_tc_pr.find.return_value = mock_existing_shd_cell
             mock_cell._element.get_or_add_tcPr.return_value = mock_tc_pr
             mock_header_cells.append(mock_cell)
@@ -2410,12 +2247,9 @@ class TestRenderToDocx:
             cell.paragraphs = [MagicMock()]
             cell.paragraphs[0].runs = [MagicMock()]
         mock_doc.add_table.return_value = mock_table
-
         mock_buffer = MagicMock()
         mock_buffer.read.return_value = b"docx content"
         mock_bytesio.return_value = mock_buffer
-
-        # Mock constants
         mock_inches.return_value = MagicMock()
         mock_pt.return_value = MagicMock()
         mock_rgb_color.return_value = MagicMock()
@@ -2423,7 +2257,6 @@ class TestRenderToDocx:
         mock_wd_align.LEFT = "LEFT"
         mock_qn.return_value = "w:shd"
         mock_oxml_element.return_value = MagicMock()
-
         cargos_list = [
             {
                 "descricao": "Professor",
@@ -2445,13 +2278,10 @@ class TestRenderToDocx:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "Cabeçalho", "test.docx"
         )
-
         assert isinstance(response, HttpResponse)
-        # Verificar que removeu o existing_shd antes de adicionar novo
         assert mock_p_pr.remove.called
 
     @patch(
@@ -2459,27 +2289,25 @@ class TestRenderToDocx:
     )
     @patch("relatorios.services.relatorios.resultado_escolha.Document")
     def test_render_to_docx_exception(
-        self, mock_document, resultado_escolha_service
-    ):
-        """Testa tratamento de exceção no render_to_docx."""
+        self, mock_document: Any, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to docx exception."""
         mock_document.side_effect = Exception("Erro ao criar documento")
-
         cargos_list = [{"descricao": "Professor", "agendas": []}]
-
         with pytest.raises(Exception, match="Erro ao criar documento"):
             resultado_escolha_service.render_to_docx(
                 cargos_list, "Cabeçalho", "test.docx"
             )
 
     def test_agrupar_por_cargo_sem_agenda_uuid(
-        self, resultado_escolha_service
-    ):
-        """Testa agrupamento quando agenda não tem UUID."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo sem agenda uuid."""
         escolhas = [
             {
                 "cargo_codigo": "123",
                 "cargo_descricao": "Professor",
-                "agenda_uuid": None,  # Sem UUID
+                "agenda_uuid": None,
                 "agenda_nome": "Agenda 1",
                 "agenda_data": "2026-01-05",
                 "agenda_sessao": "1",
@@ -2487,20 +2315,18 @@ class TestRenderToDocx:
                 "nome": "João",
             }
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["codigo"] == "123"
         assert len(resultado[0]["agendas"]) == 1
         assert resultado[0]["agendas"][0]["uuid"] is None
 
     def test_agrupar_por_cargo_sessao_nao_numerica(
-        self, resultado_escolha_service
-    ):
-        """Testa agrupamento quando sessão não é numérica."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo sessao nao numerica."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2508,23 +2334,21 @@ class TestRenderToDocx:
                 "agenda_uuid": "agenda-1",
                 "agenda_nome": "Agenda 1",
                 "agenda_data": "2026-01-05",
-                "agenda_sessao": "Especial",  # Sessão não numérica
+                "agenda_sessao": "Especial",
                 "classificacao_geral": 1,
                 "nome": "João",
             }
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["agendas"][0]["sessao"] == "Especial"
 
     def test_agrupar_por_cargo_classificacao_infinito(
-        self, resultado_escolha_service
-    ):
-        """Testa ordenação quando classificação não é numérica."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo classificacao infinito."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2533,7 +2357,7 @@ class TestRenderToDocx:
                 "agenda_nome": "Agenda 1",
                 "agenda_data": "2026-01-05",
                 "agenda_sessao": "1",
-                "classificacao_geral": "-",  # Não numérico
+                "classificacao_geral": "-",
                 "nome": "João",
             },
             {
@@ -2543,31 +2367,28 @@ class TestRenderToDocx:
                 "agenda_nome": "Agenda 1",
                 "agenda_data": "2026-01-05",
                 "agenda_sessao": "1",
-                "classificacao_geral": 1,  # Numérico
+                "classificacao_geral": 1,
                 "nome": "Maria",
             },
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
-        # O candidato com classificação numérica deve vir primeiro
         candidatos = resultado[0]["agendas"][0]["candidatos"]
         assert candidatos[0]["classificacao_geral"] == 1
         assert candidatos[1]["classificacao_geral"] == "-"
 
     def test_agrupar_por_cargo_ordenacao_agendas(
-        self, resultado_escolha_service
-    ):
-        """Testa ordenação de agendas por data e sessão."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo ordenacao agendas."""
         escolhas = [
             {
                 "cargo_codigo": "123",
                 "cargo_descricao": "Professor",
                 "agenda_uuid": "agenda-2",
                 "agenda_nome": "Agenda 2",
-                "agenda_data": "2026-01-06",  # Data posterior
+                "agenda_data": "2026-01-06",
                 "agenda_sessao": "1",
                 "classificacao_geral": 1,
                 "nome": "João",
@@ -2577,26 +2398,23 @@ class TestRenderToDocx:
                 "cargo_descricao": "Professor",
                 "agenda_uuid": "agenda-1",
                 "agenda_nome": "Agenda 1",
-                "agenda_data": "2026-01-05",  # Data anterior
+                "agenda_data": "2026-01-05",
                 "agenda_sessao": "1",
                 "classificacao_geral": 1,
                 "nome": "Maria",
             },
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
-        # Agendas devem estar ordenadas por data
         agendas = resultado[0]["agendas"]
         assert agendas[0]["data"] == "2026-01-05"
         assert agendas[1]["data"] == "2026-01-06"
 
     def test_agrupar_por_cargo_ordenacao_cargos(
-        self, resultado_escolha_service
-    ):
-        """Testa ordenação de cargos por descrição."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo ordenacao cargos."""
         escolhas = [
             {
                 "cargo_codigo": "456",
@@ -2619,12 +2437,9 @@ class TestRenderToDocx:
                 "nome": "Maria",
             },
         ]
-
         resultado = resultado_escolha_service._agrupar_por_cargo_e_agenda(
             escolhas
         )
-
-        # Cargos devem estar ordenados por descrição
         assert resultado[0]["descricao"] == "Professor A"
         assert resultado[1]["descricao"] == "Professor B"
 
@@ -2633,9 +2448,9 @@ class TestAgruparPorCargoTipoEscolhaEAgenda:
     """Testes para o método _agrupar_por_cargo_tipo_escolha_e_agenda."""
 
     def test_agrupar_por_cargo_tipo_escolha_e_agenda_basico(
-        self, resultado_escolha_service
-    ):
-        """Testa agrupamento básico por cargo, tipo de escolha e agenda."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica agrupar por cargo tipo escolha e agenda basico."""
         escolhas = [
             {
                 "cargo_codigo": "123",
@@ -2672,13 +2487,11 @@ class TestAgruparPorCargoTipoEscolhaEAgenda:
                 "escolha": "N",
             },
         ]
-
         resultado = (
             resultado_escolha_service._agrupar_por_cargo_tipo_escolha_e_agenda(
                 escolhas
             )
         )
-
         assert len(resultado) == 1
         assert resultado[0]["codigo"] == "123"
         assert len(resultado[0]["tipos_escolha"]) == 2
@@ -2690,18 +2503,16 @@ class TestAdicionarResumoDreEscola:
     """Testes para o método _adicionar_resumo_dre_escola."""
 
     def test_adicionar_resumo_dre_escola_basico(
-        self, resultado_escolha_service
-    ):
-        """Testa adição básica de resumo DRE/Escola."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica adicionar resumo dre escola basico."""
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
-        # Escolhas realizadas (tipo_escolha == 'Escolha' e situacao == 'escolha')  # noqa: E501
         escolhas_realizadas = [
             {
                 "cargo_codigo": "123",
-                "tipo_escolha": "Escolha",  # Importante: deve ser 'Escolha'
+                "tipo_escolha": "Escolha",
                 "dre_codigo": "DRE001",
                 "dre_nome": "DRE Butantã",
                 "escola_codigo_eol": "12345",
@@ -2720,8 +2531,6 @@ class TestAdicionarResumoDreEscola:
                 "tipo_vaga": "precaria",
             },
         ]
-
-        # Mock buscar_vagas_escolas
         mock_vagas_response = Mock()
         mock_vagas_response.json.return_value = {
             "vagas": [
@@ -2739,11 +2548,9 @@ class TestAdicionarResumoDreEscola:
         resultado_escolha_service.escolhas_service.buscar_vagas_escolas = Mock(
             return_value=mock_vagas_response
         )
-
         resultado = resultado_escolha_service._adicionar_resumo_dre_escola(
             cargos_list, escolhas_realizadas, "proc-123"
         )
-
         assert len(resultado) == 1
         assert "resumo_dre_escola" in resultado[0]
         assert len(resultado[0]["resumo_dre_escola"]) == 1
@@ -2757,13 +2564,12 @@ class TestAdicionarResumoDreEscola:
         assert escola["qtd_vagas_precarias"] == 3
 
     def test_adicionar_resumo_dre_escola_sem_vagas(
-        self, resultado_escolha_service
-    ):
-        """Testa resumo DRE/Escola quando não há vagas retornadas."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica adicionar resumo dre escola sem vagas."""
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
         escolhas_realizadas = [
             {
                 "cargo_codigo": "123",
@@ -2776,17 +2582,12 @@ class TestAdicionarResumoDreEscola:
                 "tipo_vaga": "definitiva",
             }
         ]
-
-        # Mock buscar_vagas_escolas retornando erro
         resultado_escolha_service.escolhas_service.buscar_vagas_escolas = Mock(
             side_effect=Exception("Erro")
         )
-
         resultado = resultado_escolha_service._adicionar_resumo_dre_escola(
             cargos_list, escolhas_realizadas, "proc-123"
         )
-
-        # Deve continuar mesmo com erro
         assert len(resultado) == 1
         assert "resumo_dre_escola" in resultado[0]
         escola = resultado[0]["resumo_dre_escola"][0]["escolas"][0]
@@ -2798,9 +2599,9 @@ class TestRenderToXlsResumoDreEscola:
     """Testes para renderização do resumo DRE/Escola no Excel."""
 
     def test_render_to_xls_com_resumo_dre_escola(
-        self, resultado_escolha_service
-    ):
-        """Testa renderização Excel com resumo DRE/Escola."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls com resumo dre escola."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -2824,28 +2625,26 @@ class TestRenderToXlsResumoDreEscola:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho", ""
         )
-
         assert isinstance(response, HttpResponse)
         assert (
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             in response["Content-Type"]
         )
 
-    def test_render_to_xls_com_logo_url(self, resultado_escolha_service):
-        """Testa renderização Excel com logo via URL."""
+    def test_render_to_xls_com_logo_url(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls com logo url."""
         resultado_escolha_service.context["usar_logotipo"] = True
         resultado_escolha_service.context["logo_url"] = (
             "http://example.com/logo.png"
         )
-
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
         with patch(
             "relatorios.services.relatorios.resultado_escolha.requests.get"
         ) as mock_get:
@@ -2853,25 +2652,22 @@ class TestRenderToXlsResumoDreEscola:
             mock_response.content = b"fake_image_data"
             mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
-
             response = resultado_escolha_service.render_to_xls(
                 cargos_list, "Cabeçalho", ""
             )
-
         assert isinstance(response, HttpResponse)
 
-    def test_render_to_xls_com_texto_final(self, resultado_escolha_service):
-        """Testa renderização Excel com texto final."""
+    def test_render_to_xls_com_texto_final(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls com texto final."""
         resultado_escolha_service.context["texto_final"] = "<p>Texto final</p>"
-
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho", ""
         )
-
         assert isinstance(response, HttpResponse)
 
 
@@ -2879,9 +2675,9 @@ class TestRenderToDocxResumoDreEscola:
     """Testes para renderização do resumo DRE/Escola no DOCX."""
 
     def test_render_to_docx_com_resumo_dre_escola(
-        self, resultado_escolha_service
-    ):
-        """Testa renderização DOCX com resumo DRE/Escola."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to docx com resumo dre escola."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -2905,27 +2701,25 @@ class TestRenderToDocxResumoDreEscola:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "Cabeçalho", "Texto final"
         )
-
         assert isinstance(response, HttpResponse)
         assert (
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             in response["Content-Type"]
         )
 
-    def test_render_to_docx_com_texto_final(self, resultado_escolha_service):
-        """Testa renderização DOCX com texto final."""
+    def test_render_to_docx_com_texto_final(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to docx com texto final."""
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "Cabeçalho", "<p>Texto final</p>"
         )
-
         assert isinstance(response, HttpResponse)
 
 
@@ -2934,14 +2728,13 @@ class TestTiposAntigosCompatibilidade:
 
     def test_gerar_tipo_resultado_escolha_sim(
         self,
-        settings,
-        parametrizacao,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-    ):
-        """Testa geração com tipo antigo RESULTADO_ESCOLHA_SIM."""
-        # Usar get_or_create para evitar duplicação
+        settings: Any,
+        parametrizacao: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+    ) -> None:
+        """Verifica gerar tipo resultado escolha sim."""
         config_antiga, _ = ConfiguracaoRelatorio.objects.get_or_create(
             tipo="RESULTADO_ESCOLHA_SIM",
             defaults={
@@ -2951,12 +2744,10 @@ class TestTiposAntigosCompatibilidade:
                 "cabecalho_capa_ata": "",
             },
         )
-
         settings.ESCOLHAS_API_URL = "http://escolhas"
         settings.CANDIDATOS_API_URL = "http://candidatos"
         settings.PROCESSOS_API_URL = "http://processos"
         settings.AGENDAS_API_URL = "http://agendas"
-
         service = ResultadoEscolha(
             tipo="RESULTADO_ESCOLHA_SIM",
             configuracao=config_antiga,
@@ -2966,7 +2757,6 @@ class TestTiposAntigosCompatibilidade:
         service.agendas_service = Mock()
         service.candidatos_service = Mock()
         service.escolhas_service = Mock()
-
         service.processos_service.buscar_cargos_por_processo.return_value = (
             mock_cargos_response
         )
@@ -2977,32 +2767,32 @@ class TestTiposAntigosCompatibilidade:
         service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [  # noqa: E501
             {"candidato_uuid": "candidato-uuid-1"}
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
-        # Verificar que busca apenas 'escolha'
+            ),
+        ):
+            response, dados = service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         service.escolhas_service.buscar_escolhas_por_candidatos.assert_called_once()
         call_args = (
             service.escolhas_service.buscar_escolhas_por_candidatos.call_args
         )
         assert call_args[1]["situacao"] == "escolha"
 
-    def test_render_to_xls_tipo_antigo(self, resultado_escolha_service):
-        """Testa renderização Excel com tipo antigo (sem tipos_escolha)."""
+    def test_render_to_xls_tipo_antigo(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls tipo antigo."""
         resultado_escolha_service.tipo = "RESULTADO_ESCOLHA_SIM"
-
         cargos_list = [
             {
                 "codigo": "123",
@@ -3017,17 +2807,16 @@ class TestTiposAntigosCompatibilidade:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho", ""
         )
-
         assert isinstance(response, HttpResponse)
 
-    def test_render_to_docx_tipo_antigo(self, resultado_escolha_service):
-        """Testa renderização DOCX com tipo antigo (sem tipos_escolha)."""
+    def test_render_to_docx_tipo_antigo(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to docx tipo antigo."""
         resultado_escolha_service.tipo = "RESULTADO_ESCOLHA_SIM"
-
         cargos_list = [
             {
                 "codigo": "123",
@@ -3042,24 +2831,22 @@ class TestTiposAntigosCompatibilidade:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "Cabeçalho"
         )
-
         assert isinstance(response, HttpResponse)
 
-    def test_render_to_xls_logo_erro(self, resultado_escolha_service):
-        """Testa renderização Excel quando há erro ao processar logo."""
+    def test_render_to_xls_logo_erro(
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls logo erro."""
         resultado_escolha_service.context["usar_logotipo"] = True
         resultado_escolha_service.context["logo_url"] = (
             "http://example.com/logo.png"
         )
-
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
         with patch(
             "relatorios.services.relatorios.resultado_escolha.requests.get",
             side_effect=Exception("Erro"),
@@ -3067,32 +2854,28 @@ class TestTiposAntigosCompatibilidade:
             response = resultado_escolha_service.render_to_xls(
                 cargos_list, "Cabeçalho", ""
             )
-
         assert isinstance(response, HttpResponse)
 
     def test_render_to_xls_logo_arquivo_local(
-        self, resultado_escolha_service, tmp_path
-    ):
-        """Testa renderização Excel com logo de arquivo local."""
+        self, resultado_escolha_service: Any, tmp_path: Any
+    ) -> None:
+        """Verifica render to xls logo arquivo local."""
         resultado_escolha_service.context["usar_logotipo"] = True
         logo_file = tmp_path / "logo.png"
         logo_file.write_bytes(b"fake_image")
         resultado_escolha_service.context["logo_url"] = str(logo_file)
-
         cargos_list = [
             {"codigo": "123", "descricao": "Professor", "tipos_escolha": []}
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho", ""
         )
-
         assert isinstance(response, HttpResponse)
 
     def test_render_to_xls_tipos_escolha_completo(
-        self, resultado_escolha_service
-    ):
-        """Testa renderização Excel com estrutura completa de tipos_escolha."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to xls tipos escolha completo."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -3122,17 +2905,15 @@ class TestTiposAntigosCompatibilidade:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_xls(
             cargos_list, "Cabeçalho", ""
         )
-
         assert isinstance(response, HttpResponse)
 
     def test_render_to_docx_tipos_escolha_completo(
-        self, resultado_escolha_service
-    ):
-        """Testa renderização DOCX com estrutura completa de tipos_escolha."""
+        self, resultado_escolha_service: Any
+    ) -> None:
+        """Verifica render to docx tipos escolha completo."""
         cargos_list = [
             {
                 "codigo": "123",
@@ -3162,11 +2943,9 @@ class TestTiposAntigosCompatibilidade:
                 ],
             }
         ]
-
         response = resultado_escolha_service.render_to_docx(
             cargos_list, "Cabeçalho"
         )
-
         assert isinstance(response, HttpResponse)
 
 
@@ -3175,63 +2954,57 @@ class TestIntegracaoCompleta:
 
     def test_fluxo_completo_html(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_agendas_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa fluxo completo de geração HTML."""
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_agendas_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica fluxo completo html."""
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        # Para RESULTADO_ESCOLHA, são 3 chamadas
-        # Adicionar 'situacao' aos dados mockados
         escolhas_com_situacao = [
             {**item, "situacao": "escolha"} if isinstance(item, dict) else item
             for item in mock_escolhas_response
         ]
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
-            escolhas_com_situacao,  # escolha
-            [],  # nao-escolha
-            [],  # reconvocacao
+            escolhas_com_situacao,
+            [],
+            [],
         ]
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ) as m_render:
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ) as m_render,
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                    cabecalho="Teste",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+                cabecalho="Teste",
+            )
         assert isinstance(response, HttpResponse)
         m_render.assert_called_once()
-
-        # Verificar estrutura dos dados
         assert isinstance(dados, list)
         if len(dados) > 0:
             assert "codigo" in dados[0]
             assert "descricao" in dados[0]
-            # Para RESULTADO_ESCOLHA, a estrutura tem 'tipos_escolha' em vez de 'agendas'  # noqa: E501
             assert "tipos_escolha" in dados[0] or "agendas" in dados[0]
 
     def test_fluxo_completo_com_agenda_por_cargo(
         self,
-        resultado_escolha_service,
-        mock_cargos_response,
-        mock_candidatos_response,
-        mock_escolhas_response,
-    ):
-        """Testa quando agenda é encontrada pelo cargo do candidato."""
-        # Agenda sem candidatos_uuids, mas com mesmo cargo_codigo
+        resultado_escolha_service: Any,
+        mock_cargos_response: Any,
+        mock_candidatos_response: Any,
+        mock_escolhas_response: Any,
+    ) -> None:
+        """Verifica fluxo completo com agenda por cargo."""
         agenda_response = _MockResponse(
             {
                 "results": [
@@ -3239,33 +3012,31 @@ class TestIntegracaoCompleta:
                         "uuid": "agenda-uuid-1",
                         "cargo_codigo": "123",
                         "cargo_nome": "Professor",
-                        "candidatos_uuids": [],  # Sem candidatos
+                        "candidatos_uuids": [],
                         "escolha_em": "2026-01-05",
                         "sessao": "1",
                     }
                 ]
             }
         )
-
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
-
-        with patch(  # noqa: SIM117
-            "relatorios.services.relatorios.resultado_escolha.render",
-            return_value=HttpResponse("OK"),
-        ):
-            with patch(
+        with (
+            patch(
+                "relatorios.services.relatorios.resultado_escolha.render",
+                return_value=HttpResponse("OK"),
+            ),
+            patch(
                 "relatorios.services.relatorios.resultado_escolha.timezone.now",
                 return_value=datetime(2026, 1, 5, 12, 0, 0),
-            ):
-                response, dados = resultado_escolha_service.gerar(
-                    processo_uuid="proc-123",
-                    request=_make_request(),
-                    formato="html",
-                )
-
+            ),
+        ):
+            response, dados = resultado_escolha_service.gerar(
+                processo_uuid="proc-123",
+                request=_make_request(),
+                formato="html",
+            )
         assert isinstance(response, HttpResponse)
-        # Deve ter encontrado agenda pelo cargo
         assert len(dados) > 0

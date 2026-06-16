@@ -1,3 +1,5 @@
+"""Módulo services/__init__."""
+
 from .agendas_api_service import AgendasService
 from .base.relatorio_base import RelatorioBase
 from .candidatos_api_service import CandidatosService

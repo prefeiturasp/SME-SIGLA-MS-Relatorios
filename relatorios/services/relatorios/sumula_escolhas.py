@@ -1,7 +1,12 @@
+"""Módulo services/relatorios/sumula_escolhas."""
+
+from __future__ import annotations
+
 import logging
 import os
 import tempfile
 from io import BytesIO
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -21,7 +26,6 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-
 try:
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -32,19 +36,20 @@ try:
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 
 class SumulaEscolhas(RelatorioBase):
-    """
-    Classe concreta responsável por gerar o relatório de Súmula de Escolhas.
-    """
+    """Classe concreta responsável por gerar o relatório de Súmula de."""
 
     TEMPLATE_NAME = "relatorios/sumula_escolhas.html"
 
-    def __init__(self, **kwargs):
-        """Inicializa o service com as dependências necessárias."""
+    def __init__(self, **kwargs: Any) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            **kwargs: Argumentos nomeados repassados ao comando.
+        """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
             base_url=settings.ESCOLHAS_API_URL
@@ -59,38 +64,32 @@ class SumulaEscolhas(RelatorioBase):
     def gerar(
         self,
         processo_uuid: str,
-        request,
+        request: Any,
         formato: str = "html",
         cabecalho: str = "",
-        **kwargs,
-    ):
-        """
-        Gera o relatório de Súmula de Escolhas.
+        **kwargs: Any,
+    ) -> Any:
+        """Gera o relatório de Súmula de Escolhas.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            request: Objeto request do Django
-            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx')
-            cabecalho: Texto do cabeçalho do relatório (opcional)
+            processo_uuid: UUID do processo de convocação.
+            request: Requisição HTTP recebida.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou
-            DOCX)
-            - dados: estrutura de dados do relatório (cargos_list) para salvar
-            no banco
+            Tupla com resposta HTTP e dados do relatório.
         """
-        # Buscar cargos do processo para mapear código -> nome (fallback caso descricao_cargo não venha)  # noqa: E501
         cargos_map = {}
         try:
             cargos_response = (
                 self.processos_service.buscar_cargos_por_processo(
-                    processo_uuid=str(processo_uuid) if processo_uuid else "",
+                    processo_uuid=str(processo_uuid) if processo_uuid else ""
                 )
             )
             cargos_data = cargos_response.json()
             cargos = cargos_data if isinstance(cargos_data, list) else []
-
             for cargo in cargos:
                 codigo = (
                     cargo.get("cargo_codigo")
@@ -101,17 +100,15 @@ class SumulaEscolhas(RelatorioBase):
                 if codigo and nome:
                     cargos_map[str(codigo)] = nome
                     if isinstance(codigo, int | float):
-                        cargos_map[codigo] = nome
+                        cargos_map[codigo] = nome  # type: ignore[index]
         except Exception as exc:
             logger.warning(
                 "Falha ao buscar cargos do processo: %s. Continuando sem mapeamento de cargos.",  # noqa: E501
                 exc,
             )
-
-        # Buscar ConcursoCandidato por processo_uuid
         try:
             candidatos_response = self.candidatos_service.buscar_concurso_candidatos_por_processo(  # noqa: E501
-                processo_uuid=str(processo_uuid) if processo_uuid else "",
+                processo_uuid=str(processo_uuid) if processo_uuid else ""
             )
             candidatos_data = candidatos_response.json()
             candidatos = (
@@ -122,73 +119,56 @@ class SumulaEscolhas(RelatorioBase):
         except Exception as exc:
             logger.error("Falha ao buscar candidatos da API externa: %s", exc)
             raise
-
-        # Criar mapa de candidatos por uuid para busca rápida
         candidatos_map = {}
         for candidato in candidatos:
             candidato_uuid = candidato.get("uuid")
             if candidato_uuid:
                 candidatos_map[str(candidato_uuid)] = candidato
-
-        # Extrair UUIDs dos ConcursoCandidato para buscar escolhas
         concurso_candidato_uuids = [
             candidato.get("uuid")
             for candidato in candidatos
             if candidato.get("uuid")
         ]
-
-        # Buscar TODAS as escolhas (sem filtro de situação) para depois filtrar as realizadas  # noqa: E501
         try:
             escolhas_data = (
                 self.escolhas_service.buscar_escolhas_por_candidatos(
-                    candidato_uuids=concurso_candidato_uuids,
-                    situacao=None,  # Buscar todas, sem filtro
+                    candidato_uuids=concurso_candidato_uuids, situacao=None
                 )
-            )
+            )  # type: ignore[arg-type]
         except Exception as exc:
             logger.error("Falha ao buscar escolhas da API externa: %s", exc)
             raise
-
-        # Filtrar apenas escolhas realizadas (excluir 'nao-escolha' e 'reconvocacao')  # noqa: E501
         escolhas_realizadas = [
             e
             for e in escolhas_data
             if e.get("situacao") not in ["nao-escolha", "reconvocacao", None]
         ]
-
         escolhas_com_candidatos = []
         for escolha in escolhas_realizadas:
             candidato_uuid = escolha.get("candidato_uuid")
             if not candidato_uuid:
                 continue
-
             candidato = candidatos_map.get(
                 str(candidato_uuid)
             ) or candidatos_map.get(candidato_uuid)
             if not candidato:
                 continue
-
-            # Extrair dados do candidato
             candidato_obj = (
                 candidato.get("candidato", {})
                 if isinstance(candidato.get("candidato"), dict)
                 else {}
             )
-
-            # Obter classificações (do ConcursoCandidato)
             classificacao_geral = candidato.get("classificacao")
             classificacao_nna = candidato.get("classificacao_nna")
             classificacao_pcd = candidato.get("classificacao_pcd")
             categoria_efetiva = (
                 candidato.get("categoria_efetiva") or ""
             ).upper()
-
             classificacao_coluna_geral = (
                 classificacao_geral if classificacao_geral is not None else "-"
             )
             classificacao_coluna_nna = "-"
             classificacao_coluna_pcd = "-"
-
             if categoria_efetiva == "NNA":
                 classificacao_coluna_nna = (
                     classificacao_nna if classificacao_nna is not None else "-"
@@ -201,21 +181,12 @@ class SumulaEscolhas(RelatorioBase):
                 classificacao_ordem = classificacao_pcd
             else:
                 classificacao_ordem = classificacao_geral
-
-            # Obter nome do candidato
             nome = candidato_obj.get("nome") or "-"
-
-            # Determinar tipo de candidato e classificação a usar baseado na categoria_efetiva  # noqa: E501
-            # A categoria_efetiva é o campo que define qual classificação está sendo usada  # noqa: E501
             tipo_candidato = None
-
-            # Formatar nome do candidato com sufixo se necessário
             if tipo_candidato:
                 nome_formatado = f"{nome} - {tipo_candidato}"
             else:
                 nome_formatado = nome
-
-            # Extrair dados da vaga_escola (escola e DRE)
             vaga_escola = escolha.get("vaga_escola", {})
             escola = (
                 vaga_escola.get("escola", {})
@@ -223,27 +194,18 @@ class SumulaEscolhas(RelatorioBase):
                 else {}
             )
             dre = escola.get("dre", {}) if isinstance(escola, dict) else {}
-
-            # Obter cargo (do ConcursoCandidato) - igual às outras súmulas
             cargo_codigo = candidato.get("codigo_cargo") or ""
-
-            # Buscar descrição do cargo - primeiro tenta descricao_cargo que já vem na resposta  # noqa: E501
             cargo_descricao = candidato.get("descricao_cargo") or ""
-
-            # Se não encontrou descrição, buscar no mapa de cargos do processo (fallback)  # noqa: E501
             if not cargo_descricao and cargo_codigo:
                 cargo_descricao = (
                     cargos_map.get(str(cargo_codigo))
                     or cargos_map.get(cargo_codigo)
                     or ""
                 )
-
-            # Se ainda não encontrou descrição mas tem código, usar o código como fallback  # noqa: E501
             if not cargo_descricao and cargo_codigo:
                 cargo_descricao = f"Cargo {cargo_codigo}"
             elif not cargo_descricao:
                 cargo_descricao = "Cargo não informado"
-
             nome_oficial = (
                 escola.get("nome_oficial", "-")
                 if isinstance(escola, dict)
@@ -256,8 +218,6 @@ class SumulaEscolhas(RelatorioBase):
             )
             dre_nome = dre.get("nome", "-") if isinstance(dre, dict) else "-"
             dre_codigo = dre.get("codigo", "") if isinstance(dre, dict) else ""
-
-            # Converter tipo_vaga: 'precaria' = 'P', 'definitiva' = 'D'
             tipo_vaga_raw = escolha.get("tipo_vaga", "")
             if tipo_vaga_raw == "precaria":
                 tipo_vaga = "P"
@@ -265,7 +225,6 @@ class SumulaEscolhas(RelatorioBase):
                 tipo_vaga = "D"
             else:
                 tipo_vaga = "-"
-
             escolhas_com_candidatos.append(
                 {
                     "cargo_codigo": cargo_codigo,
@@ -282,32 +241,24 @@ class SumulaEscolhas(RelatorioBase):
                     "tipo_vaga": tipo_vaga,
                 }
             )
-
-        # Agrupar por cargo, depois por DRE e depois por Unidade Escolar
         cargos_list = self._agrupar_por_cargo_dre_e_escola(
             escolhas_com_candidatos
         )
-
         logo_url = (
             request.build_absolute_uri(self.context.get("logo_url", ""))
             if self.context.get("logo_url")
             else ""
         )
         self.context.update(
-            {
-                "cargos": cargos_list,
-                "is_pdf": False,
-                "logo_url": logo_url,
-            }
+            {"cargos": cargos_list, "is_pdf": False, "logo_url": logo_url}
         )
-
         if formato == "xls" or formato == "csv":
             filename = f"relatorio_sumula_escolhas_{processo_uuid}.xlsx"
             logger.info("Gerando Excel: %s", filename)
             response = self.render_to_xls(
                 context=self.context, filename=filename
             )
-            return response, cargos_list
+            return (response, cargos_list)
         elif formato == "docx" or formato == "doc":
             filename = f"relatorio_sumula_escolhas_{processo_uuid}.docx"
             logger.info("Gerando Word: %s", filename)
@@ -319,42 +270,31 @@ class SumulaEscolhas(RelatorioBase):
             response = self.render_to_docx(
                 cargos_list, cabecalho_docx, filename=filename
             )
-            return response, cargos_list
+            return (response, cargos_list)
         elif formato == "pdf":
             filename = f"relatorio_sumula_escolhas_{processo_uuid}.pdf"
             logger.info("Gerando PDF: %s", filename)
-            self.context.update(
-                {
-                    "is_pdf": True,
-                    "cargos": cargos_list,
-                }
-            )
+            self.context.update({"is_pdf": True, "cargos": cargos_list})
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME, self.context, filename=filename
             )
-            return response, cargos_list
+            return (response, cargos_list)
         else:
             logger.info("Gerando HTML")
-            self.context.update(
-                {
-                    "cargos": cargos_list,
-                }
-            )
+            self.context.update({"cargos": cargos_list})
             response = render(request, self.TEMPLATE_NAME, self.context)
-            return response, cargos_list
+            return (response, cargos_list)
 
     def _agrupar_por_cargo_dre_e_escola(self, escolhas: list) -> list:
-        """
-        Agrupa escolhas por cargo, depois por DRE e depois por Unidade Escolar.
+        """Agrupa escolhas por cargo, depois por DRE e depois por Unidade.
 
         Args:
-            escolhas: Lista de escolhas com suas informações
+            escolhas: Escolhas.
 
         Returns:
-            Lista de cargos com suas DREs, unidades escolares e escolhas
+            Lista com os registros obtidos.
         """
-        cargos_dict = {}
-
+        cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
             cargo_codigo = escolha.get("cargo_codigo", "") or ""
             cargo_descricao = escolha.get("cargo_descricao", "") or ""
@@ -362,36 +302,26 @@ class SumulaEscolhas(RelatorioBase):
             dre_nome = escolha.get("dre_nome", "") or "-"
             escola_nome = escolha.get("escola_nome", "") or "-"
             escola_codigo_eol = escolha.get("escola_codigo_eol", "") or ""
-
-            # Se não tem descrição do cargo, usar código ou um valor padrão
             if not cargo_descricao:
                 if cargo_codigo and cargo_codigo != "-":
                     cargo_descricao = f"Cargo {cargo_codigo}"
                 else:
                     cargo_descricao = "Cargo não informado"
-
-            # Se não tem nome da DRE, usar código ou um valor padrão
             if not dre_nome or dre_nome == "-":
                 if dre_codigo:
                     dre_nome = f"DRE {dre_codigo}"
                 else:
                     dre_nome = "DRE não informada"
-
-            # Se não tem nome da escola, usar código EOL ou um valor padrão
             if not escola_nome or escola_nome == "-":
                 if escola_codigo_eol:
                     escola_nome = f"Escola EOL {escola_codigo_eol}"
                 else:
                     escola_nome = "Unidade Escolar não informada"
-
-            # Criar chave única para a escola (usando nome + EOL para garantir unicidade)  # noqa: E501
             escola_chave = (
                 f"{escola_nome}_{escola_codigo_eol}"
                 if escola_codigo_eol
                 else escola_nome
             )
-
-            # Criar estrutura hierárquica: Cargo -> DRE -> Unidade Escolar -> Escolhas  # noqa: E501
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
                     "codigo": cargo_codigo
@@ -400,14 +330,12 @@ class SumulaEscolhas(RelatorioBase):
                     "descricao": cargo_descricao,
                     "dres": {},
                 }
-
             if dre_codigo not in cargos_dict[cargo_codigo]["dres"]:
                 cargos_dict[cargo_codigo]["dres"][dre_codigo] = {
                     "codigo": dre_codigo if dre_codigo else "",
                     "nome": dre_nome,
                     "escolas": {},
                 }
-
             if (
                 escola_chave
                 not in cargos_dict[cargo_codigo]["dres"][dre_codigo]["escolas"]
@@ -419,33 +347,25 @@ class SumulaEscolhas(RelatorioBase):
                     "codigo_eol": escola_codigo_eol,
                     "escolhas": [],
                 }
-
             cargos_dict[cargo_codigo]["dres"][dre_codigo]["escolas"][
                 escola_chave
             ]["escolhas"].append(escolha)
-
-        # Converter para lista e ordenar
         cargos_list = []
-        for cargo_codigo, cargo_data in cargos_dict.items():  # noqa: B007
+        for cargo_codigo, cargo_data in cargos_dict.items():
             dres_list = []
-            for dre_codigo, dre_data in cargo_data["dres"].items():  # noqa: B007
+            for dre_codigo, dre_data in cargo_data["dres"].items():
                 escolas_list = []
-                for escola_chave, escola_data in dre_data["escolas"].items():  # noqa: B007
-                    # Ordenar escolhas por classificação
+                for escola_chave, escola_data in dre_data["escolas"].items():
                     escola_data["escolhas"].sort(
-                        key=lambda e: (
-                            e.get("classificacao_ordem")
-                            if isinstance(
-                                e.get("classificacao_ordem"), int | float
-                            )
-                            else e.get("classificacao")
-                            if isinstance(e.get("classificacao"), int | float)
-                            else float("inf")
+                        key=lambda e: e.get("classificacao_ordem")
+                        if isinstance(
+                            e.get("classificacao_ordem"), int | float
                         )
+                        else e.get("classificacao")
+                        if isinstance(e.get("classificacao"), int | float)
+                        else float("inf")
                     )
                     escolas_list.append(escola_data)
-
-                # Ordenar escolas por nome
                 escolas_list.sort(key=lambda e: e["nome"])
                 dres_list.append(
                     {
@@ -454,8 +374,6 @@ class SumulaEscolhas(RelatorioBase):
                         "escolas": escolas_list,
                     }
                 )
-
-            # Ordenar DREs por nome
             dres_list.sort(key=lambda d: d["nome"])
             cargos_list.append(
                 {
@@ -464,24 +382,25 @@ class SumulaEscolhas(RelatorioBase):
                     "dres": dres_list,
                 }
             )
-
-        # Ordenar cargos por descrição
         cargos_list.sort(key=lambda x: x["descricao"])
-
         return cargos_list
 
     def render_to_xls(
-        self, context=None, filename="relatorio_sumula_escolhas.xlsx"
-    ):
-        """
-        Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
+        self,
+        context: Any = None,
+        filename: Any = "relatorio_sumula_escolhas.xlsx",
+    ) -> Any:
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            context: Contexto do relatório
-            filename: Nome do arquivo Excel gerado
+            context: Dados de contexto usados na renderização.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Excel gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if context is None:
             context = {}
@@ -489,12 +408,10 @@ class SumulaEscolhas(RelatorioBase):
             raise ImportError(
                 "openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0"  # noqa: E501
             )
-
         try:
             wb = Workbook()
             ws = wb.active
             ws.title = "Súmula de Escolhas"
-
             cargo_fill = PatternFill(
                 start_color="667eea", end_color="667eea", fill_type="solid"
             )
@@ -524,11 +441,8 @@ class SumulaEscolhas(RelatorioBase):
                 horizontal="center", vertical="center", wrap_text=True
             )
             left_align = Alignment(horizontal="left", vertical="center")
-
             row = 1
-
             temp_image_paths = []
-            # Inserir logotipo no topo, se disponível
             logo_url = (
                 (context or self.context).get("logo_url")
                 if context or self.context
@@ -552,23 +466,17 @@ class SumulaEscolhas(RelatorioBase):
                         image_path = logo_url
                     if image_path:
                         img = XLImage(image_path)
-                        # opcional: ajustar tamanho
                         try:
-                            # Reduz o tamanho da imagem
                             img.width = 220
                             img.height = 90
                         except Exception:
                             pass
-                        # Aproxima o alinhamento central ancorando em uma coluna intermediária  # noqa: E501
-                        # Como a planilha usa 4 colunas (A:D), ancorar em B1 fica visualmente centralizado  # noqa: E501
                         ws.add_image(img, "B1")
-                        # Avança algumas linhas para não sobrepor conteúdo
                         row = max(row, 8)
                 except Exception as exc:
                     logger.warning(
                         "Não foi possível inserir o logotipo no XLS: %s", exc
                     )
-
             cabecalho_padrao = self.context.get("cabecalho_padrao", "")
             if cabecalho_padrao:
                 ws.merge_cells(f"A{row}:E{row}")
@@ -586,10 +494,8 @@ class SumulaEscolhas(RelatorioBase):
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-
             for cargo in context.get("cargos", []):
                 cargo_descricao = cargo.get("descricao", "")
-
                 ws.merge_cells(f"A{row}:C{row}")
                 cell = ws[f"A{row}"]
                 cell.value = f"Cargo: {cargo_descricao}"
@@ -597,10 +503,8 @@ class SumulaEscolhas(RelatorioBase):
                 cell.fill = cargo_fill
                 cell.alignment = left_align
                 row += 1
-
                 for dre in cargo.get("dres", []):
                     dre_nome = dre.get("nome", "")
-
                     ws.merge_cells(f"A{row}:E{row}")
                     cell = ws[f"A{row}"]
                     cell.value = f"DRE - {dre_nome}"
@@ -608,10 +512,8 @@ class SumulaEscolhas(RelatorioBase):
                     cell.fill = dre_fill
                     cell.alignment = left_align
                     row += 1
-
                     for escola in dre.get("escolas", []):
                         escola_nome = escola.get("nome", "")
-
                         ws.merge_cells(f"A{row}:E{row}")
                         cell = ws[f"A{row}"]
                         cell.value = escola_nome
@@ -619,7 +521,6 @@ class SumulaEscolhas(RelatorioBase):
                         cell.fill = escola_fill
                         cell.alignment = left_align
                         row += 1
-
                         headers = [
                             "Classificação",
                             "Classificação NNA",
@@ -635,7 +536,6 @@ class SumulaEscolhas(RelatorioBase):
                             cell.alignment = center_align
                             cell.border = border
                         row += 1
-
                         for escolha in escola.get("escolhas", []):
                             ws.cell(row=row, column=1).value = escolha.get(
                                 "classificacao", "-"
@@ -652,37 +552,21 @@ class SumulaEscolhas(RelatorioBase):
                             ws.cell(row=row, column=5).value = escolha.get(
                                 "tipo_vaga", "-"
                             )
-
                             for col in range(1, 6):
                                 cell = ws.cell(row=row, column=col)
                                 cell.border = border
                                 cell.font = normal_font
-                                if (
-                                    col in [1, 2, 3, 5]
-                                ):  # Colunas de classificação e tipo centralizadas  # noqa: E501
+                                if col in [1, 2, 3, 5]:
                                     cell.alignment = center_align
-                                else:  # Candidatos alinhado à esquerda
+                                else:
                                     cell.alignment = left_align
-
                             row += 1
-
                         row += 1
-
                     row += 1
-
                 row += 1
-
-            column_widths = {
-                "A": 15,  # Classificação
-                "B": 18,  # Classificação NNA
-                "C": 18,  # Classificação PcD
-                "D": 50,  # Candidatos
-                "E": 15,  # Tipo da Vaga
-            }
-
+            column_widths = {"A": 15, "B": 18, "C": 18, "D": 50, "E": 15}
             for col_letter, width in column_widths.items():
                 ws.column_dimensions[col_letter].width = width
-
             texto_final = self.context.get("texto_final")
             if texto_final:
                 row += 1
@@ -693,19 +577,15 @@ class SumulaEscolhas(RelatorioBase):
                 cell.alignment = Alignment(
                     horizontal="left", vertical="top", wrap_text=True
                 )
-
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
-
-            # Limpar temporários de imagem
             for p in temp_image_paths:
                 try:
                     if os.path.exists(p):
                         os.unlink(p)
                 except Exception:
                     pass
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -714,51 +594,46 @@ class SumulaEscolhas(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Excel: %s", exc, exc_info=True)
             raise
 
     def render_to_docx(
-        self, cargos_list, cabecalho, filename="relatorio_sumula_escolhas.docx"
-    ):
-        """
-        Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do Excel.
+        self,
+        cargos_list: Any,
+        cabecalho: Any,
+        filename: Any = "relatorio_sumula_escolhas.docx",
+    ) -> Any:
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            cargos_list: Lista de cargos com suas DREs e escolhas (estrutura
-            hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            filename: Nome do arquivo Word gerado
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho: Cabecalho.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
                 "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"  # noqa: E501
             )
-
         texto_final = self.context.get("texto_final", "")
-
         try:
             doc = Document()
-
-            # Configurar margens da página
             sections = doc.sections
             for section in sections:
                 section.top_margin = Inches(1)
                 section.bottom_margin = Inches(1)
                 section.left_margin = Inches(1)
                 section.right_margin = Inches(1)
-
-            # Cores (em RGB)
-            RGBColor(102, 126, 234)  # #667eea
-            RGBColor(52, 73, 94)  # #34495e
-            RGBColor(90, 108, 125)  # #5a6c7d
-            RGBColor(236, 240, 241)  # #ECF0F1
-
-            # Cabeçalho
+            RGBColor(102, 126, 234)
+            RGBColor(52, 73, 94)
+            RGBColor(90, 108, 125)
+            RGBColor(236, 240, 241)
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 p = doc.add_paragraph()
@@ -767,12 +642,8 @@ class SumulaEscolhas(RelatorioBase):
                 run.font.size = Pt(14)
                 run.font.bold = True
                 doc.add_paragraph()
-
-            # Processar cargos
             for cargo in cargos_list:
                 cargo_descricao = cargo.get("descricao", "")
-
-                # Título do cargo
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(f"Cargo: {cargo_descricao}")
@@ -787,12 +658,8 @@ class SumulaEscolhas(RelatorioBase):
                 shading_elm.set(qn("w:fill"), "667eea")
                 shading_elm.set(qn("w:val"), "clear")
                 p_pr.append(shading_elm)
-
-                # Processar DREs
                 for dre in cargo.get("dres", []):
                     dre_nome = dre.get("nome", "")
-
-                    # Título da DRE
                     p = doc.add_paragraph()
                     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                     run = p.add_run(f"DRE - {dre_nome}")
@@ -807,12 +674,8 @@ class SumulaEscolhas(RelatorioBase):
                     shading_elm.set(qn("w:fill"), "34495e")
                     shading_elm.set(qn("w:val"), "clear")
                     p_pr.append(shading_elm)
-
-                    # Processar Unidades Escolares
                     for escola in dre.get("escolas", []):
                         escola_nome = escola.get("nome", "")
-
-                        # Título da Unidade Escolar
                         p = doc.add_paragraph()
                         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                         run = p.add_run(escola_nome)
@@ -827,8 +690,6 @@ class SumulaEscolhas(RelatorioBase):
                         shading_elm.set(qn("w:fill"), "5a6c7d")
                         shading_elm.set(qn("w:val"), "clear")
                         p_pr.append(shading_elm)
-
-                        # Criar tabela
                         headers = [
                             "Classificação",
                             "Classificação NNA",
@@ -838,8 +699,6 @@ class SumulaEscolhas(RelatorioBase):
                         ]
                         table = doc.add_table(rows=1, cols=len(headers))
                         table.style = "Light Grid Accent 1"
-
-                        # Cabeçalho da tabela
                         header_cells = table.rows[0].cells
                         for i, header in enumerate(headers):
                             cell = header_cells[i]
@@ -857,11 +716,8 @@ class SumulaEscolhas(RelatorioBase):
                             shading_elm.set(qn("w:fill"), "ECF0F1")
                             shading_elm.set(qn("w:val"), "clear")
                             tc_pr.append(shading_elm)
-
-                        # Dados das escolhas
                         for escolha in escola.get("escolhas", []):
                             row_cells = table.add_row().cells
-
                             row_cells[0].text = str(
                                 escolha.get("classificacao", "-")
                             )
@@ -877,8 +733,6 @@ class SumulaEscolhas(RelatorioBase):
                             row_cells[4].text = str(
                                 escolha.get("tipo_vaga", "-")
                             )
-
-                            # Alinhamento
                             row_cells[0].paragraphs[
                                 0
                             ].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -896,25 +750,18 @@ class SumulaEscolhas(RelatorioBase):
                             ].alignment = WD_ALIGN_PARAGRAPH.CENTER
                             for cell in row_cells:
                                 cell.paragraphs[0].runs[0].font.size = Pt(10)
-
                         doc.add_paragraph()
-
                     doc.add_paragraph()
-
                 doc.add_paragraph()
-
             if texto_final:
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(self.processar_cabecalho_html(texto_final))
                 run.font.size = Pt(10)
                 doc.add_paragraph()
-
-            # Salvar em buffer
             buffer = BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -923,7 +770,6 @@ class SumulaEscolhas(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Word: %s", exc, exc_info=True)
             raise

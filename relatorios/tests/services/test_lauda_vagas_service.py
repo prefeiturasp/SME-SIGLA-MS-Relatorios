@@ -1,16 +1,15 @@
-"""
-Testes unitários para o serviço LaudaVagasService.
-"""
+"""Testes unitários para o serviço LaudaVagasService."""
+
+from __future__ import annotations
 
 import sys
+from typing import Any
 from unittest.mock import MagicMock
 
-# Mock render_to_pdf antes de importar
 if "relatorios.utils" not in sys.modules:
     mock_utils = MagicMock()
     mock_utils.render_to_pdf = MagicMock(return_value=MagicMock())
     sys.modules["relatorios.utils"] = mock_utils
-
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -22,7 +21,7 @@ from relatorios.services.lauda_vagas_service import LaudaVagasService
 pytestmark = pytest.mark.django_db
 
 
-def _make_request():
+def _make_request() -> Any:
     """Cria um request mock para os testes."""
     return RequestFactory().get("/relatorios/lauda-vagas/")
 
@@ -30,16 +29,18 @@ def _make_request():
 class _MockResponse:
     """Classe auxiliar para mockar respostas HTTP."""
 
-    def __init__(self, json_data, status_code=200):
+    def __init__(self, json_data: Any, status_code: Any = 200) -> None:
+        """Inicializa a instância com os parâmetros informados."""
         self._json_data = json_data
         self.status_code = status_code
 
-    def json(self):
+    def json(self) -> Any:
+        """Json."""
         return self._json_data
 
 
 @pytest.fixture
-def mock_vagas_response():
+def mock_vagas_response() -> Any:
     """Fixture com dados mockados de vagas."""
     return _MockResponse(
         {
@@ -77,27 +78,21 @@ def mock_vagas_response():
 
 
 @pytest.fixture
-def lauda_vagas_service(settings):
+def lauda_vagas_service(settings: Any) -> Any:
     """Fixture que cria uma instância do serviço com mocks."""
     settings.ESCOLHAS_API_URL = "http://escolhas"
-
     service = LaudaVagasService()
-
-    # Mockar o serviço
     service.escolhas_service = Mock()
-
     return service
 
 
 class TestInit:
     """Testes para o método __init__."""
 
-    def test_init(self, settings):
-        """Testa inicialização."""
+    def test_init(self, settings: Any) -> None:
+        """Verifica init."""
         settings.ESCOLHAS_API_URL = "http://escolhas"
-
         service = LaudaVagasService()
-
         assert service.escolhas_service is not None
         assert service.TEMPLATE_NAME == "relatorios/vagas_escolas.html"
 
@@ -106,11 +101,10 @@ class TestGerarRelatorio:
     """Testes para o método gerar_relatorio."""
 
     def test_gerar_relatorio_html_success(
-        self, lauda_vagas_service, mock_vagas_response
-    ):
-        """Testa geração de relatório HTML com sucesso."""
+        self, lauda_vagas_service: Any, mock_vagas_response: Any
+    ) -> None:
+        """Verifica gerar relatorio html success."""
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = mock_vagas_response  # noqa: E501
-
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),
@@ -118,30 +112,31 @@ class TestGerarRelatorio:
             response = lauda_vagas_service.gerar_relatorio(
                 processo_uuid="proc-123", request=_make_request()
             )
-
         assert isinstance(response, HttpResponse)
         m_render.assert_called_once()
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.assert_called_once_with(
             processo_uuid="proc-123"
         )
 
-    def test_gerar_relatorio_erro_buscar_vagas(self, lauda_vagas_service):
-        """Testa que erro ao buscar vagas é propagado."""
+    def test_gerar_relatorio_erro_buscar_vagas(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica gerar relatorio erro buscar vagas."""
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.side_effect = Exception(  # noqa: E501
             "Erro API"
         )
-
         with pytest.raises(Exception, match="Erro API"):
             lauda_vagas_service.gerar_relatorio(
                 processo_uuid="proc-123", request=_make_request()
             )
 
-    def test_gerar_relatorio_vagas_vazias(self, lauda_vagas_service):
-        """Testa quando não há vagas."""
+    def test_gerar_relatorio_vagas_vazias(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica gerar relatorio vagas vazias."""
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = _MockResponse(  # noqa: E501
             {"vagas": []}
         )
-
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),
@@ -149,20 +144,17 @@ class TestGerarRelatorio:
             response = lauda_vagas_service.gerar_relatorio(
                 processo_uuid="proc-123", request=_make_request()
             )
-
         assert isinstance(response, HttpResponse)
         m_render.assert_called_once()
-        # Verificar que o contexto tem cargos vazios
         _, args, kwargs = m_render.mock_calls[0]
         context = args[2] if len(args) >= 3 else kwargs.get("context")
         assert context["cargos"] == []
 
     def test_gerar_relatorio_processo_uuid_none(
-        self, lauda_vagas_service, mock_vagas_response
-    ):
-        """Testa quando processo_uuid é None."""
+        self, lauda_vagas_service: Any, mock_vagas_response: Any
+    ) -> None:
+        """Verifica gerar relatorio processo uuid none."""
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = mock_vagas_response  # noqa: E501
-
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),
@@ -170,9 +162,7 @@ class TestGerarRelatorio:
             response = lauda_vagas_service.gerar_relatorio(
                 processo_uuid=None, request=_make_request()
             )
-
         assert isinstance(response, HttpResponse)
-        # Verificar que foi chamado com string vazia
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.assert_called_once_with(
             processo_uuid=""
         )
@@ -181,16 +171,14 @@ class TestGerarRelatorio:
 class TestAgruparVagas:
     """Testes para o método _agrupar_vagas."""
 
-    def test_agrupar_vagas_basico(self, lauda_vagas_service):
-        """Testa agrupamento básico de vagas."""
+    def test_agrupar_vagas_basico(self, lauda_vagas_service: Any) -> None:
+        """Verifica agrupar vagas basico."""
         vagas = [
             {"cargo_codigo": "123", "escola": {"dre": {"codigo": "DRE001"}}},
             {"cargo_codigo": "123", "escola": {"dre": {"codigo": "DRE001"}}},
             {"cargo_codigo": "456", "escola": {"dre": {"codigo": "DRE002"}}},
         ]
-
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
         assert "123" in resultado
         assert "456" in resultado
         assert "DRE001" in resultado["123"]
@@ -198,69 +186,59 @@ class TestAgruparVagas:
         assert len(resultado["123"]["DRE001"]) == 2
         assert len(resultado["456"]["DRE002"]) == 1
 
-    def test_agrupar_vagas_sem_cargo_codigo(self, lauda_vagas_service):
-        """Testa quando vaga não tem cargo_codigo."""
+    def test_agrupar_vagas_sem_cargo_codigo(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica agrupar vagas sem cargo codigo."""
         vagas = [
             {"cargo_codigo": None, "escola": {"dre": {"codigo": "DRE001"}}}
         ]
-
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
         assert None in resultado
         assert "DRE001" in resultado[None]
 
-    def test_agrupar_vagas_sem_dre_codigo(self, lauda_vagas_service):
-        """Testa quando escola não tem DRE codigo."""
+    def test_agrupar_vagas_sem_dre_codigo(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica agrupar vagas sem dre codigo."""
         vagas = [{"cargo_codigo": "123", "escola": {"dre": {"codigo": None}}}]
-
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
         assert "123" in resultado
         assert None in resultado["123"]
 
-    def test_agrupar_vagas_sem_escola(self, lauda_vagas_service):
-        """Testa quando vaga não tem escola."""
-        vagas = [
-            {
-                "cargo_codigo": "123"
-                # Sem chave 'escola'
-            }
-        ]
-
+    def test_agrupar_vagas_sem_escola(self, lauda_vagas_service: Any) -> None:
+        """Verifica agrupar vagas sem escola."""
+        vagas = [{"cargo_codigo": "123"}]
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
-        # Deve tratar como escola vazia (None)
         assert "123" in resultado
         assert None in resultado["123"]
 
-    def test_agrupar_vagas_escola_vazia(self, lauda_vagas_service):
-        """Testa quando escola está vazia."""
+    def test_agrupar_vagas_escola_vazia(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica agrupar vagas escola vazia."""
         vagas = [{"cargo_codigo": "123", "escola": {}}]
-
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
         assert "123" in resultado
         assert None in resultado["123"]
 
-    def test_agrupar_vagas_dre_vazia(self, lauda_vagas_service):
-        """Testa quando DRE está vazia."""
+    def test_agrupar_vagas_dre_vazia(self, lauda_vagas_service: Any) -> None:
+        """Verifica agrupar vagas dre vazia."""
         vagas = [{"cargo_codigo": "123", "escola": {"dre": {}}}]
-
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
         assert "123" in resultado
         assert None in resultado["123"]
 
-    def test_agrupar_vagas_multiplos_cargos_dres(self, lauda_vagas_service):
-        """Testa agrupamento com múltiplos cargos e DREs."""
+    def test_agrupar_vagas_multiplos_cargos_dres(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica agrupar vagas multiplos cargos dres."""
         vagas = [
             {"cargo_codigo": "123", "escola": {"dre": {"codigo": "DRE001"}}},
             {"cargo_codigo": "123", "escola": {"dre": {"codigo": "DRE002"}}},
             {"cargo_codigo": "456", "escola": {"dre": {"codigo": "DRE001"}}},
         ]
-
         resultado = lauda_vagas_service._agrupar_vagas(vagas)
-
         assert "123" in resultado
         assert "456" in resultado
         assert "DRE001" in resultado["123"]
@@ -274,8 +252,10 @@ class TestAgruparVagas:
 class TestPrepararDadosTemplate:
     """Testes para o método _preparar_dados_template."""
 
-    def test_preparar_dados_template_basico(self, lauda_vagas_service):
-        """Testa preparação básica de dados para o template."""
+    def test_preparar_dados_template_basico(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template basico."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -290,11 +270,9 @@ class TestPrepararDadosTemplate:
                 ]
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["codigo"] == "123"
         assert resultado[0]["descricao"] == "Professor de Educação Infantil"
@@ -303,9 +281,9 @@ class TestPrepararDadosTemplate:
         assert resultado[0]["dres"][0]["nome"] == "DRE Butantã"
 
     def test_preparar_dados_template_multiplos_cargos(
-        self, lauda_vagas_service
-    ):
-        """Testa preparação com múltiplos cargos."""
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template multiplos cargos."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -330,17 +308,17 @@ class TestPrepararDadosTemplate:
                 ]
             },
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 2
         assert resultado[0]["codigo"] == "123"
         assert resultado[1]["codigo"] == "456"
 
-    def test_preparar_dados_template_multiplas_dres(self, lauda_vagas_service):
-        """Testa preparação com múltiplas DREs no mesmo cargo."""
+    def test_preparar_dados_template_multiplas_dres(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template multiplas dres."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -363,33 +341,28 @@ class TestPrepararDadosTemplate:
                 ],
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 1
         assert len(resultado[0]["dres"]) == 2
         assert resultado[0]["dres"][0]["codigo"] == "DRE001"
         assert resultado[0]["dres"][1]["codigo"] == "DRE002"
 
     def test_preparar_dados_template_sem_primeira_vaga(
-        self, lauda_vagas_service
-    ):
-        """Testa quando não há primeira vaga (lista vazia)."""
-        vagas_agrupadas = {"123": {"DRE001": []}}
-
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template sem primeira vaga."""
+        vagas_agrupadas = {"123": {"DRE001": []}}  # type: ignore[var-annotated]
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
-        # Não deve adicionar cargo se não há vagas
         assert len(resultado) == 0
 
     def test_preparar_dados_template_sem_cargo_descricao(
-        self, lauda_vagas_service
-    ):
-        """Testa quando vaga não tem cargo_descricao."""
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template sem cargo descricao."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -403,16 +376,16 @@ class TestPrepararDadosTemplate:
                 ]
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["descricao"] == ""
 
-    def test_preparar_dados_template_sem_dre_nome(self, lauda_vagas_service):
-        """Testa quando DRE não tem nome."""
+    def test_preparar_dados_template_sem_dre_nome(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template sem dre nome."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -424,16 +397,16 @@ class TestPrepararDadosTemplate:
                 ]
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["dres"][0]["nome"] == ""
 
-    def test_preparar_dados_template_dre_vazia(self, lauda_vagas_service):
-        """Testa quando estrutura de DRE está vazia."""
+    def test_preparar_dados_template_dre_vazia(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template dre vazia."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -445,16 +418,16 @@ class TestPrepararDadosTemplate:
                 ]
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["dres"][0]["nome"] == ""
 
-    def test_preparar_dados_template_escola_vazia(self, lauda_vagas_service):
-        """Testa quando estrutura de escola está vazia."""
+    def test_preparar_dados_template_escola_vazia(
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template escola vazia."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -466,18 +439,16 @@ class TestPrepararDadosTemplate:
                 ]
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
         assert len(resultado) == 1
         assert resultado[0]["dres"][0]["nome"] == ""
 
     def test_preparar_dados_template_vagas_vazias_em_dre(
-        self, lauda_vagas_service
-    ):
-        """Testa quando uma DRE tem lista vazia de vagas."""
+        self, lauda_vagas_service: Any
+    ) -> None:
+        """Verifica preparar dados template vagas vazias em dre."""
         vagas_agrupadas = {
             "123": {
                 "DRE001": [
@@ -489,15 +460,12 @@ class TestPrepararDadosTemplate:
                         },
                     }
                 ],
-                "DRE002": [],  # DRE com lista vazia
+                "DRE002": [],
             }
         }
-
         resultado = lauda_vagas_service._preparar_dados_template(
             vagas_agrupadas
         )
-
-        # Deve incluir apenas DRE001, ignorando DRE002 vazia
         assert len(resultado) == 1
         assert len(resultado[0]["dres"]) == 1
         assert resultado[0]["dres"][0]["codigo"] == "DRE001"
@@ -507,11 +475,10 @@ class TestIntegracaoCompleta:
     """Testes de integração completos."""
 
     def test_fluxo_completo_html(
-        self, lauda_vagas_service, mock_vagas_response
-    ):
-        """Testa fluxo completo de geração HTML."""
+        self, lauda_vagas_service: Any, mock_vagas_response: Any
+    ) -> None:
+        """Verifica fluxo completo html."""
         lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = mock_vagas_response  # noqa: E501
-
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),
@@ -519,11 +486,8 @@ class TestIntegracaoCompleta:
             response = lauda_vagas_service.gerar_relatorio(
                 processo_uuid="proc-123", request=_make_request()
             )
-
         assert isinstance(response, HttpResponse)
         m_render.assert_called_once()
-
-        # Verificar estrutura dos dados
         _, args, kwargs = m_render.mock_calls[0]
         context = args[2] if len(args) >= 3 else kwargs.get("context")
         cargos = context["cargos"]

@@ -1,10 +1,13 @@
-"""
-Serviço para geração de Ata de Escolha.
+"""Serviço para geração de Ata de Escolha.
+
 Baseado no padrão da Lauda de Convocação, mas com informações da escola
 escolhida.
 """
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from requests import RequestException
 
@@ -12,38 +15,33 @@ from .candidatos_api_service import CandidatosService
 
 
 class CargoObrigatorioError(Exception):
-    """
-    Exceção levantada quando o processo tem mais de um cargo e o cargo não foi
-    informado.
-    """
+    """Exceção levantada quando o processo tem mais de um cargo e o cargo."""
 
     def __init__(
         self,
         cargos: list[dict],
         message: str = "Selecione um cargo para emitir a Ata de Escolha.",
-    ):
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            cargos: Cargos.
+            message: Message.
+        """
         self.cargos = cargos
         self.message = message
         super().__init__(message)
 
 
-from .agendas_api_service import AgendasService  # noqa: E402
-from .escolhas_api_service import EscolhasService  # noqa: E402
-from .processo_convocacao_api_service import (  # noqa: E402
-    ProcessoConvocacaoService,
-)
+from .agendas_api_service import AgendasService
+from .escolhas_api_service import EscolhasService
+from .processo_convocacao_api_service import ProcessoConvocacaoService
 
 logger = logging.getLogger(__name__)
 
 
 class AtaEscolhaService:
-    """
-    Serviço para geração de Ata de Escolha.
-    Processa por cargo (cargo_codigo) de forma independente: busca habilitados
-    filtrando por cargo,
-    organiza sessões conforme agendas do cargo, busca escolhas e consolida o
-    resultado por cargo.
-    """
+    """Serviço para geração de Ata de Escolha."""
 
     def __init__(
         self,
@@ -52,16 +50,15 @@ class AtaEscolhaService:
         agendas_base_url: str = "https://example.com",
         escolhas_base_url: str = "https://example.com",
         timeout_seconds: int = 30,
-    ):
-        """
-        Inicializa o serviço de ata de escolha.
+    ) -> None:
+        """Inicializa a instância com os parâmetros informados.
 
         Args:
-            candidatos_base_url: URL base da API de candidatos
-            processo_base_url: URL base da API de processos de convocação
-            agendas_base_url: URL base da API de agendas
-            escolhas_base_url: URL base da API de escolhas
-            timeout_seconds: Timeout em segundos para as requisições
+            candidatos_base_url: Candidatos base url.
+            processo_base_url: Processo base url.
+            agendas_base_url: Agendas base url.
+            escolhas_base_url: Escolhas base url.
+            timeout_seconds: Tempo máximo de espera, em segundos.
         """
         self.candidatos_service = CandidatosService(
             base_url=candidatos_base_url, timeout_seconds=timeout_seconds
@@ -77,16 +74,14 @@ class AtaEscolhaService:
         )
 
     def _identificar_lacunas(self, classificacoes: list[int]) -> list[int]:
-        """
-        Identifica lacunas em uma lista de classificações.
-        Exemplo: [1, 2, 3, 6, 7] -> retorna [4, 5]
+        """Identifica lacunas em uma lista de classificações.
+
         Args:
-            classificacoes: Lista de classificações (pode conter None)
+            classificacoes: Classificacoes.
 
         Returns:
-            Lista de classificações faltantes (lacunas)
+            Lista com os registros obtidos.
         """
-        # Remove None e valores inválidos, ordena e remove duplicatas
         classificacoes_validas = sorted(
             set(
                 c
@@ -94,71 +89,49 @@ class AtaEscolhaService:
                 if c is not None and isinstance(c, int)
             )
         )
-
         if not classificacoes_validas:
             return []
-
-        # Encontra o mínimo e máximo
         min_class = min(classificacoes_validas)
         max_class = max(classificacoes_validas)
-
-        # Cria um conjunto com todas as classificações esperadas
         todas_classificacoes = set(range(min_class, max_class + 1))
-
-        # Identifica as lacunas (classificações esperadas que não existem)
         lacunas = sorted(todas_classificacoes - set(classificacoes_validas))
-
         return lacunas
 
     def _separar_por_tipo(
         self, candidatos: list[dict]
     ) -> dict[str, list[dict]]:
-        """
-        Separa candidatos por tipo usando o campo categoria_efetiva: GERAL, NNA
-        e PCD.
-        PCD deve aparecer primeiro.
+        """Separa candidatos por categoria_efetiva (GERAL, NNA e PCD).
 
         Args:
-            candidatos: Lista de candidatos retornados da API
+            candidatos: Candidatos habilitados retornados pela API.
 
         Returns:
-            Dicionário com candidatos separados por tipo:
-            {
-                'pcd': [candidatos com categoria_efetiva='PCD'],
-                'geral': [candidatos com categoria_efetiva='GERAL'],
-                'nna': [candidatos com categoria_efetiva='NNA']
-            }
+            Dicionário com os dados processados.
         """
-        separados = {"pcd": [], "geral": [], "nna": []}
-
+        separados = {"pcd": [], "geral": [], "nna": []}  # type: ignore[var-annotated]
         for candidato in candidatos:
             categoria_efetiva = candidato.get("categoria_efetiva")
-
-            # Separa por categoria_efetiva
             if categoria_efetiva == "PCD":
                 separados["pcd"].append(candidato)
             elif categoria_efetiva == "GERAL":
                 separados["geral"].append(candidato)
             elif categoria_efetiva == "NNA":
                 separados["nna"].append(candidato)
-
         return separados
 
     def _extrair_classificacoes(
         self, candidatos: list[dict], campo: str
     ) -> list[int]:
-        """
-        Extrai classificações de uma lista de candidatos.
+        """Extrai classificações de uma lista de candidatos.
 
         Args:
-            candidatos: Lista de candidatos
-            campo: Nome do campo de classificação ('classificacao',
-            'classificacao_nna', 'classificacao_pcd')
+            candidatos: Candidatos habilitados retornados pela API.
+            campo: Campo.
 
         Returns:
-            Lista de classificações (pode conter None)
+            Lista com os registros obtidos.
         """
-        return [candidato.get(campo) for candidato in candidatos]
+        return [candidato.get(campo) for candidato in candidatos]  # type: ignore[misc]
 
     def _buscar_candidatos_faltantes(
         self,
@@ -169,38 +142,29 @@ class AtaEscolhaService:
         codigo_cargo: list[str] | str | None = None,
         ordering: str = "ranking_escolha",
     ) -> dict[str, list[dict]]:
-        """
-        Busca candidatos faltantes nos outros processos do mesmo concurso,
-        filtrando por cargo quando informado.
+        """Busca candidatos faltantes em outros processos do concurso.
 
         Args:
-            outros_processos_uuid: Lista de UUIDs dos outros processos
-            lacunas_geral: Lista de classificações faltantes (Geral)
-            lacunas_nna: Lista de classificações faltantes (NNA)
-            lacunas_pcd: Lista de classificações faltantes (PCD)
-            codigo_cargo: Código(s) do cargo para filtrar (opcional)
-            ordering: Campo para ordenação
+            outros_processos_uuid: UUID de outros processos.
+            lacunas_geral: Lacunas geral.
+            lacunas_nna: Lacunas nna.
+            lacunas_pcd: Lacunas pcd.
+            codigo_cargo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com candidatos faltantes por tipo. Cada lista é uma
-            lista de dicts diretamente
-            e os itens são anotados com 'status_especial' para diferenciar já
-            classificados/convocados.
+            Dicionário com os dados processados.
         """
-        candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}
-
+        candidatos_faltantes = {"geral": [], "nna": [], "pcd": []}  # type: ignore[var-annotated]
         if not outros_processos_uuid:
             return candidatos_faltantes
         try:
-            # Buscar candidatos PCD faltantes primeiro (devem aparecer primeiro)  # noqa: E501
             if lacunas_pcd:
                 logger.info(
                     "Buscando candidatos PCD faltantes (classificações: %s) nos processos: %s",  # noqa: E501
                     lacunas_pcd,
                     outros_processos_uuid,
                 )
-
-                # Buscar todos os candidatos dos outros processos (sem filtro de classificação)  # noqa: E501
                 todos_candidatos_pcd = []
                 for processo_uuid in outros_processos_uuid:
                     try:
@@ -210,8 +174,6 @@ class AtaEscolhaService:
                             )
                         )
                         candidatos_pcd_data = response_pcd.json()
-
-                        # candidatos_pcd_data é uma lista de dicts diretamente
                         if isinstance(candidatos_pcd_data, list):
                             todos_candidatos_pcd.extend(candidatos_pcd_data)
                     except RequestException as exc:
@@ -220,27 +182,20 @@ class AtaEscolhaService:
                             processo_uuid,
                             exc,
                         )
-
-                # Filtrar apenas candidatos PCD com classificações nas lacunas
                 candidatos_faltantes["pcd"] = [
                     c
                     for c in todos_candidatos_pcd
                     if c.get("classificacao_pcd") is not None
                     and c.get("classificacao_pcd") in lacunas_pcd
                 ]
-
-                # Marcar candidatos como "CANDIDATOS JÁ CLASSIFICADO."
                 for candidato in candidatos_faltantes["pcd"]:
                     candidato["status_especial"] = (
                         "CANDIDATOS JÁ CLASSIFICADO."
                     )
-
                 logger.info(
                     "Encontrados %d candidatos PCD faltantes",
                     len(candidatos_faltantes["pcd"]),
                 )
-
-            # Buscar candidatos Gerais faltantes
             if lacunas_geral:
                 logger.info(
                     "Buscando candidatos Gerais faltantes (classificações: %s) nos processos: %s",  # noqa: E501
@@ -254,13 +209,10 @@ class AtaEscolhaService:
                     ordering=ordering,
                 )
                 candidatos_geral_data = response_geral.json()
-
-                # candidatos_geral_data é uma lista de dicts diretamente
                 if isinstance(candidatos_geral_data, list):
                     candidatos_faltantes["geral"] = candidatos_geral_data
                 else:
                     candidatos_faltantes["geral"] = []
-
                 for candidato in candidatos_faltantes["geral"]:
                     candidato["status_especial"] = (
                         "JÁ CONVOCADO - LEI 13.398/02"
@@ -269,13 +221,10 @@ class AtaEscolhaService:
                         if candidato.get("classificacao_pcd") is not None
                         else ""
                     )
-
                 logger.info(
                     "Encontrados %d candidatos Gerais faltantes",
                     len(candidatos_faltantes["geral"]),
                 )
-
-            # Buscar candidatos NNA faltantes
             if lacunas_nna:
                 logger.info(
                     "Buscando candidatos NNA faltantes (classificações: %s) nos processos: %s",  # noqa: E501
@@ -289,95 +238,66 @@ class AtaEscolhaService:
                     ordering=ordering,
                 )
                 candidatos_nna_data = response_nna.json()
-
-                # candidatos_nna_data é uma lista de dicts diretamente
                 if isinstance(candidatos_nna_data, list):
                     candidatos_faltantes["nna"] = candidatos_nna_data
                 else:
                     candidatos_faltantes["nna"] = []
-
-                # Marcar candidatos como "CANDIDATOS JÁ CLASSIFICADO."
                 for candidato in candidatos_faltantes["nna"]:
                     candidato["status_especial"] = (
                         "CANDIDATOS JÁ CLASSIFICADO."
                     )
-
                 logger.info(
                     "Encontrados %d candidatos NNA faltantes",
                     len(candidatos_faltantes["nna"]),
                 )
-
         except RequestException as exc:
             logger.warning(
                 "Erro ao buscar candidatos faltantes nos outros processos: %s",
                 exc,
             )
-            # Não levanta exceção, apenas retorna o que conseguiu buscar
-
         return candidatos_faltantes
 
     def _buscar_escolhas_por_candidatos(
         self, candidato_uuids: list[str]
     ) -> dict[str, dict]:
-        """
-        Busca escolhas por lista de candidato_uuids e retorna um mapa
-        candidato_uuid -> escolha.
+        """Busca escolhas por lista de candidato_uuids e retorna um mapa.
 
         Args:
-            candidato_uuids: Lista de UUIDs dos candidatos
+            candidato_uuids: UUIDs dos candidatos consultados.
 
         Returns:
-            Dicionário mapeando candidato_uuid -> escolha (ou vazio se não
-            houver escolha)
+            Dicionário com os dados processados.
         """
-        escolhas_map = {}
-
+        escolhas_map = {}  # type: ignore[var-annotated]
         if not candidato_uuids:
             return escolhas_map
-
         try:
             escolhas_data = (
                 self.escolhas_service.buscar_escolhas_por_candidatos(
-                    candidato_uuids=candidato_uuids,
-                    situacao=None,  # Buscar todas as escolhas
+                    candidato_uuids=candidato_uuids, situacao=None
                 )
-            )
-
-            # Criar mapa de escolhas por candidato_uuid
+            )  # type: ignore[arg-type]
             for escolha in escolhas_data:
                 candidato_uuid = escolha.get("candidato_uuid")
                 if candidato_uuid:
                     escolhas_map[str(candidato_uuid)] = escolha
-
             logger.info(
                 "Encontradas %d escolhas para %d candidatos",
                 len(escolhas_map),
                 len(candidato_uuids),
             )
-
         except RequestException as exc:
             logger.warning("Erro ao buscar escolhas: %s", exc)
-            # Não levanta exceção, apenas retorna mapa vazio
-
         return escolhas_map
 
     def _extrair_dados_escola_escolhida(self, escolha: dict) -> dict:
-        """
-        Extrai dados da escola escolhida de uma escolha.
+        """Extrai dados da escola escolhida de uma escolha.
 
         Args:
-            escolha: Dicionário com dados da escolha
+            escolha: Escolha.
 
         Returns:
-            Dicionário com dados da escola escolhida:
-            {
-                'codigo_eol': str,
-                'dre_codigo': str,
-                'dre_nome': str,
-                'tipo_unidade': str,
-                'nome_escola': str,
-                'tipo_vaga': str  # 'P' para precária, 'D' para definitiva
-            }
+            Dicionário com os dados processados.
         """
         vaga_escola = escolha.get("vaga_escola", {})
         escola = (
@@ -386,18 +306,15 @@ class AtaEscolhaService:
             else {}
         )
         dre = escola.get("dre", {}) if isinstance(escola, dict) else {}
-
         codigo_eol = (
             escola.get("codigo_eol", "") if isinstance(escola, dict) else ""
         )
-        # DRE = SIGLA (do model dres)
         dre_codigo = (
             dre.get("sigla", "") or dre.get("SIGLA", "")
             if isinstance(dre, dict)
             else ""
         )
         dre_nome = dre.get("nome", "") if isinstance(dre, dict) else ""
-        # TIPO UNIDADE = TIPO_UE (do model escola)
         tipo_unidade = (
             escola.get("tipo_ue", "")
             or escola.get("TIPO_UE", "")
@@ -408,8 +325,6 @@ class AtaEscolhaService:
         nome_escola = (
             escola.get("nome_oficial", "") if isinstance(escola, dict) else ""
         )
-
-        # Converter tipo_vaga: 'precaria' = 'P', 'definitiva' = 'D'
         tipo_vaga_raw = escolha.get("tipo_vaga", "")
         if tipo_vaga_raw == "precaria":
             tipo_vaga = "P"
@@ -417,7 +332,6 @@ class AtaEscolhaService:
             tipo_vaga = "D"
         else:
             tipo_vaga = ""
-
         return {
             "codigo_eol": codigo_eol,
             "dre_codigo": dre_codigo,
@@ -430,19 +344,15 @@ class AtaEscolhaService:
     def _contar_escolhas_por_situacao(
         self, escolhas: list[dict]
     ) -> dict[str, int]:
-        """
-        Conta quantas escolhas existem por situação.
-        A situação pode ser: 'escolha', 'nao-escolha' ou 'reconvocacao'.
-        Retorna um dicionário com as chaves 'escolha', 'nao_escolha' e
-        'reconvocacao'.
-        Também inclui alias 'nao-escolha' para compatibilidade de acesso.
-        """
-        contadores = {
-            "escolha": 0,
-            "nao_escolha": 0,
-            "reconvocacao": 0,
-        }
+        """Conta quantas escolhas existem por situação.
 
+        Args:
+            escolhas: Escolhas.
+
+        Returns:
+            Dicionário com os dados processados.
+        """
+        contadores = {"escolha": 0, "nao_escolha": 0, "reconvocacao": 0}
         normalizar = {
             "escolha": "escolha",
             "nao-escolha": "nao_escolha",
@@ -457,8 +367,6 @@ class AtaEscolhaService:
             chave = normalizar.get(situacao)
             if chave in contadores:
                 contadores[chave] += 1
-
-        # Alias com hífen para acesso alternativo se necessário
         contadores["nao-escolha"] = contadores["nao_escolha"]
         return contadores
 
@@ -467,12 +375,14 @@ class AtaEscolhaService:
         candidatos_sep_cargo: dict[str, list[dict]],
         escolhas_map: dict[str, dict],
     ) -> dict[str, dict[str, int]]:
-        """
-        Conta as escolhas por situação separadas por tipo de candidato (pcd,
-        geral, nna).
-        - candidatos_sep_cargo: {'pcd': [...], 'geral': [...], 'nna': [...]}
-        - escolhas_map: {candidato_uuid: { 'situacao':
-        'escolha'|'nao-escolha'|'reconvocacao', ...}}
+        """Conta as escolhas por situação separadas por tipo de candidato.
+
+        Args:
+            candidatos_sep_cargo: Candidatos sep cargo.
+            escolhas_map: Escolhas map.
+
+        Returns:
+            Dicionário com os dados processados.
         """
         resultado: dict[str, dict[str, int]] = {}
         normalizar = {
@@ -510,78 +420,21 @@ class AtaEscolhaService:
         cargo_codigo: str | None = None,
         ordering: str = "ranking_escolha",
     ) -> dict:
-        """
-        Processa a ata de escolha para um processo.
-
-        Passos (por cargo):
-        1. Busca candidatos habilitados do processo filtrando por cargo
-        2. Separa candidatos por tipo (PCD primeiro, depois GERAL, depois NNA)
-        3. Identifica lacunas nas classificações de cada tipo no contexto do
-        cargo
-        4. Busca detalhes do processo para obter concurso_uuid e os outros
-        processos do concurso
-        5. Busca candidatos faltantes nos outros processos (do mesmo cargo) e
-        mescla na base do cargo
-           respeitando lacunas de classificação
-        6. Busca escolhas dos candidatos
-        7. Divide os candidatos do cargo em sessões com base nas agendas do
-        cargo
-        8. Gera campo 'ordem_escolha' por cargo e retorna a estrutura final
-        agregada por cargos
+        """Processa ata escolha.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            cargo_codigo: Código do cargo (obrigatório se o processo tiver mais
-            de um cargo)
-            ordering: Campo para ordenação (padrão: 'ranking_escolha')
+            processo_uuid: UUID do processo de convocação.
+            cargo_codigo: Código numérico do cargo.
+            ordering: Ordering.
 
         Returns:
-            Dicionário com os dados processados:
-            {
-                'processo_uuid': str,
-                'concurso_uuid': str,
-                'todos_processos_uuid': List[str],
-                'outros_processos_uuid': List[str],
-                'total_cargos': int,
-                'cargos': [
-                    {
-                        'cargo_nome': str,
-                        'cargo_codigo': str,
-                        'numero_sessoes': int,
-                        'sessoes': [
-                            {
-                                'numero_sessao': int,
-                                'hora_convocacao_inicio': str,
-                                'hora_convocacao_fim': str,
-                                'horario_formatado': str,
-                                'total_candidatos': int,
-                                'candidatos': List[Dict]  # Cada candidato com
-                                dados da escolha se houver
-                            },
-                            ...
-                        ]
-                    },
-                    ...
-                ]
-            }
-
-            Cada candidato na lista terá os seguintes campos adicionais:
-            - 'escolha': Dict com dados da escola escolhida (se houver escolha)
-            - 'assinatura': str ('Escolha' ou 'Não Escolha')
-            - 'codigo_eol': str
-            - 'dre_codigo': str
-            - 'dre_nome': str
-            - 'tipo_unidade': str
-            - 'nome_escola_escolhida': str
-            - 'tipo_vaga': str ('P' ou 'D')
+            Dicionário com os dados processados.
 
         Raises:
-            RequestException: Em caso de erro nas requisições
-            CargoObrigatorioError: Quando o processo tem mais de um cargo e
-            cargo_codigo não foi informado
+            CargoObrigatorioError: Quando o cargo obrigatório não é informado.
+            ValueError: Se os dados informados forem inválidos.
         """
         try:
-            # 1. Buscar agendas do processo
             logger.info(
                 "Buscando agendas para processo_uuid=%s", processo_uuid
             )
@@ -590,9 +443,7 @@ class AtaEscolhaService:
                 page=1,
                 page_size=1000000,
             )
-
-            # Extrair códigos de cargo das agendas
-            agendas_data_temp = response_agendas.json()            
+            agendas_data_temp = response_agendas.json()
             if (
                 isinstance(agendas_data_temp, dict)
                 and "results" in agendas_data_temp
@@ -602,8 +453,6 @@ class AtaEscolhaService:
                 agendas_temp = agendas_data_temp
             else:
                 agendas_temp = []
-
-            # (codigos_cargo/codigo_cargo_param usados em outros pontos - manter compatibilidade)  # noqa: E501
             codigos_cargo = []
             for agenda in agendas_temp:
                 cod = agenda.get("cargo_codigo")
@@ -612,33 +461,24 @@ class AtaEscolhaService:
             codigo_cargo_param = (
                 codigos_cargo[0]
                 if len(codigos_cargo) == 1
-                else (codigos_cargo if codigos_cargo else None)
+                else codigos_cargo
+                if codigos_cargo
+                else None
             )
             logger.info(
                 "Códigos de cargo extraídos das agendas: %s",
                 codigo_cargo_param,
             )
-
-            # Inicializar resultado e metadados globais
-            resultado = {
-                "processo_uuid": processo_uuid,
-                "concurso_uuid": None,
-            }
+            resultado = {"processo_uuid": processo_uuid, "concurso_uuid": None}
             processo_uuid_principal = None
-            outros_processos_uuid = []
-
-            # Processar agendas para separar candidatos
+            outros_processos_uuid = []  # type: ignore[var-annotated]
             agendas_data = response_agendas.json()
-
-            # Extrair lista de agendas
             if isinstance(agendas_data, dict) and "results" in agendas_data:
                 agendas = agendas_data["results"]
             elif isinstance(agendas_data, list):
                 agendas = agendas_data
             else:
                 agendas = []
-
-            # 1. Agrupar agendas por cargo_nome e salvar cargo_codigo
             agendas_por_cargo = {}
             for agenda in agendas:
                 cargo_nome = agenda.get("cargo_nome", "Sem Cargo")
@@ -652,7 +492,6 @@ class AtaEscolhaService:
                 agendas_por_cargo[cod]["agendas"].append(agenda)
                 if not agendas_por_cargo[cod]["cargo_codigo"] and cod:
                     agendas_por_cargo[cod]["cargo_codigo"] = cod
-
             logger.info(
                 "Agendas agrupadas por cargo: %s",
                 {
@@ -660,8 +499,6 @@ class AtaEscolhaService:
                     for c, info in agendas_por_cargo.items()
                 },
             )
-
-            # Ata de escolha é gerada para um único cargo: exigir seleção se houver mais de um  # noqa: E501
             cargos_lista = [
                 {"cargo_codigo": c, "cargo_nome": info["cargo_nome"]}
                 for c, info in agendas_por_cargo.items()
@@ -677,13 +514,9 @@ class AtaEscolhaService:
                     cargo_codigo: agendas_por_cargo[cargo_codigo]
                 }
             elif len(agendas_por_cargo) == 1 and cargo_codigo is None:
-                # processo com um único cargo: usar esse cargo
                 unico = next(iter(agendas_por_cargo.keys()))
                 agendas_por_cargo = {unico: agendas_por_cargo[unico]}
-
-            # 2. Processar cada cargo e separar por sessões/agendas
             cargos_com_sessoes = []
-
             response_processo = (
                 self.processo_service.buscar_processo_convocacao(processo_uuid)
             )
@@ -693,7 +526,6 @@ class AtaEscolhaService:
                 [],
                 [],
             )
-
             for cargo_info in agendas_por_cargo.values():
                 cargo_nome = cargo_info["cargo_nome"]
                 cargo_codigo = cargo_info["cargo_codigo"]
@@ -704,22 +536,19 @@ class AtaEscolhaService:
                     cargo_nome,
                     numero_sessoes,
                 )
-
-                # Coletar todos os UUIDs de candidatos das agendas deste cargo
                 todos_candidatos_uuids = []
                 for _agenda in agendas_cargo:
                     for _uuid in _agenda.get("candidatos_uuids", []):
                         if _uuid not in todos_candidatos_uuids:
                             todos_candidatos_uuids.append(_uuid)
-
                 logger.info(
                     "Buscando candidatos por UUIDs (cargo=%s, total=%d)",
                     cargo_codigo,
                     len(todos_candidatos_uuids),
-                )                
+                )
                 response_candidatos = self.candidatos_service.buscar_por_uuids(
                     uuids=todos_candidatos_uuids, order_by=ordering
-                )                         
+                )
                 dados_cargo = response_candidatos.json()
                 if isinstance(dados_cargo, dict) and "results" in dados_cargo:
                     candidatos_cargo = dados_cargo["results"]
@@ -731,20 +560,15 @@ class AtaEscolhaService:
                         cargo_codigo,
                     )
                     candidatos_cargo = []
-
-                # Separar por tipo e identificar lacunas por cargo (PCD primeiro)  # noqa: E501
                 candidatos_sep_cargo = self._separar_por_tipo(candidatos_cargo)
                 lacunas_geral = []
                 lacunas_nna = []
                 lacunas_pcd = []
-
-                # Processar PCD primeiro
                 if candidatos_sep_cargo["pcd"]:
                     classificacoes_pcd = self._extrair_classificacoes(
                         candidatos_sep_cargo["pcd"], "classificacao_pcd"
                     )
                     lacunas_pcd = self._identificar_lacunas(classificacoes_pcd)
-
                 if candidatos_sep_cargo["geral"]:
                     classificacoes_geral = self._extrair_classificacoes(
                         candidatos_sep_cargo["geral"], "classificacao"
@@ -757,8 +581,6 @@ class AtaEscolhaService:
                         candidatos_sep_cargo["nna"], "classificacao_nna"
                     )
                     lacunas_nna = self._identificar_lacunas(classificacoes_nna)
-
-                # Buscar e inserir faltantes deste cargo (se houver lacunas)
                 faltantes_todos = []
                 if lacunas_geral or lacunas_nna or lacunas_pcd:
                     if resultado.get("concurso_uuid") is None:
@@ -780,9 +602,9 @@ class AtaEscolhaService:
                             )
                             resultado["todos_processos_uuid"] = [
                                 processo_uuid_principal
-                            ] + outros_processos_uuid
+                            ] + outros_processos_uuid  # type: ignore[assignment]
                             resultado["outros_processos_uuid"] = (
-                                outros_processos_uuid
+                                outros_processos_uuid  # type: ignore[assignment]
                             )
                     if outros_processos_uuid:
                         candidatos_faltantes = (
@@ -795,7 +617,6 @@ class AtaEscolhaService:
                                 ordering=ordering,
                             )
                         )
-                        # Inserir PCD primeiro
                         if candidatos_faltantes["pcd"]:
                             candidatos_faltantes["pcd"].sort(
                                 key=lambda x: x.get("classificacao_pcd")
@@ -817,15 +638,15 @@ class AtaEscolhaService:
                             )
                             faltantes_todos.extend(candidatos_faltantes["nna"])
 
-                # Ordenar base: PCD primeiro, depois por ranking_escolha e inserir faltantes por classificacao  # noqa: E501
-                def key_ranking_escolha(item):
+                def key_ranking_escolha(item: Any) -> Any:
+                    """Ordena pelo ranking de escolha."""
                     val = item.get("ranking_escolha")
                     return val if val is not None else float("inf")
 
-                def key_categoria_efetiva(item):
-                    # PCD primeiro (0), depois GERAL (1), depois NNA (2)
+                def key_categoria_efetiva(item: Any) -> Any:
+                    """Ordena pela categoria efetiva do candidato."""
                     categoria = item.get("categoria_efetiva", "")
-                    if categoria == "PCD":  # noqa: SIM116
+                    if categoria == "PCD":
                         return 0
                     elif categoria == "GERAL":
                         return 1
@@ -833,11 +654,11 @@ class AtaEscolhaService:
                         return 2
                     return 3
 
-                def key_classificacao(item):
+                def key_classificacao(item: Any) -> Any:
+                    """Ordena pela classificação do candidato."""
                     val = item.get("classificacao")
                     return val if val is not None else float("inf")
 
-                # Ordenar candidatos: primeiro por categoria (PCD primeiro), depois por ranking  # noqa: E501
                 candidatos_base_ordenados = sorted(
                     candidatos_cargo,
                     key=lambda x: (
@@ -845,17 +666,13 @@ class AtaEscolhaService:
                         key_ranking_escolha(x),
                     ),
                 )
-
                 if faltantes_todos:
-                    # Helpers para encontrar lacunas e índices de inserção
+
                     def indices_lacunas_classificacao(
-                        classificacoes_ordenadas,
-                    ):
-                        """
-                        Retorna mapa {valor_faltante: indice_insercao} sem
-                        repetir índice para lacunas múltiplas.
-                        """
-                        gaps = {}
+                        classificacoes_ordenadas: Any,
+                    ) -> Any:
+                        """Mapeia lacunas na lista de classificações."""
+                        gaps = {}  # type: ignore[var-annotated]
                         cont = 0
                         if not classificacoes_ordenadas:
                             return gaps
@@ -867,10 +684,8 @@ class AtaEscolhaService:
                             if (
                                 isinstance(a, int)
                                 and isinstance(b, int)
-                                and b - a > 1
+                                and (b - a > 1)
                             ):
-                                # números faltantes entre a e b
-                                # cada número faltante avança o índice de inserção  # noqa: E501
                                 for offset, missing in enumerate(
                                     range(a + 1, b), start=1
                                 ):
@@ -878,8 +693,8 @@ class AtaEscolhaService:
                                 cont += 1
                         return gaps
 
-                    # Construir lista de classificações ordenadas a partir da base  # noqa: E501
-                    def _classificacao_para_gap(item):
+                    def _classificacao_para_gap(item: Any) -> Any:
+                        """Obtém classificação para detectar lacunas."""
                         return (
                             9999999
                             if item.get("categoria_efetiva") != "GERAL"
@@ -892,15 +707,12 @@ class AtaEscolhaService:
                         if _classificacao_para_gap(c) is not None
                     ]
                     mapa_lacunas = indices_lacunas_classificacao(classifs_base)
-
                     for faltante in faltantes_todos:
                         cls_f = faltante.get("classificacao")
                         if cls_f in mapa_lacunas:
                             pos = mapa_lacunas[cls_f]
                             candidatos_base_ordenados.insert(pos, faltante)
                         else:
-                            # Caso não exista lacuna correspondente, insere por ordem de classificação  # noqa: E501
-                            # na posição ordenada padrão (bisect-like)
                             pos = 0
                             while (
                                 pos < len(candidatos_base_ordenados)
@@ -911,8 +723,6 @@ class AtaEscolhaService:
                             ):
                                 pos += 1
                             candidatos_base_ordenados.insert(pos, faltante)
-
-                # Buscar escolhas dos candidatos
                 candidato_uuids = [
                     c.get("uuid")
                     for c in candidatos_base_ordenados
@@ -921,8 +731,6 @@ class AtaEscolhaService:
                 escolhas_map = self._buscar_escolhas_por_candidatos(
                     candidato_uuids
                 )
-
-                # Adicionar informações de escolha aos candidatos e extrair dados do candidato  # noqa: E501
                 for candidato in candidatos_base_ordenados:
                     candidato_uuid = candidato.get("uuid")
                     escolha = (
@@ -930,8 +738,6 @@ class AtaEscolhaService:
                         if candidato_uuid
                         else None
                     )
-
-                    # Extrair dados do candidato (nome, RG, CPF, RF)
                     candidato_obj = (
                         candidato.get("candidato", {})
                         if isinstance(candidato.get("candidato"), dict)
@@ -952,15 +758,12 @@ class AtaEscolhaService:
                         if isinstance(candidato_obj, dict)
                         else ""
                     )
-                    # RF = registro_funcional (do model candidato)
                     candidato["rf"] = (
                         candidato_obj.get("registro_funcional", "")
                         if isinstance(candidato_obj, dict)
                         else ""
                     )
-
                     if escolha and escolha.get("situacao") == "escolha":
-                        # Candidato fez escolha
                         dados_escola = self._extrair_dados_escola_escolhida(
                             escolha
                         )
@@ -985,7 +788,6 @@ class AtaEscolhaService:
                             "tipo_vaga", ""
                         )
                     else:
-                        # Candidato não fez escolha
                         candidato["escolha"] = None
                         candidato["assinatura"] = "Não Escolha"
                         candidato["codigo_eol"] = ""
@@ -994,21 +796,13 @@ class AtaEscolhaService:
                         candidato["tipo_unidade"] = ""
                         candidato["nome_escola_escolhida"] = ""
                         candidato["tipo_vaga"] = ""
-
-                # Processar agendas do cargo para encontrar separadores
                 uuids_separadores_cargo = []
                 acumulado = 0
-
-                # Iterar nas agendas do cargo até o penúltimo item
-                for i in range(len(agendas_cargo) - 1):  # Até o penúltimo
+                for i in range(len(agendas_cargo) - 1):
                     agenda = agendas_cargo[i]
                     candidatos_uuids = agenda.get("candidatos_uuids", [])
                     quantidade_candidatos = len(candidatos_uuids)
-
-                    # Calcular posição: acumulado + quantidade
                     posicao = acumulado + quantidade_candidatos
-
-                    # Verificar se a posição existe em candidatos_cargo
                     if posicao < len(candidatos_cargo):
                         candidatos_cargo[posicao]
                         uuid_separador = candidatos_cargo[posicao].get("uuid")
@@ -1022,18 +816,10 @@ class AtaEscolhaService:
                                 posicao,
                                 uuid_separador,
                             )
-
-                    # Atualizar acumulado para próxima iteração
                     acumulado += quantidade_candidatos
-
-                # 3. Separar candidatos do cargo baseado nos UUIDs separadores
-                # Mapear cada sessão com sua agenda correspondente para obter horários  # noqa: E501
                 sessoes_cargo = []
-                indices_usados = set()
-
+                indices_usados = set()  # type: ignore[var-annotated]
                 if not uuids_separadores_cargo:
-                    # Se não há separadores, todos os candidatos vão para uma única sessão  # noqa: E501
-                    # Usar a primeira agenda para obter horários
                     agenda_primeira = agendas_cargo[0] if agendas_cargo else {}
                     sessoes_cargo.append(
                         {
@@ -1048,11 +834,9 @@ class AtaEscolhaService:
                         }
                     )
                 else:
-                    # Iterar na lista de UUIDs separadores do cargo
                     for idx_uuid, uuid_separador in enumerate(
                         uuids_separadores_cargo
                     ):
-                        # Encontrar a posição do candidato com esse UUID em candidatos_base_ordenados  # noqa: E501
                         posicao_encontrada = None
                         for idx_candidato, candidato in enumerate(
                             candidatos_base_ordenados
@@ -1063,9 +847,7 @@ class AtaEscolhaService:
                             ):
                                 posicao_encontrada = idx_candidato
                                 break
-
                         if posicao_encontrada is not None:
-                            # Determinar o índice inicial
                             if idx_uuid == 0:
                                 indice_inicial = 0
                             else:
@@ -1074,20 +856,16 @@ class AtaEscolhaService:
                                     if indices_usados
                                     else 0
                                 )
-
-                            # Criar lista desde indice_inicial até posicao_encontrada (apenas deste cargo)  # noqa: E501
                             lista_segmento = candidatos_base_ordenados[
                                 indice_inicial:posicao_encontrada
                             ]
                             if lista_segmento:
-                                # Obter horários da agenda correspondente (índice da sessão)  # noqa: E501
                                 numero_sessao = len(sessoes_cargo) + 1
                                 agenda_sessao = (
                                     agendas_cargo[numero_sessao - 1]
                                     if numero_sessao - 1 < len(agendas_cargo)
                                     else {}
                                 )
-
                                 sessoes_cargo.append(
                                     {
                                         "numero_sessao": numero_sessao,
@@ -1100,11 +878,8 @@ class AtaEscolhaService:
                                         "candidatos": lista_segmento,
                                     }
                                 )
-
-                            # Marcar índices como utilizados
                             for i in range(indice_inicial, posicao_encontrada):
                                 indices_usados.add(i)
-
                             logger.info(
                                 "Cargo %s - Sessão %d: %d candidatos (índice %d até %d) - Horário: %s às %s",  # noqa: E501
                                 cargo_nome,
@@ -1119,8 +894,6 @@ class AtaEscolhaService:
                                     "hora_convocacao_fim", "N/A"
                                 ),
                             )
-
-                            # Se for o último UUID, criar sessão adicional da posição em diante  # noqa: E501
                             if idx_uuid == len(uuids_separadores_cargo) - 1:
                                 indice_proximo = posicao_encontrada
                                 if indice_proximo < len(
@@ -1130,7 +903,6 @@ class AtaEscolhaService:
                                         indice_proximo:
                                     ]
                                     if lista_final:
-                                        # Obter horários da última agenda
                                         numero_sessao_final = (
                                             len(sessoes_cargo) + 1
                                         )
@@ -1142,7 +914,6 @@ class AtaEscolhaService:
                                             < len(agendas_cargo)
                                             else {}
                                         )
-
                                         sessoes_cargo.append(
                                             {
                                                 "numero_sessao": numero_sessao_final,  # noqa: E501
@@ -1168,8 +939,6 @@ class AtaEscolhaService:
                                                 "hora_convocacao_fim", "N/A"
                                             ),
                                         )
-
-                # Adicionar estrutura do cargo com suas sessões
                 cargos_com_sessoes.append(
                     {
                         "cargo_nome": cargo_nome,
@@ -1178,26 +947,16 @@ class AtaEscolhaService:
                         "sessoes": sessoes_cargo,
                     }
                 )
-
-            # Adicionar campo "ordem_escolha" aos candidatos
-            # A ordem é contínua entre sessões do mesmo cargo, mas reinicia para cada novo cargo  # noqa: E501
-            # Candidatos com status_especial não são contados na ordem
             for cargo_info in cargos_com_sessoes:
-                ordem_escolha_contador = 0  # Reinicia para cada cargo
-
+                ordem_escolha_contador = 0
                 for sessao in cargo_info["sessoes"]:
                     candidatos_sessao = sessao.get("candidatos", [])
-
                     for candidato in candidatos_sessao:
-                        # Se o candidato não tiver status_especial, adicionar ordem_escolha  # noqa: E501
                         if not candidato.get("status_especial"):
                             ordem_escolha_contador += 1
                             candidato["ordem_escolha"] = ordem_escolha_contador
                         else:
-                            # Candidatos com status_especial não recebem ordem_escolha  # noqa: E501
                             candidato["ordem_escolha"] = None
-
-            # A estrutura principal será organizada por cargos e sessões
             resultado_estruturado = {
                 "processo_uuid": processo_data.get("uuid"),
                 "processo_nome": processo_data.get("descricao"),
@@ -1208,11 +967,9 @@ class AtaEscolhaService:
                 ),
                 "total_cargos": len(cargos_com_sessoes),
                 "candidatos_sep_cargo": candidatos_sep_cargo,
-                # Totais agregados por situação (todas as escolhas)
                 "escolhas_totais": self._contar_escolhas_por_situacao(
                     list(escolhas_map.values())
                 ),
-                # Totais por situação separados por tipo (pcd/geral/nna)
                 "escolhas_totais_por_tipo": self._contar_escolhas_por_situacao_por_tipo(  # noqa: E501
                     candidatos_sep_cargo=candidatos_sep_cargo,
                     escolhas_map=escolhas_map,
@@ -1245,7 +1002,6 @@ class AtaEscolhaService:
                     },
                 },
             }
-
             for cargo_info in cargos_com_sessoes:
                 cargo_estruturado = {
                     "cargo_nome": cargo_info["cargo_nome"],
@@ -1253,18 +1009,14 @@ class AtaEscolhaService:
                     "numero_sessoes": cargo_info["numero_sessoes"],
                     "sessoes": [],
                 }
-
                 for sessao in cargo_info["sessoes"]:
                     hora_inicio = sessao.get("hora_convocacao_inicio", "")
                     hora_fim = sessao.get("hora_convocacao_fim", "")
                     candidatos_sessao = sessao.get("candidatos", [])
-
-                    # Formatar horário
                     if hora_inicio and hora_fim:
                         horario_formatado = f"{hora_inicio} às {hora_fim}"
                     else:
                         horario_formatado = "Não informado"
-
                     sessao_estruturada = {
                         "numero_sessao": sessao["numero_sessao"],
                         "hora_convocacao_inicio": hora_inicio,
@@ -1274,11 +1026,8 @@ class AtaEscolhaService:
                         "candidatos": candidatos_sessao,
                     }
                     cargo_estruturado["sessoes"].append(sessao_estruturada)
-
                 resultado_estruturado["cargos"].append(cargo_estruturado)
-            # Retornar a estrutura organizada
             return resultado_estruturado
-
         except RequestException as exc:
             logger.error(
                 "Erro ao processar ata de escolha (processo_uuid=%s): %s",

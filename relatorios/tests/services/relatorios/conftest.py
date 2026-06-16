@@ -1,5 +1,5 @@
-"""
-Configuração específica para testes de relatórios.
+"""Configuração específica para testes de relatórios.
+
 Mocka dependências opcionais antes dos imports.
 """
 

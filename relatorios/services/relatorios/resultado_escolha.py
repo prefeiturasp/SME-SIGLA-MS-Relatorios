@@ -1,8 +1,13 @@
+"""Módulo services/relatorios/resultado_escolha."""
+
+from __future__ import annotations
+
 import logging
 import os
 import re
 import tempfile
 from io import BytesIO
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -24,7 +29,6 @@ try:
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-
 try:
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -35,21 +39,21 @@ try:
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
-
 logger = logging.getLogger(__name__)
 
 
 class ResultadoEscolha(RelatorioBase):
-    """
-    Classe concreta responsável por gerar o relatório de Resultado de Escolha
-    de Vagas.
-    Estrutura: Cargo > Tipo de Escolha > Agenda > Candidatos e escolha
-    """
+    """Classe concreta responsável por gerar o relatório de Resultado de."""
 
     TEMPLATE_NAME = "relatorios/resultado_escolha.html"
 
-    def __init__(self, tipo: str, **kwargs):
-        """Inicializa o service com as dependências necessárias."""
+    def __init__(self, tipo: str, **kwargs: Any) -> None:
+        """Inicializa a instância com os parâmetros informados.
+
+        Args:
+            tipo: Tipo.
+            **kwargs: Argumentos nomeados repassados ao comando.
+        """
         super().__init__(**kwargs)
         self.escolhas_service = EscolhasService(
             base_url=settings.ESCOLHAS_API_URL
@@ -68,39 +72,34 @@ class ResultadoEscolha(RelatorioBase):
     def gerar(
         self,
         processo_uuid: str,
-        request,
+        request: Any,
         formato: str = "html",
         cabecalho: str = "",
         agenda_uuid: str = None,
-        **kwargs,
-    ):
-        """
-        Gera o relatório de Resultado da Escolha SIM.
+        **kwargs: Any,
+    ) -> Any:  # type: ignore[assignment]
+        """Gera o relatório de Resultado da Escolha SIM.
 
         Args:
-            processo_uuid: UUID do processo de convocação
-            request: Objeto request do Django
-            formato: Formato do relatório ('html', 'pdf', 'xls' ou 'docx')
-            cabecalho: Texto do cabeçalho do relatório (opcional)
+            processo_uuid: UUID do processo de convocação.
+            request: Requisição HTTP recebida.
+            formato: Formato.
+            cabecalho: Cabecalho.
+            agenda_uuid: UUID de agenda.
+            **kwargs: Argumentos nomeados repassados ao comando.
 
         Returns:
-            Tupla (HttpResponse, dados) onde:
-            - HttpResponse: resposta com o relatório gerado (HTML, PDF, XLS ou
-            DOCX)
-            - dados: estrutura de dados do relatório (cargos_list) para salvar
-            no banco
+            Tupla com resposta HTTP e dados do relatório.
         """
-
         cargos_map = {}
         try:
             cargos_response = (
                 self.processos_service.buscar_cargos_por_processo(
-                    processo_uuid=str(processo_uuid) if processo_uuid else "",
+                    processo_uuid=str(processo_uuid) if processo_uuid else ""
                 )
             )
             cargos_data = cargos_response.json()
             cargos = cargos_data if isinstance(cargos_data, list) else []
-
             for cargo in cargos:
                 codigo = (
                     cargo.get("cargo_codigo")
@@ -111,23 +110,21 @@ class ResultadoEscolha(RelatorioBase):
                 if codigo and nome:
                     cargos_map[str(codigo)] = nome
                     if isinstance(codigo, int | float):
-                        cargos_map[codigo] = nome
+                        cargos_map[codigo] = nome  # type: ignore[index]
         except Exception as exc:
             logger.warning(
                 "Falha ao buscar cargos do processo: %s. Continuando sem mapeamento de cargos.",  # noqa: E501
                 exc,
             )
-
-        # Buscar agendas por processo_uuid
-        agendas_map = {}  # Mapa agenda_uuid -> agenda_data
-        agendas_por_candidato = {}  # Mapa candidato_uuid -> agenda_data (para relacionar escolhas com agendas)  # noqa: E501
+        agendas_map = {}
+        agendas_por_candidato = {}
         try:
             agendas_response = self.agendas_service.buscar_agendas(
                 processo_convocacao_uuid=str(processo_uuid)
                 if processo_uuid
                 else "",
                 page=1,
-                page_size=1000,  # Buscar todas as agendas
+                page_size=1000,
             )
             agendas_data = agendas_response.json()
             agendas = (
@@ -135,18 +132,14 @@ class ResultadoEscolha(RelatorioBase):
                 if isinstance(agendas_data, dict)
                 else agendas_data
             )
-
             for agenda in agendas:
                 agenda_uuid = agenda.get("uuid")
                 if agenda_uuid:
                     agendas_map[str(agenda_uuid)] = agenda
-                    # Criar mapa inverso: candidato_uuid -> agenda
                     candidatos_uuids = agenda.get("candidatos_uuids", [])
                     for candidato_uuid in candidatos_uuids:
                         if candidato_uuid:
                             candidato_uuid_str = str(candidato_uuid)
-                            # Se já existe uma agenda para este candidato, manter a primeira encontrada  # noqa: E501
-                            # (ou podemos usar a última, dependendo da lógica de negócio)  # noqa: E501
                             if candidato_uuid_str not in agendas_por_candidato:
                                 agendas_por_candidato[candidato_uuid_str] = (
                                     agenda
@@ -156,11 +149,9 @@ class ResultadoEscolha(RelatorioBase):
                 "Falha ao buscar agendas do processo: %s. Continuando sem agendas.",  # noqa: E501
                 exc,
             )
-
-        # Buscar ConcursoCandidato por processo_uuid
         try:
             candidatos_response = self.candidatos_service.buscar_concurso_candidatos_por_processo(  # noqa: E501
-                processo_uuid=str(processo_uuid) if processo_uuid else "",
+                processo_uuid=str(processo_uuid) if processo_uuid else ""
             )
             candidatos_data = candidatos_response.json()
             candidatos = (
@@ -171,22 +162,16 @@ class ResultadoEscolha(RelatorioBase):
         except Exception as exc:
             logger.error("Falha ao buscar candidatos da API externa: %s", exc)
             raise
-
-        # Criar mapa de candidatos por uuid para busca rápida
         candidatos_map = {}
         for candidato in candidatos:
             candidato_uuid = candidato.get("uuid")
             if candidato_uuid:
                 candidatos_map[str(candidato_uuid)] = candidato
-
-        # Extrair UUIDs dos ConcursoCandidato para buscar escolhas
         concurso_candidato_uuids = [
             candidato.get("uuid")
             for candidato in candidatos
             if candidato.get("uuid")
         ]
-
-        # Se for o tipo unificado RESULTADO_ESCOLHA, buscar todos os tipos de escolhas  # noqa: E501
         if self.tipo == "RESULTADO_ESCOLHA":
             tipos_escolha = ["escolha", "nao-escolha", "reconvocacao"]
             todas_escolhas = []
@@ -207,7 +192,6 @@ class ResultadoEscolha(RelatorioBase):
                     )
             escolhas_data = todas_escolhas
         else:
-            # Comportamento antigo para manter compatibilidade com tipos antigos  # noqa: E501
             tipo_escolha = (
                 "escolha"
                 if self.tipo == "RESULTADO_ESCOLHA_SIM"
@@ -216,7 +200,7 @@ class ResultadoEscolha(RelatorioBase):
                 else "reconvocacao"
                 if self.tipo == "RESULTADO_ESCOLHA_RECONVOCACAO"
                 else None
-            )
+            )  # type: ignore[assignment]
             try:
                 escolhas_data = (
                     self.escolhas_service.buscar_escolhas_por_candidatos(
@@ -229,50 +213,34 @@ class ResultadoEscolha(RelatorioBase):
                     "Falha ao buscar escolhas da API externa: %s", exc
                 )
                 raise
-
-        # Processar escolhas e vincular com candidatos e agendas
         escolhas_com_candidatos = []
         for escolha in escolhas_data:
             candidato_uuid = escolha.get("candidato_uuid")
             if not candidato_uuid:
                 continue
-
             candidato = candidatos_map.get(
                 str(candidato_uuid)
             ) or candidatos_map.get(candidato_uuid)
             if not candidato:
                 continue
-
-            # Extrair dados do candidato
             candidato_obj = (
                 candidato.get("candidato", {})
                 if isinstance(candidato.get("candidato"), dict)
                 else {}
             )
-
-            # Obter classificações (do ConcursoCandidato)
             classificacao_geral = candidato.get("classificacao") or "-"
             classificacao_def = candidato.get("classificacao_pcd") or "-"
             classificacao_nna = candidato.get("classificacao_nna") or "-"
-
-            # Obter nome, RG e CPF (do Candidato)
             nome = candidato_obj.get("nome") or "-"
             rg = candidato_obj.get("rg") or "-"
             cpf = candidato_obj.get("cpf") or "-"
-
-            # Buscar agenda relacionada ao candidato através do mapa inverso
             agenda_data = agendas_por_candidato.get(str(candidato_uuid))
-
-            # Se não encontrou agenda pelo candidato, tentar buscar pelo cargo do candidato  # noqa: E501
             if not agenda_data:
                 cargo_codigo_candidato = candidato.get("codigo_cargo") or ""
-                # Tentar buscar agenda pelo cargo_codigo
                 for agenda in agendas_map.values():
                     if agenda.get("cargo_codigo") == cargo_codigo_candidato:
                         agenda_data = agenda
                         break
-
-            # Se ainda não encontrou, criar uma agenda vazia para agrupamento
             if not agenda_data:
                 cargo_codigo_candidato = candidato.get("codigo_cargo") or ""
                 cargo_descricao_candidato = (
@@ -290,7 +258,6 @@ class ResultadoEscolha(RelatorioBase):
                     )
                 elif not cargo_descricao_candidato:
                     cargo_descricao_candidato = "Cargo não informado"
-
                 agenda_data = {
                     "uuid": None,
                     "cargo_uuid": None,
@@ -299,29 +266,20 @@ class ResultadoEscolha(RelatorioBase):
                     "escolha_em": None,
                     "sessao": None,
                 }
-
-            # Obter cargo da agenda (não do candidato)
             cargo_codigo = agenda_data.get("cargo_codigo") or ""
             cargo_descricao = agenda_data.get("cargo_nome") or ""
-
-            # Se não encontrou descrição do cargo na agenda, buscar no mapa de cargos  # noqa: E501
             if not cargo_descricao and cargo_codigo:
                 cargo_descricao = (
                     cargos_map.get(str(cargo_codigo))
                     or cargos_map.get(cargo_codigo)
                     or ""
                 )
-
-            # Se ainda não encontrou descrição mas tem código, usar o código como fallback  # noqa: E501
             if not cargo_descricao and cargo_codigo:
                 cargo_descricao = f"Cargo {cargo_codigo}"
             elif not cargo_descricao:
                 cargo_descricao = "Cargo não informado"
-
-            # Determinar tipo de escolha e valor baseado na situação da escolha
             situacao_escolha = escolha.get("situacao", "")
             if self.tipo == "RESULTADO_ESCOLHA":
-                # Para o relatório unificado, usar a situação da escolha
                 if situacao_escolha == "reconvocacao":
                     tipo_escolha_nome = "Reconvocação"
                     escolha_valor = "R"
@@ -334,21 +292,18 @@ class ResultadoEscolha(RelatorioBase):
                 else:
                     tipo_escolha_nome = "Outros"
                     escolha_valor = "-"
+            elif self.tipo == "RESULTADO_ESCOLHA_RECONVOCACAO":
+                tipo_escolha_nome = "Reconvocação"
+                escolha_valor = "R"
+            elif self.tipo == "RESULTADO_ESCOLHA_NAO":
+                tipo_escolha_nome = "Não Escolha"
+                escolha_valor = "N"
+            elif self.tipo == "RESULTADO_ESCOLHA_SIM":
+                tipo_escolha_nome = "Escolha"
+                escolha_valor = "S"
             else:
-                # Comportamento antigo para manter compatibilidade
-                if self.tipo == "RESULTADO_ESCOLHA_RECONVOCACAO":
-                    tipo_escolha_nome = "Reconvocação"
-                    escolha_valor = "R"
-                elif self.tipo == "RESULTADO_ESCOLHA_NAO":
-                    tipo_escolha_nome = "Não Escolha"
-                    escolha_valor = "N"
-                elif self.tipo == "RESULTADO_ESCOLHA_SIM":
-                    tipo_escolha_nome = "Escolha"
-                    escolha_valor = "S"
-                else:
-                    tipo_escolha_nome = "Outros"
-                    escolha_valor = "-"
-
+                tipo_escolha_nome = "Outros"
+                escolha_valor = "-"
             item_escolha = {
                 "cargo_codigo": cargo_codigo,
                 "cargo_descricao": cargo_descricao,
@@ -373,7 +328,6 @@ class ResultadoEscolha(RelatorioBase):
                 "cpf": cpf,
                 "escolha": escolha_valor,
             }
-            # Para escolhas realizadas (situacao 'escolha'), extrair DRE, escola e tipo da vaga  # noqa: E501
             if (
                 self.tipo == "RESULTADO_ESCOLHA"
                 and situacao_escolha == "escolha"
@@ -422,13 +376,10 @@ class ResultadoEscolha(RelatorioBase):
                 item_escolha["tipo_ue"] = ""
                 item_escolha["tipo_vaga"] = ""
             escolhas_com_candidatos.append(item_escolha)
-
-        # Agrupar por cargo, depois por tipo de escolha, depois por agenda
         if self.tipo == "RESULTADO_ESCOLHA":
             cargos_list = self._agrupar_por_cargo_tipo_escolha_e_agenda(
                 escolhas_com_candidatos
             )
-            # Adicionar resumo DRE > ESCOLA > qtd vagas e escolhas (apenas escolas/DREs com escolhas realizadas)  # noqa: E501
             cargos_list = self._adicionar_resumo_dre_escola(
                 cargos_list, escolhas_com_candidatos, processo_uuid
             )
@@ -436,18 +387,12 @@ class ResultadoEscolha(RelatorioBase):
             cargos_list = self._agrupar_por_cargo_e_agenda(
                 escolhas_com_candidatos
             )
-
-        # Construir logo_url absoluto para o template
         logo_url = (
             request.build_absolute_uri(self.context.get("logo_url", ""))
             if self.context.get("logo_url")
             else ""
         )
-
-        # Data atual para o relatório
         data_atual = timezone.now()
-
-        # Atualizar context com dados específicos do relatório
         self.context.update(
             {
                 "cargos": cargos_list,
@@ -456,7 +401,6 @@ class ResultadoEscolha(RelatorioBase):
                 "is_pdf": False,
             }
         )
-
         if formato == "xls" or formato == "csv":
             filename = f"resultado_escolha_{processo_uuid}.xlsx"
             logger.info("Gerando Excel: %s", filename)
@@ -466,7 +410,7 @@ class ResultadoEscolha(RelatorioBase):
                 self.context.get("cabecalho"),
                 filename=filename,
             )
-            return response, cargos_list
+            return (response, cargos_list)
         elif formato == "docx" or formato == "doc":
             filename = f"resultado_escolha_{processo_uuid}.docx"
             logger.info("Gerando Word: %s", filename)
@@ -476,8 +420,8 @@ class ResultadoEscolha(RelatorioBase):
                 self.context.get("cabecalho"),
                 self.context.get("texto_final"),
                 filename=filename,
-            )
-            return response, cargos_list
+            )  # type: ignore[misc]
+            return (response, cargos_list)
         elif formato == "pdf":
             filename = f"resultado_escolha_{processo_uuid}.pdf"
             logger.info("Gerando PDF: %s", filename)
@@ -485,78 +429,60 @@ class ResultadoEscolha(RelatorioBase):
             response = self.render_to_pdf(
                 self.TEMPLATE_NAME, self.context, filename=filename
             )
-            return response, cargos_list
+            return (response, cargos_list)
         else:
             logger.info("Gerando HTML")
             response = render(request, self.TEMPLATE_NAME, self.context)
-            return response, cargos_list
+            return (response, cargos_list)
 
     def _extrair_numero_sessao(self, sessao: str) -> str:
-        """
-        Extrai apenas o número da sessão, removendo a palavra "Sessão" se
-        presente.
+        """Extrai o número da sessão, removendo o prefixo 'Sessão'.
 
         Args:
-            sessao: String com a sessão (ex: "Sessão 4", "4", etc.)
+            sessao: Sessao.
 
         Returns:
-            String com apenas o número da sessão ou '-' se não encontrar
+            Conteúdo textual gerado.
         """
         if not sessao or sessao == "-":
             return "-"
-
         sessao_str = str(sessao).strip()
-
-        # Remover a palavra "Sessão" (case insensitive)
         sessao_limpa = re.sub(
-            r"^[Ss]ess[ãa]o\s*", "", sessao_str, flags=re.IGNORECASE
+            "^[Ss]ess[ãa]o\\s*", "", sessao_str, flags=re.IGNORECASE
         )
         sessao_limpa = sessao_limpa.strip()
-
-        # Extrair apenas números
-        numeros = re.findall(r"\d+", sessao_limpa)
+        numeros = re.findall("\\d+", sessao_limpa)
         if numeros:
-            return numeros[0]
-
+            return numeros[0]  # type: ignore[no-any-return]
         return sessao_limpa if sessao_limpa else "-"
 
     def _agrupar_por_cargo_e_agenda(self, escolhas: list) -> list:
-        """
-        Agrupa escolhas por cargo da agenda e depois por agenda.
+        """Agrupa escolhas por cargo da agenda e depois por agenda.
 
         Args:
-            escolhas: Lista de escolhas com suas informações
+            escolhas: Escolhas.
 
         Returns:
-            Lista de cargos (da agenda) com suas agendas e candidatos
+            Lista com os registros obtidos.
         """
-        cargos_dict = {}
-
+        cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
-            # Usar cargo da agenda (não do candidato)
             cargo_codigo = escolha.get("cargo_codigo", "") or ""
             cargo_descricao = escolha.get("cargo_descricao", "") or ""
             agenda_uuid = escolha.get("agenda_uuid")
             agenda_nome = escolha.get("agenda_nome", "-")
             agenda_data = escolha.get("agenda_data", "-")
             agenda_sessao = escolha.get("agenda_sessao", "-")
-            # Processar sessão para extrair apenas o número
             sessao_numero = self._extrair_numero_sessao(agenda_sessao)
-
-            # Se não tem descrição do cargo, usar código ou um valor padrão
             if not cargo_descricao:
                 if cargo_codigo and cargo_codigo != "-":
                     cargo_descricao = f"Cargo {cargo_codigo}"
                 else:
                     cargo_descricao = "Cargo não informado"
-
-            # Criar chave única para a agenda (usando uuid ou nome+data)
             if agenda_uuid:
                 agenda_chave = str(agenda_uuid)
             else:
                 agenda_chave = f"{agenda_nome}_{agenda_data}_{agenda_sessao}"
-
-            # Criar estrutura hierárquica: Cargo (da agenda) -> Agenda -> Candidatos  # noqa: E501
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
                     "codigo": cargo_codigo
@@ -565,43 +491,36 @@ class ResultadoEscolha(RelatorioBase):
                     "descricao": cargo_descricao,
                     "agendas": {},
                 }
-
             if agenda_chave not in cargos_dict[cargo_codigo]["agendas"]:
                 cargos_dict[cargo_codigo]["agendas"][agenda_chave] = {
                     "uuid": agenda_uuid,
                     "nome": agenda_nome,
                     "data": agenda_data,
-                    "sessao": sessao_numero,  # Usar número processado
+                    "sessao": sessao_numero,
                     "candidatos": [],
                 }
-
             cargos_dict[cargo_codigo]["agendas"][agenda_chave][
                 "candidatos"
             ].append(escolha)
-
-        # Converter para lista e ordenar
         cargos_list = []
-        for cargo_codigo, cargo_data in cargos_dict.items():  # noqa: B007
+        for cargo_codigo, cargo_data in cargos_dict.items():
             agendas_list = []
-            for agenda_chave, agenda_data in cargo_data["agendas"].items():  # noqa: B007
-                # Ordenar candidatos por classificação geral
+            for agenda_chave, agenda_data in cargo_data["agendas"].items():
                 agenda_data["candidatos"].sort(
-                    key=lambda e: (
-                        e["classificacao_geral"]
-                        if isinstance(e["classificacao_geral"], int | float)
-                        and e["classificacao_geral"] != "-"
-                        else float("inf")
-                    )
+                    key=lambda e: e["classificacao_geral"]
+                    if isinstance(e["classificacao_geral"], int | float)
+                    and e["classificacao_geral"] != "-"
+                    else float("inf")
                 )
                 agendas_list.append(agenda_data)
-
-            # Ordenar agendas por data e sessão (tratando sessão como número quando possível)  # noqa: E501
             agendas_list.sort(
                 key=lambda a: (
                     a["data"] if a["data"] != "-" else "",
                     int(a["sessao"])
                     if a["sessao"] != "-" and str(a["sessao"]).isdigit()
-                    else (float("inf") if a["sessao"] != "-" else ""),
+                    else float("inf")
+                    if a["sessao"] != "-"
+                    else "",
                 )
             )
             cargos_list.append(
@@ -611,28 +530,20 @@ class ResultadoEscolha(RelatorioBase):
                     "agendas": agendas_list,
                 }
             )
-
-        # Ordenar cargos por descrição
         cargos_list.sort(key=lambda x: x["descricao"])
-
         return cargos_list
 
     def _agrupar_por_cargo_tipo_escolha_e_agenda(self, escolhas: list) -> list:
-        """
-        Agrupa escolhas por cargo da agenda, depois por tipo de escolha, e
-        depois por agenda.
+        """Agrupa escolhas por cargo, tipo de escolha e agenda.
 
         Args:
-            escolhas: Lista de escolhas com suas informações
+            escolhas: Escolhas.
 
         Returns:
-            Lista de cargos (da agenda) com tipos de escolha, agendas e
-            candidatos
+            Lista com os registros obtidos.
         """
-        cargos_dict = {}
-
+        cargos_dict = {}  # type: ignore[var-annotated]
         for escolha in escolhas:
-            # Usar cargo da agenda (não do candidato)
             cargo_codigo = escolha.get("cargo_codigo", "") or ""
             cargo_descricao = escolha.get("cargo_descricao", "") or ""
             tipo_escolha = escolha.get("tipo_escolha", "Outros")
@@ -641,23 +552,16 @@ class ResultadoEscolha(RelatorioBase):
             agenda_nome = escolha.get("agenda_nome", "-")
             agenda_data = escolha.get("agenda_data", "-")
             agenda_sessao = escolha.get("agenda_sessao", "-")
-            # Processar sessão para extrair apenas o número
             sessao_numero = self._extrair_numero_sessao(agenda_sessao)
-
-            # Se não tem descrição do cargo, usar código ou um valor padrão
             if not cargo_descricao:
                 if cargo_codigo and cargo_codigo != "-":
                     cargo_descricao = f"Cargo {cargo_codigo}"
                 else:
                     cargo_descricao = "Cargo não informado"
-
-            # Criar chave única para a agenda (usando uuid ou nome+data)
             if agenda_uuid:
                 agenda_chave = str(agenda_uuid)
             else:
                 agenda_chave = f"{agenda_nome}_{agenda_data}_{agenda_sessao}"
-
-            # Criar estrutura hierárquica: Cargo -> Tipo de Escolha -> Agenda -> Candidatos  # noqa: E501
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
                     "codigo": cargo_codigo
@@ -666,14 +570,12 @@ class ResultadoEscolha(RelatorioBase):
                     "descricao": cargo_descricao,
                     "tipos_escolha": {},
                 }
-
             if tipo_escolha not in cargos_dict[cargo_codigo]["tipos_escolha"]:
                 cargos_dict[cargo_codigo]["tipos_escolha"][tipo_escolha] = {
                     "nome": tipo_escolha,
                     "ordem": tipo_escolha_ordem,
                     "agendas": {},
                 }
-
             if (
                 agenda_chave
                 not in cargos_dict[cargo_codigo]["tipos_escolha"][
@@ -686,45 +588,37 @@ class ResultadoEscolha(RelatorioBase):
                     "uuid": agenda_uuid,
                     "nome": agenda_nome,
                     "data": agenda_data,
-                    "sessao": sessao_numero,  # Usar número processado
+                    "sessao": sessao_numero,
                     "candidatos": [],
                 }
-
             cargos_dict[cargo_codigo]["tipos_escolha"][tipo_escolha][
                 "agendas"
             ][agenda_chave]["candidatos"].append(escolha)
-
-        # Converter para lista e ordenar
         cargos_list = []
-        for cargo_codigo, cargo_data in cargos_dict.items():  # noqa: B007
+        for cargo_codigo, cargo_data in cargos_dict.items():
             tipos_escolha_list = []
             for _tipo_escolha_nome, tipo_escolha_data in cargo_data[
                 "tipos_escolha"
             ].items():
                 agendas_list = []
-                for agenda_chave, agenda_data in tipo_escolha_data[  # noqa: B007
+                for agenda_chave, agenda_data in tipo_escolha_data[
                     "agendas"
                 ].items():
-                    # Ordenar candidatos por classificação geral
                     agenda_data["candidatos"].sort(
-                        key=lambda e: (
-                            e["classificacao_geral"]
-                            if isinstance(
-                                e["classificacao_geral"], int | float
-                            )
-                            and e["classificacao_geral"] != "-"
-                            else float("inf")
-                        )
+                        key=lambda e: e["classificacao_geral"]
+                        if isinstance(e["classificacao_geral"], int | float)
+                        and e["classificacao_geral"] != "-"
+                        else float("inf")
                     )
                     agendas_list.append(agenda_data)
-
-                # Ordenar agendas por data e sessão (tratando sessão como número quando possível)  # noqa: E501
                 agendas_list.sort(
                     key=lambda a: (
                         a["data"] if a["data"] != "-" else "",
                         int(a["sessao"])
                         if a["sessao"] != "-" and str(a["sessao"]).isdigit()
-                        else (float("inf") if a["sessao"] != "-" else ""),
+                        else float("inf")
+                        if a["sessao"] != "-"
+                        else "",
                     )
                 )
                 tipos_escolha_list.append(
@@ -734,10 +628,7 @@ class ResultadoEscolha(RelatorioBase):
                         "agendas": agendas_list,
                     }
                 )
-
-            # Ordenar tipos de escolha por ordem (Escolha, Não Escolha, Reconvocação)  # noqa: E501
             tipos_escolha_list.sort(key=lambda t: t["ordem"])
-
             cargos_list.append(
                 {
                     "codigo": cargo_data["codigo"],
@@ -745,10 +636,7 @@ class ResultadoEscolha(RelatorioBase):
                     "tipos_escolha": tipos_escolha_list,
                 }
             )
-
-        # Ordenar cargos por descrição
         cargos_list.sort(key=lambda x: x["descricao"])
-
         return cargos_list
 
     def _adicionar_resumo_dre_escola(
@@ -757,13 +645,16 @@ class ResultadoEscolha(RelatorioBase):
         escolhas_com_candidatos: list,
         processo_uuid: str,
     ) -> list:
+        """Adiciona ao cargos_list o resumo DRE > ESCOLA com vagas e escolhas.
+
+        Args:
+            cargos_list: Lista de cargos agrupados para o relatório.
+            escolhas_com_candidatos: Escolhas com candidatos.
+            processo_uuid: UUID do processo de convocação.
+
+        Returns:
+            Lista com os registros obtidos.
         """
-        Adiciona ao cargos_list o resumo DRE > ESCOLA com qtd de vagas e qtd de
-        escolhas.
-        Inclui apenas DREs e escolas que tiveram escolhas realizadas (situacao
-        'escolha').
-        """
-        # Filtrar apenas escolhas realizadas (tipo Escolha) que têm DRE/escola
         escolhas_realizadas = [
             e
             for e in escolhas_com_candidatos
@@ -776,9 +667,7 @@ class ResultadoEscolha(RelatorioBase):
         ]
         if not escolhas_realizadas:
             return cargos_list
-
-        # Agrupar por cargo -> dre_codigo -> escola: count escolhas por tipo (definitiva/precária)  # noqa: E501
-        por_cargo = {}
+        por_cargo = {}  # type: ignore[var-annotated]
         for e in escolhas_realizadas:
             cargo_codigo = e.get("cargo_codigo", "") or ""
             dre_codigo = e.get("dre_codigo", "") or ""
@@ -818,8 +707,6 @@ class ResultadoEscolha(RelatorioBase):
                 por_cargo[cargo_codigo][dre_codigo]["escolas"][escola_chave][
                     "qtd_escolhas_precarias"
                 ] += 1
-
-        # Buscar vagas das escolas: qtd vagas definitivas e precárias por escola/cargo  # noqa: E501
         mapa_vagas = {}
         try:
             vagas_response = self.escolhas_service.buscar_vagas_escolas(
@@ -836,7 +723,6 @@ class ResultadoEscolha(RelatorioBase):
                 v_prec = vaga.get("vagas_precarias") or 0
                 chave = (str(cargo_cod), str(dre_cod), str(codigo_eol))
                 if chave not in mapa_vagas:
-                    # breakpoint()
                     mapa_vagas[chave] = {"definitivas": 0, "precarias": 0}
                 mapa_vagas[chave]["definitivas"] += v_def
                 mapa_vagas[chave]["precarias"] += v_prec
@@ -845,8 +731,6 @@ class ResultadoEscolha(RelatorioBase):
                 "Falha ao buscar vagas das escolas para resumo DRE/ESCOLA: %s. Exibindo apenas qtd de escolhas.",  # noqa: E501
                 exc,
             )
-        # Montar lista resumo_dre_escola por cargo com vagas e escolhas por tipo  # noqa: E501
-        # breakpoint()
         for cargo in cargos_list:
             cargo_codigo = cargo.get("codigo", "") or ""
             resumo_dres = []
@@ -855,7 +739,7 @@ class ResultadoEscolha(RelatorioBase):
                 dres_data.items(), key=lambda x: (x[1]["nome"], x[0])
             ):
                 escolas_list = []
-                for escola_chave, esc_info in sorted(  # noqa: B007
+                for escola_chave, esc_info in sorted(
                     dre_info["escolas"].items(),
                     key=lambda x: (x[1]["nome"], x[0]),
                 ):
@@ -889,38 +773,37 @@ class ResultadoEscolha(RelatorioBase):
                     {"nome": dre_info["nome"], "escolas": escolas_list}
                 )
             cargo["resumo_dre_escola"] = resumo_dres
-        # breakpoint()
         return cargos_list
 
     def render_to_xls(
         self,
-        cargos_list,
-        cabecalho_padrao,
-        cabecalho,
-        filename="resultado_escolha.xlsx",
-    ):
-        """
-        Gera um arquivo Excel (XLSX) mantendo a estrutura hierárquica do HTML.
+        cargos_list: Any,
+        cabecalho_padrao: Any,
+        cabecalho: Any,
+        filename: Any = "resultado_escolha.xlsx",
+    ) -> Any:
+        """Gera arquivo Excel (XLSX) com a estrutura hierárquica do relatório.
 
         Args:
-            cargos_list: Lista de cargos com suas agendas e candidatos
-            (estrutura hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            filename: Nome do arquivo Excel gerado
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho_padrao: Cabecalho padrao.
+            cabecalho: Cabecalho.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Excel gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not OPENPYXL_AVAILABLE:
             raise ImportError(
                 "openpyxl não está instalado. Instale com: pip install openpyxl>=3.1.0"  # noqa: E501
             )
-
         try:
             wb = Workbook()
             ws = wb.active
             ws.title = "Resultado da Escolha"
-
             cargo_fill = PatternFill(
                 start_color="667eea", end_color="667eea", fill_type="solid"
             )
@@ -942,11 +825,8 @@ class ResultadoEscolha(RelatorioBase):
                 horizontal="center", vertical="center", wrap_text=True
             )
             left_align = Alignment(horizontal="left", vertical="center")
-
             row = 1
             temp_image_paths = []
-
-            # Inserir logotipo no topo, se disponível
             logo_url = self.context.get("logo_url", "")
             if self.context.get("usar_logotipo") and logo_url:
                 image_path = None
@@ -978,7 +858,6 @@ class ResultadoEscolha(RelatorioBase):
                         "Não foi possível inserir o logotipo no XLS (resultado_escolha): %s",  # noqa: E501
                         exc,
                     )
-
             if cabecalho_padrao:
                 ws.merge_cells(f"A{row}:H{row}")
                 cell = ws[f"A{row}"]
@@ -989,7 +868,6 @@ class ResultadoEscolha(RelatorioBase):
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-
             if cabecalho:
                 ws.merge_cells(f"A{row}:H{row}")
                 cell = ws[f"A{row}"]
@@ -998,8 +876,6 @@ class ResultadoEscolha(RelatorioBase):
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
-
-            # Título do relatório
             ws.merge_cells(f"A{row}:H{row}")
             cell = ws[f"A{row}"]
             if self.tipo == "RESULTADO_ESCOLHA":
@@ -1009,12 +885,9 @@ class ResultadoEscolha(RelatorioBase):
             cell.font = Font(bold=True, size=16)
             cell.alignment = center_align
             row += 1
-
-            # Data do relatório
             ws.merge_cells(f"A{row}:H{row}")
             cell = ws[f"A{row}"]
             data_atual = timezone.now()
-            # Formatar data em português
             meses_pt = {
                 1: "janeiro",
                 2: "fevereiro",
@@ -1037,11 +910,8 @@ class ResultadoEscolha(RelatorioBase):
             cell.font = Font(size=12)
             cell.alignment = center_align
             row += 2
-
             for cargo in cargos_list:
                 cargo_descricao = cargo.get("descricao", "")
-
-                # Cabeçalho do cargo
                 ws.merge_cells(f"A{row}:H{row}")
                 cell = ws[f"A{row}"]
                 cell.value = cargo_descricao
@@ -1049,14 +919,9 @@ class ResultadoEscolha(RelatorioBase):
                 cell.fill = cargo_fill
                 cell.alignment = left_align
                 row += 1
-
-                # Verificar se é a estrutura nova (com tipos_escolha) ou antiga (com agendas)  # noqa: E501
                 if "tipos_escolha" in cargo:
-                    # Nova estrutura: Cargo -> Tipo de Escolha -> Agenda -> Candidatos  # noqa: E501
                     for tipo_escolha in cargo.get("tipos_escolha", []):
                         tipo_nome = tipo_escolha.get("nome", "")
-
-                        # Cabeçalho do tipo de escolha
                         ws.merge_cells(f"A{row}:H{row}")
                         cell = ws[f"A{row}"]
                         cell.value = f"  {tipo_nome}"
@@ -1068,8 +933,6 @@ class ResultadoEscolha(RelatorioBase):
                         )
                         cell.alignment = left_align
                         row += 1
-
-                        # Cabeçalhos da tabela
                         headers = [
                             "Bloco",
                             "Geral",
@@ -1088,8 +951,6 @@ class ResultadoEscolha(RelatorioBase):
                             cell.alignment = center_align
                             cell.border = border
                         row += 1
-
-                        # Dados dos candidatos
                         for agenda in tipo_escolha.get("agendas", []):
                             sessao = agenda.get("sessao", "-")
                             for candidato in agenda.get("candidatos", []):
@@ -1121,27 +982,16 @@ class ResultadoEscolha(RelatorioBase):
                                 ws.cell(
                                     row=row, column=8
                                 ).value = candidato.get("escolha", "-")
-
-                                # Aplicar formatação
                                 for col in range(1, 9):
                                     cell = ws.cell(row=row, column=col)
                                     cell.border = border
                                     cell.font = normal_font
-                                    if col in [
-                                        1,
-                                        2,
-                                        3,
-                                        4,
-                                        8,
-                                    ]:  # Bloco, Geral, NNA, Def., ESCOLHA
+                                    if col in [1, 2, 3, 4, 8]:
                                         cell.alignment = center_align
-                                    else:  # NOME, R.G., CPF
+                                    else:
                                         cell.alignment = left_align
-
                                 row += 1
                 else:
-                    # Estrutura antiga: Cargo -> Agenda -> Candidatos
-                    # Cabeçalhos da tabela
                     headers = [
                         "Bloco",
                         "Geral",
@@ -1160,8 +1010,6 @@ class ResultadoEscolha(RelatorioBase):
                         cell.alignment = center_align
                         cell.border = border
                     row += 1
-
-                    # Dados dos candidatos
                     for agenda in cargo.get("agendas", []):
                         sessao = agenda.get("sessao", "-")
                         for candidato in agenda.get("candidatos", []):
@@ -1187,26 +1035,15 @@ class ResultadoEscolha(RelatorioBase):
                             ws.cell(row=row, column=8).value = candidato.get(
                                 "escolha", "-"
                             )
-
-                            # Aplicar formatação
                             for col in range(1, 9):
                                 cell = ws.cell(row=row, column=col)
                                 cell.border = border
                                 cell.font = normal_font
-                                if col in [
-                                    1,
-                                    2,
-                                    3,
-                                    4,
-                                    8,
-                                ]:  # Bloco, Geral, NNA, Def., ESCOLHA
+                                if col in [1, 2, 3, 4, 8]:
                                     cell.alignment = center_align
-                                else:  # NOME, R.G., CPF
+                                else:
                                     cell.alignment = left_align
-
                             row += 1
-
-                # Resumo DRE > ESCOLA (apenas escolas com escolhas realizadas)
                 if cargo.get("resumo_dre_escola"):
                     ws.merge_cells(f"A{row}:G{row}")
                     cell = ws[f"A{row}"]
@@ -1231,7 +1068,7 @@ class ResultadoEscolha(RelatorioBase):
                     for dre in cargo.get("resumo_dre_escola", []):
                         ws.merge_cells(f"A{row}:G{row}")
                         cell = ws[f"A{row}"]
-                        cell.value = f"  DRE - {dre.get('nome', '')}"
+                        cell.value = f'  DRE - {dre.get('nome', '')}'
                         cell.font = Font(bold=True, size=10)
                         cell.fill = PatternFill(
                             start_color="BDC3C7",
@@ -1281,10 +1118,7 @@ class ResultadoEscolha(RelatorioBase):
                                 )
                             row += 1
                     row += 1
-
                 row += 1
-
-            # Calcular largura necessária para coluna A (Escola) baseada no maior nome  # noqa: E501
             max_escola_length = 0
             for cargo in cargos_list:
                 if cargo.get("resumo_dre_escola"):
@@ -1294,53 +1128,31 @@ class ResultadoEscolha(RelatorioBase):
                             max_escola_length = max(
                                 max_escola_length, len(escola_nome)
                             )
-
-            # Ajustar larguras das colunas
-            # Larguras para a tabela principal de candidatos (colunas A-H)
-            # Se há tabela de resumo, ajustar coluna A para acomodar nomes de escolas  # noqa: E501
-            escola_width = 40  # Largura padrão para coluna Escola (aumentada para evitar truncamento)  # noqa: E501
+            escola_width = 40
             if max_escola_length > 0:
-                # Calcular largura baseada no conteúdo (aproximadamente 1 caractere = 1 unidade de largura)  # noqa: E501
-                # Adicionar margem de segurança
-                escola_width = min(
-                    max(max_escola_length + 5, 40), 50
-                )  # Mínimo 40, máximo 50
-
+                escola_width = min(max(max_escola_length + 5, 40), 50)
             column_widths = {
-                "A": max(
-                    10, escola_width
-                ),  # Bloco (ou Escola no resumo) - usar a maior largura necessária  # noqa: E501
-                "B": 12,  # Geral / Tipo UE
-                "C": 12,  # NNA / Código EOL
-                "D": 14,  # Def. / Vagas Def. (aumentada para melhor visualização)  # noqa: E501
-                "E": 40,  # NOME / Vagas Prec. (mantém 40 para nomes de candidatos)  # noqa: E501
-                "F": 18,  # R.G. / Escolhas Def.
-                "G": 16,  # CPF / Escolhas Prec. (aumentada para melhor visualização)  # noqa: E501
-                "H": 10,  # ESCOLHA
+                "A": max(10, escola_width),
+                "B": 12,
+                "C": 12,
+                "D": 14,
+                "E": 40,
+                "F": 18,
+                "G": 16,
+                "H": 10,
             }
-
             for col_letter, width in column_widths.items():
                 ws.column_dimensions[col_letter].width = width
-
-            # Ajustar larguras específicas para melhor alinhamento da tabela de resumo  # noqa: E501
-            # As colunas numéricas da tabela de resumo precisam de larguras consistentes  # noqa: E501
             if max_escola_length > 0:
-                # Ajustar colunas numéricas da tabela de resumo para melhor alinhamento  # noqa: E501
-                resumo_numeric_widths = {
-                    "D": 15,  # Vagas Def. (aumentada para melhor visualização)
-                    "E": 15,  # Vagas Prec. (ajustada para tabela de resumo, mas não reduz muito pois ainda há nomes)  # noqa: E501
-                    "F": 18,  # Escolhas Def. (mantém 18)
-                    "G": 18,  # Escolhas Prec. (aumentada para melhor visualização)  # noqa: E501
-                }
+                resumo_numeric_widths = {"D": 15, "E": 15, "F": 18, "G": 18}
                 for col_letter, width in resumo_numeric_widths.items():
-                    # Para coluna E, manter pelo menos 40 se já foi definida para nomes  # noqa: E501
                     if col_letter == "E":
                         current_width = (
                             ws.column_dimensions[col_letter].width or 40
                         )
                         ws.column_dimensions[col_letter].width = max(
                             current_width, 40
-                        )  # Manter 40 para nomes
+                        )
                     else:
                         current_width = (
                             ws.column_dimensions[col_letter].width or width
@@ -1348,8 +1160,6 @@ class ResultadoEscolha(RelatorioBase):
                         ws.column_dimensions[col_letter].width = max(
                             current_width, width
                         )
-
-            # Adicionar texto final, se disponível
             texto_final = self.context.get("texto_final")
             if texto_final:
                 row += 1
@@ -1360,19 +1170,15 @@ class ResultadoEscolha(RelatorioBase):
                 cell.alignment = Alignment(
                     horizontal="left", vertical="top", wrap_text=True
                 )
-
             buffer = BytesIO()
             wb.save(buffer)
             buffer.seek(0)
-
-            # Limpar temporários de imagem
             for p in temp_image_paths:
                 try:
                     if os.path.exists(p):
                         os.unlink(p)
                 except Exception:
                     pass
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1381,52 +1187,45 @@ class ResultadoEscolha(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Excel: %s", exc, exc_info=True)
             raise
 
     def render_to_docx(
         self,
-        cargos_list,
-        cabecalho,
-        texto_final=None,
-        filename="resultado_escolha.docx",
-    ):
-        """
-        Gera um arquivo Word (DOCX) mantendo a estrutura hierárquica do HTML.
+        cargos_list: Any,
+        cabecalho: Any,
+        texto_final: Any = None,
+        filename: Any = "resultado_escolha.docx",
+    ) -> Any:
+        """Gera arquivo Word (DOCX) com a estrutura hierárquica do relatório.
 
         Args:
-            cargos_list: Lista de cargos com suas agendas e candidatos
-            (estrutura hierárquica)
-            cabecalho: Texto do cabeçalho do relatório
-            texto_final: Texto final do relatório (opcional)
-            filename: Nome do arquivo Word gerado
+            cargos_list: Lista de cargos agrupados para o relatório.
+            cabecalho: Cabecalho.
+            texto_final: Texto de encerramento do relatório.
+            filename: Nome do arquivo gerado para download.
 
         Returns:
-            HttpResponse com o arquivo Word gerado
+            Conteúdo textual gerado.
+
+        Raises:
+            ImportError: Quando a biblioteca necessária não está instalada.
         """
         if not DOCX_AVAILABLE:
             raise ImportError(
                 "python-docx não está instalado. Instale com: pip install python-docx>=1.1.0"  # noqa: E501
             )
-
         try:
             doc = Document()
-
-            # Configurar margens da página
             sections = doc.sections
             for section in sections:
                 section.top_margin = Inches(1)
                 section.bottom_margin = Inches(1)
                 section.left_margin = Inches(1)
                 section.right_margin = Inches(1)
-
-            # Cores (em RGB)
-            RGBColor(102, 126, 234)  # #667eea
-            RGBColor(236, 240, 241)  # #ECF0F1
-
-            # Cabeçalho
+            RGBColor(102, 126, 234)
+            RGBColor(236, 240, 241)
             if cabecalho:
                 cabecalho_texto = self.processar_cabecalho_html(cabecalho)
                 p = doc.add_paragraph()
@@ -1435,8 +1234,6 @@ class ResultadoEscolha(RelatorioBase):
                 run.font.size = Pt(14)
                 run.font.bold = True
                 doc.add_paragraph()
-
-            # Título do relatório
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             if self.tipo == "RESULTADO_ESCOLHA":
@@ -1446,8 +1243,6 @@ class ResultadoEscolha(RelatorioBase):
             run.font.size = Pt(16)
             run.font.bold = True
             doc.add_paragraph()
-
-            # Data do relatório
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             data_atual = timezone.now()
@@ -1473,12 +1268,8 @@ class ResultadoEscolha(RelatorioBase):
             run.font.size = Pt(12)
             doc.add_paragraph()
             doc.add_paragraph()
-
-            # Processar cargos
             for cargo in cargos_list:
                 cargo_descricao = cargo.get("descricao", "")
-
-                # Título do cargo
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(cargo_descricao)
@@ -1493,14 +1284,9 @@ class ResultadoEscolha(RelatorioBase):
                 shading_elm.set(qn("w:fill"), "667eea")
                 shading_elm.set(qn("w:val"), "clear")
                 p_pr.append(shading_elm)
-
-                # Verificar se é a estrutura nova (com tipos_escolha) ou antiga (com agendas)  # noqa: E501
                 if "tipos_escolha" in cargo:
-                    # Nova estrutura: Cargo -> Tipo de Escolha -> Agenda -> Candidatos  # noqa: E501
                     for tipo_escolha in cargo.get("tipos_escolha", []):
                         tipo_nome = tipo_escolha.get("nome", "")
-
-                        # Título do tipo de escolha
                         p = doc.add_paragraph()
                         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                         run = p.add_run(f"  {tipo_nome}")
@@ -1515,8 +1301,6 @@ class ResultadoEscolha(RelatorioBase):
                         shading_elm.set(qn("w:fill"), "D5D8DC")
                         shading_elm.set(qn("w:val"), "clear")
                         p_pr.append(shading_elm)
-
-                        # Criar tabela
                         headers = [
                             "Bloco",
                             "Geral",
@@ -1529,8 +1313,6 @@ class ResultadoEscolha(RelatorioBase):
                         ]
                         table = doc.add_table(rows=1, cols=len(headers))
                         table.style = "Light Grid Accent 1"
-
-                        # Cabeçalho da tabela
                         header_cells = table.rows[0].cells
                         for i, header in enumerate(headers):
                             cell = header_cells[i]
@@ -1550,13 +1332,10 @@ class ResultadoEscolha(RelatorioBase):
                             shading_elm.set(qn("w:fill"), "ECF0F1")
                             shading_elm.set(qn("w:val"), "clear")
                             tc_pr.append(shading_elm)
-
-                        # Dados dos candidatos
                         for agenda in tipo_escolha.get("agendas", []):
                             sessao = agenda.get("sessao", "-")
                             for candidato in agenda.get("candidatos", []):
                                 row_cells = table.add_row().cells
-
                                 row_cells[0].text = str(sessao)
                                 row_cells[1].text = str(
                                     candidato.get("classificacao_geral", "-")
@@ -1579,20 +1358,12 @@ class ResultadoEscolha(RelatorioBase):
                                 row_cells[7].text = str(
                                     candidato.get("escolha", "-")
                                 )
-
-                                # Alinhamento
                                 for i, cell in enumerate(row_cells):
-                                    if i in [
-                                        0,
-                                        1,
-                                        2,
-                                        3,
-                                        7,
-                                    ]:  # Bloco, Geral, NNA, Def., ESCOLHA
+                                    if i in [0, 1, 2, 3, 7]:
                                         cell.paragraphs[
                                             0
                                         ].alignment = WD_ALIGN_PARAGRAPH.CENTER
-                                    else:  # NOME, R.G., CPF
+                                    else:
                                         cell.paragraphs[
                                             0
                                         ].alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -1600,8 +1371,6 @@ class ResultadoEscolha(RelatorioBase):
                                         10
                                     )
                 else:
-                    # Estrutura antiga: Cargo -> Agenda -> Candidatos
-                    # Criar tabela
                     headers = [
                         "Bloco",
                         "Geral",
@@ -1614,8 +1383,6 @@ class ResultadoEscolha(RelatorioBase):
                     ]
                     table = doc.add_table(rows=1, cols=len(headers))
                     table.style = "Light Grid Accent 1"
-
-                    # Cabeçalho da tabela
                     header_cells = table.rows[0].cells
                     for i, header in enumerate(headers):
                         cell = header_cells[i]
@@ -1635,13 +1402,10 @@ class ResultadoEscolha(RelatorioBase):
                         shading_elm.set(qn("w:fill"), "ECF0F1")
                         shading_elm.set(qn("w:val"), "clear")
                         tc_pr.append(shading_elm)
-
-                    # Dados dos candidatos
                     for agenda in cargo.get("agendas", []):
                         sessao = agenda.get("sessao", "-")
                         for candidato in agenda.get("candidatos", []):
                             row_cells = table.add_row().cells
-
                             row_cells[0].text = str(sessao)
                             row_cells[1].text = str(
                                 candidato.get("classificacao_geral", "-")
@@ -1658,26 +1422,16 @@ class ResultadoEscolha(RelatorioBase):
                             row_cells[7].text = str(
                                 candidato.get("escolha", "-")
                             )
-
-                            # Alinhamento
                             for i, cell in enumerate(row_cells):
-                                if i in [
-                                    0,
-                                    1,
-                                    2,
-                                    3,
-                                    7,
-                                ]:  # Bloco, Geral, NNA, Def., ESCOLHA
+                                if i in [0, 1, 2, 3, 7]:
                                     cell.paragraphs[
                                         0
                                     ].alignment = WD_ALIGN_PARAGRAPH.CENTER
-                                else:  # NOME, R.G., CPF
+                                else:
                                     cell.paragraphs[
                                         0
                                     ].alignment = WD_ALIGN_PARAGRAPH.LEFT
                                 cell.paragraphs[0].runs[0].font.size = Pt(10)
-
-                # Resumo DRE > ESCOLA (apenas escolas com escolhas realizadas)
                 if cargo.get("resumo_dre_escola"):
                     p = doc.add_paragraph()
                     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -1698,7 +1452,7 @@ class ResultadoEscolha(RelatorioBase):
                     for dre in cargo.get("resumo_dre_escola", []):
                         p = doc.add_paragraph()
                         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                        run = p.add_run(f"  DRE - {dre.get('nome', '')}")
+                        run = p.add_run(f'  DRE - {dre.get('nome', '')}')
                         run.font.size = Pt(10)
                         run.font.bold = True
                         p_pr = p._element.get_or_add_pPr()
@@ -1766,22 +1520,16 @@ class ResultadoEscolha(RelatorioBase):
                                 )
                                 cell.paragraphs[0].runs[0].font.size = Pt(10)
                     doc.add_paragraph()
-
                 doc.add_paragraph()
-
-            # Adicionar texto final, se disponível
             if texto_final:
                 doc.add_paragraph()
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 run = p.add_run(self.processar_cabecalho_html(texto_final))
                 run.font.size = Pt(10)
-
-            # Salvar em buffer
             buffer = BytesIO()
             doc.save(buffer)
             buffer.seek(0)
-
             response = HttpResponse(
                 buffer.read(),
                 content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1790,7 +1538,6 @@ class ResultadoEscolha(RelatorioBase):
                 f'attachment; filename="{filename}"'
             )
             return response
-
         except Exception as exc:
             logger.error("Erro ao gerar Word: %s", exc, exc_info=True)
             raise
