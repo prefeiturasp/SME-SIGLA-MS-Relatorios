@@ -21,28 +21,32 @@ class ExtracaoDadosViewSet(viewsets.GenericViewSet):
     ViewSet para extração de dados.
 
     GET /extracao-dados/          → list (filtrado por concurso_uuid e ano)
-    GET /extracao-dados/todos/    → action todos (extração geral)
+    GET /extracao-dados/total/    → action total (extração geral)
     """
 
     permission_classes = [AllowAny]
 
     def list(self, request, *args, **kwargs):
-        serializer = ExtracaoDadosQuerySerializer(data=request.query_params)
+        serializer = ExtracaoDadosQuerySerializer(
+            data=ExtracaoDadosQuerySerializer.normalize_query_data(
+                request.query_params
+            )
+        )
         serializer.is_valid(raise_exception=True)
 
         concurso_uuid = str(serializer.validated_data["concurso_uuid"])
-        ano = serializer.validated_data["ano"]
+        anos = sorted(serializer.validated_data["ano"])
 
         try:
             dados = ExtracaoDadosService().extrair(
                 concurso_uuid=concurso_uuid,
-                ano=ano,
+                anos=anos,
             )
         except RequestException as exc:
             logger.error(
-                "Erro ao extrair dados (concurso_uuid=%s, ano=%s): %s",
+                "Erro ao extrair dados (concurso_uuid=%s, anos=%s): %s",
                 concurso_uuid,
-                ano,
+                anos,
                 exc,
             )
             return Response(
