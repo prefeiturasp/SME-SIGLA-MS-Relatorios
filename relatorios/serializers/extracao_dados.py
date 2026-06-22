@@ -16,10 +16,9 @@ class ExtracaoDadosQuerySerializer(serializers.Serializer):
         allow_empty=False,
     )
 
-    @staticmethod
-    def normalize_query_data(query_params) -> dict:
-        """Normaliza query params repetidos (?ano=2025&ano=2026)."""
-        return {
-            "concurso_uuid": query_params.get("concurso_uuid"),
-            "ano": query_params.getlist("ano"),
-        }
+    def to_internal_value(self, data):
+        dados_modificados = data.dict() if hasattr(data, 'dict') else dict(data)
+        ano_param = dados_modificados.get('ano')
+        if isinstance(ano_param, str) and ano_param:
+            dados_modificados['ano'] = ano_param.split(',')
+        return super().to_internal_value(dados_modificados)

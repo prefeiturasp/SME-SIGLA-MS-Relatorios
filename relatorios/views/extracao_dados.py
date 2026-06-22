@@ -28,10 +28,7 @@ class ExtracaoDadosViewSet(viewsets.GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         serializer = ExtracaoDadosQuerySerializer(
-            data=ExtracaoDadosQuerySerializer.normalize_query_data(
-                request.query_params
-            )
-        )
+            data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
         concurso_uuid = str(serializer.validated_data["concurso_uuid"])
