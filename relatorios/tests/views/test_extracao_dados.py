@@ -14,7 +14,7 @@ def client():
     return APIClient()
 
 
-def test_extracao_dados_query_serializer_valid():
+def test_extracao_dados_query_serializer_valid_um_ano():
     from relatorios.serializers.extracao_dados import (
         ExtracaoDadosQuerySerializer,
     )
@@ -22,11 +22,26 @@ def test_extracao_dados_query_serializer_valid():
     serializer = ExtracaoDadosQuerySerializer(
         data={
             "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            "ano": 2026,
+            "ano": [2026],
         }
     )
     assert serializer.is_valid(), serializer.errors
-    assert serializer.validated_data["ano"] == 2026
+    assert serializer.validated_data["ano"] == [2026]
+
+
+def test_extracao_dados_query_serializer_valid_dois_anos():
+    from relatorios.serializers.extracao_dados import (
+        ExtracaoDadosQuerySerializer,
+    )
+
+    serializer = ExtracaoDadosQuerySerializer(
+        data={
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "ano": [2026, 2025],
+        }
+    )
+    assert serializer.is_valid(), serializer.errors
+    assert serializer.validated_data["ano"] == [2026, 2025]
 
 
 def test_extracao_dados_query_serializer_ano_invalido():
@@ -37,7 +52,22 @@ def test_extracao_dados_query_serializer_ano_invalido():
     serializer = ExtracaoDadosQuerySerializer(
         data={
             "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            "ano": 26,
+            "ano": [26],
+        }
+    )
+    assert not serializer.is_valid()
+    assert "ano" in serializer.errors
+
+
+def test_extracao_dados_query_serializer_mais_de_dois_anos():
+    from relatorios.serializers.extracao_dados import (
+        ExtracaoDadosQuerySerializer,
+    )
+
+    serializer = ExtracaoDadosQuerySerializer(
+        data={
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "ano": [2024, 2025, 2026],
         }
     )
     assert not serializer.is_valid()
@@ -65,7 +95,29 @@ def test_extracao_dados_get_com_filtros(mock_service_cls, client):
     assert response.data["candidatos"]["habilitados"]["total"] == 10000
     mock_service.extrair.assert_called_once_with(
         concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-        ano=2026,
+        anos=[2026],
+    )
+
+
+@patch("relatorios.views.extracao_dados.ExtracaoDadosService")
+def test_extracao_dados_get_com_dois_anos(mock_service_cls, client):
+    mock_service = Mock()
+    mock_service.extrair.return_value = {"comparativo": {"anos": [2025, 2026]}}
+    mock_service_cls.return_value = mock_service
+
+    url = reverse("extracao-dados-list")
+    response = client.get(
+        url,
+        {
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "ano": "2026,2025",
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    mock_service.extrair.assert_called_once_with(
+        concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        anos=[2025, 2026],
     )
 
 

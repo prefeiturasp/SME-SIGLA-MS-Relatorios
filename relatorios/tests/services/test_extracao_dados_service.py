@@ -88,15 +88,23 @@ def test_extrair_por_concurso_chama_microservicos_com_filtros(
         escolhas_base_url="http://escolhas",
         concursos_base_url="http://concursos",
     )
-    resultado = service.extrair(concurso_uuid=concurso_uuid, ano=2026)
+    resultado = service.extrair(concurso_uuid=concurso_uuid, anos=[2026])
 
-    assert resultado["candidatos"]["habilitados"]["total"] == 10000
-    assert resultado["escolhas"]["2026"]["escolha"] == 100
-    filtros_esperados = [
+    assert resultado["concurso_uuid"] == concurso_uuid
+    assert resultado["filtros"] == [
         {
             "ano": 2025,
             "processo_uuids": ["proc-2025-a"],
         },
+        {
+            "ano": 2026,
+            "processo_uuids": ["proc-2026-a", "proc-2026-b"],
+        },
+    ]
+    assert resultado["candidatos"]["habilitados"]["total"] == 10000
+    assert resultado["escolhas"]["2026"]["escolha"] == 100
+    assert "comparativo" not in resultado
+    filtros_esperados = [
         {
             "ano": 2026,
             "processo_uuids": ["proc-2026-a", "proc-2026-b"],
@@ -112,7 +120,120 @@ def test_extrair_por_concurso_chama_microservicos_com_filtros(
     )
     mock_concurso.buscar_extracao_dados.assert_called_once_with(
         concurso_uuid=concurso_uuid,
-        ano=2026,
+        anos=[2026],
+    )
+
+
+@patch(
+    "relatorios.services.extracao_dados_service.ConcursoService"
+)
+@patch(
+    "relatorios.services.extracao_dados_service.EscolhasService"
+)
+@patch(
+    "relatorios.services.extracao_dados_service.CandidatosService"
+)
+@patch(
+    "relatorios.services.extracao_dados_service.ProcessoConvocacaoService"
+)
+def test_extrair_dois_anos_retorna_comparativo(
+    mock_processo_cls,
+    mock_candidatos_cls,
+    mock_escolhas_cls,
+    mock_concurso_cls,
+):
+    concurso_uuid = "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
+    mock_processo = Mock()
+    mock_processo.buscar_processos_por_concurso.return_value = (
+        _processos_response(
+            [
+                {
+                    "uuid": "proc-2026-a",
+                    "data_convocacao": "2026-03-15T10:00:00Z",
+                },
+                {
+                    "uuid": "proc-2025-a",
+                    "data_convocacao": "2025-01-10T10:00:00Z",
+                },
+            ]
+        )
+    )
+    mock_processo_cls.return_value = mock_processo
+
+    mock_candidatos = Mock()
+    mock_candidatos.buscar_extracao_dados.return_value = {
+        "habilitados": {"total": 100},
+        "2025": {"convocados": 80, "nao-convocados": 20},
+        "2026": {"convocados": 100, "nao-convocados": 0},
+    }
+    mock_candidatos_cls.return_value = mock_candidatos
+
+    mock_escolhas = Mock()
+    mock_escolhas.buscar_extracao_dados.return_value = {
+        "2025": {
+            "escolha": 50,
+            "reconvocacao": 10,
+            "nao-escolha": 5,
+            "dres": [
+                {
+                    "nome": "Diretoria Regional de Educação Centro",
+                    "escolhas": 20,
+                    "vagas": 40,
+                }
+            ],
+        },
+        "2026": {
+            "escolha": 75,
+            "reconvocacao": 5,
+            "nao-escolha": 10,
+            "dres": [
+                {
+                    "nome": "Diretoria Regional de Educação Centro",
+                    "escolhas": 30,
+                    "vagas": 40,
+                }
+            ],
+        },
+    }
+    mock_escolhas_cls.return_value = mock_escolhas
+
+    mock_concurso = Mock()
+    mock_concurso.buscar_extracao_dados.return_value = {
+        "2025": {"autorizacoes-publicadas": 80},
+        "2026": {"autorizacoes-publicadas": 100},
+    }
+    mock_concurso_cls.return_value = mock_concurso
+
+    service = ExtracaoDadosService(
+        convocacao_base_url="http://convocacao",
+        candidatos_base_url="http://candidatos",
+        escolhas_base_url="http://escolhas",
+        concursos_base_url="http://concursos",
+    )
+    resultado = service.extrair(
+        concurso_uuid=concurso_uuid, anos=[2026, 2025]
+    )
+
+    comparativo = resultado["comparativo"]
+    assert resultado["concurso_uuid"] == concurso_uuid
+    assert resultado["filtros"] == [
+        {"ano": 2025, "processo_uuids": ["proc-2025-a"]},
+        {"ano": 2026, "processo_uuids": ["proc-2026-a"]},
+    ]
+    assert comparativo["anos"] == [2025, 2026]
+    assert comparativo["indicadores"]["convocados"] == 20.0
+    assert comparativo["indicadores"]["naoConvocados"] == -20.0
+    assert comparativo["indicadores"]["escolhasRealizadas"] == 25.0
+    assert comparativo["indicadores"]["reconvocacoes"] == -5.0
+    assert comparativo["indicadores"]["semEscolha"] == 5.0
+    assert comparativo["indicadores"]["autorizacoes"] == 20.0
+    assert comparativo["dres"]["Centro"]["escolhas"] == 10.0
+    assert comparativo["dres"]["Centro"]["vagas"] == 0.0
+    assert comparativo["dres"]["Centro"]["percentualPreenchimento"] == 25.0
+
+    mock_concurso.buscar_extracao_dados.assert_called_once_with(
+        concurso_uuid=concurso_uuid,
+        anos=[2025, 2026],
     )
 
 
@@ -187,7 +308,7 @@ def test_extrair_ano_sem_processos_levanta_not_found(mock_processo_cls):
     with pytest.raises(NotFound):
         service.extrair(
             concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            ano=2026,
+            anos=[2026],
         )
 
 
@@ -209,5 +330,13 @@ def test_extrair_concurso_sem_processos_levanta_not_found(mock_processo_cls):
     with pytest.raises(NotFound):
         service.extrair(
             concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            ano=2026,
+            anos=[2026],
         )
+
+
+def test_diferenca_absoluta_calcula_variacao_numerica():
+    assert ExtracaoDadosService._diferenca_absoluta(80, 100) == 20.0
+
+
+def test_diferenca_absoluta_arredonda_uma_casa():
+    assert ExtracaoDadosService._diferenca_absoluta(3, 4.15) == 1.2
