@@ -28,17 +28,17 @@ class ConcursoService:
     def buscar_extracao_dados(
         self,
         concurso_uuid: str | None = None,
-        ano: int | None = None,
+        anos: list[int] | None = None,
     ) -> dict:
         """
         Busca dados de extração do concurso.
 
         Endpoint esperado do ms-concursos:
-            GET /api/v1/extracao-dados/
+            POST /api/v1/extracao-dados/
 
         Args:
             concurso_uuid: UUID do concurso (opcional)
-            ano: Ano de referência YYYY (opcional)
+            anos: Anos de referência YYYY (opcional)
 
         Returns:
             Dados da API com extração do concurso
@@ -50,13 +50,13 @@ class ConcursoService:
         payload = {}
         if concurso_uuid is not None:
             payload["concurso_uuid"] = concurso_uuid
-        if ano is not None:
-            payload["ano"] = ano
+        if anos is not None:
+            payload["anos"] = anos
         logger.info(
             "Buscando extração de dados em concursos",
             extra={
                 "correlation_id": get_correlation_id(),
-                "method": "GET",
+                "method": "POST",
                 "url": url,
                 "headers": self._default_headers,
                 "payload": payload,
@@ -73,9 +73,9 @@ class ConcursoService:
         except RequestException as exc:
             logger.error(
                 "Erro ao buscar extração de dados em concursos "
-                "(concurso_uuid=%s, ano=%s): %s",
+                "(concurso_uuid=%s, anos=%s): %s",
                 concurso_uuid,
-                ano,
+                anos,
                 exc,
             )
             raise
@@ -84,7 +84,7 @@ class ConcursoService:
             "Extração de dados em concursos buscada com sucesso",
             extra={
                 "correlation_id": get_correlation_id(),
-                "method": "GET",
+                "method": "POST",
                 "url": url,
                 "headers": self._default_headers,
                 "payload": payload,

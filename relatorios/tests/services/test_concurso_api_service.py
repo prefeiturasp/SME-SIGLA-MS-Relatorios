@@ -31,14 +31,42 @@ def test_buscar_extracao_dados_success(mock_post):
     svc = _svc(timeout=5)
     resp = svc.buscar_extracao_dados(
         concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-        ano=2026,
+        anos=[2026],
     )
     assert resp == {"concurso": {"nome": "Concurso X", "codigo": 1001}}
     mock_post.assert_called_once_with(
         "http://api.local/api/v1/extracao-dados/",
         json={
             "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            "ano": 2026,
+            "anos": [2026],
+        },
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.concurso_api_service.http_client.post")
+def test_buscar_extracao_dados_com_dois_anos(mock_post):
+    mock_post.return_value = _Resp(
+        payload={
+            "2025": {"autorizacoes-publicadas": 80},
+            "2026": {"autorizacoes-publicadas": 100},
+        }
+    )
+    svc = _svc(timeout=5)
+    resp = svc.buscar_extracao_dados(
+        concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        anos=[2025, 2026],
+    )
+    assert resp["2026"]["autorizacoes-publicadas"] == 100
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/extracao-dados/",
+        json={
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "anos": [2025, 2026],
         },
         headers={
             "Accept": "application/json",
@@ -74,5 +102,5 @@ def test_buscar_extracao_dados_http_error(mock_post):
     with pytest.raises(requests.HTTPError):
         svc.buscar_extracao_dados(
             concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            ano=2026,
+            anos=[2026],
         )
