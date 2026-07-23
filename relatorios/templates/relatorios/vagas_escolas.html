@@ -106,14 +106,17 @@
         }
 
         .rel-vagas-escolas th:nth-child(2) {
-            width: 50%;
+            width: 15%;
         }
 
         .rel-vagas-escolas th:nth-child(3) {
-            width: 17.5%;
+            width: 35%;
         }
 
         .rel-vagas-escolas th:nth-child(4) {
+            width: 17.5%;
+        }
+        .rel-vagas-escolas th:nth-child(5) {
             width: 17.5%;
         }
 
@@ -191,6 +194,7 @@
                                 <thead>
                                     <tr>
                                         <th>Tipo de unidade</th>
+                                        <th>Código EOL</th>
                                         <th>Unidade</th>
                                         <th style="text-align: center;">Vagas Definitivas</th>
                                         <th style="text-align: center;">Vagas Precárias</th>
@@ -202,6 +206,7 @@
                                             <td class="tipo-unidade">
                                                 {{ vaga.escola.tipo_ue|default:"-" }}
                                             </td>
+                                            <td>{{ vaga.escola.codigo_eol|default:"-" }}</td>
                                             <td>{{ vaga.escola.nome_oficial }}</td>
                                             <td class="numero-vaga {% if vaga.vagas_definitivas > 0 %}vaga-definitiva{% else %}sem-vagas{% endif %}">
                                                 {{ vaga.vagas_definitivas|default:0 }}
