@@ -271,14 +271,14 @@ class LaudaVagas(RelatorioBase):
                     )
             cabecalho_padrao = self.context.get("cabecalho_padrao", "")
             if cabecalho_padrao:
-                ws.merge_cells(f"A{row}:D{row}")
+                ws.merge_cells(f"A{row}:E{row}")
                 cell = ws[f"A{row}"]
                 cell.value = self.processar_cabecalho_html(cabecalho_padrao)
                 cell.font = title_font
                 cell.alignment = center_wrap_align
                 row += 2
             if self.context.get("cabecalho"):
-                ws.merge_cells(f"A{row}:D{row}")
+                ws.merge_cells(f"A{row}:E{row}")
                 cell = ws[f"A{row}"]
                 cell.value = self.processar_cabecalho_html(
                     self.context["cabecalho"]
@@ -288,7 +288,7 @@ class LaudaVagas(RelatorioBase):
                 row += 2
             for cargo in self.context["cargos"]:
                 cargo_descricao = cargo.get("descricao", "")
-                ws.merge_cells(f"A{row}:D{row}")
+                ws.merge_cells(f"A{row}:E{row}")
                 cell = ws[f"A{row}"]
                 cell.value = f"Cargo: {cargo_descricao}"
                 cell.font = cargo_font
@@ -297,7 +297,7 @@ class LaudaVagas(RelatorioBase):
                 row += 1
                 for dre in cargo.get("dres", []):
                     dre_nome = dre.get("nome", "")
-                    ws.merge_cells(f"A{row}:D{row}")
+                    ws.merge_cells(f"A{row}:E{row}")
                     cell = ws[f"A{row}"]
                     cell.value = f"DRE - {dre_nome}"
                     cell.font = dre_font
@@ -306,6 +306,7 @@ class LaudaVagas(RelatorioBase):
                     row += 1
                     headers = [
                         "Tipo de unidade",
+                        "Código EOL",
                         "Unidade",
                         "Vagas Definitivas",
                         "Vagas Precárias",
@@ -324,32 +325,35 @@ class LaudaVagas(RelatorioBase):
                             "tipo_ue", "-"
                         )
                         ws.cell(row=row, column=2).value = escola.get(
+                            "codigo_eol", "-"
+                        )
+                        ws.cell(row=row, column=3).value = escola.get(
                             "nome_oficial", "-"
                         )
-                        ws.cell(row=row, column=3).value = vaga.get(
+                        ws.cell(row=row, column=4).value = vaga.get(
                             "vagas_definitivas", 0
                         )
-                        ws.cell(row=row, column=4).value = vaga.get(
+                        ws.cell(row=row, column=5).value = vaga.get(
                             "vagas_precarias", 0
                         )
-                        for col in range(1, 5):
+                        for col in range(1, 6):
                             cell = ws.cell(row=row, column=col)
                             cell.border = border
                             cell.font = normal_font
-                            if col in [3, 4]:
+                            if col in [4, 5]:
                                 cell.alignment = center_align
                             else:
                                 cell.alignment = left_align
                         row += 1
                     row += 1
                 row += 1
-            column_widths = {"A": 20, "B": 60, "C": 20, "D": 20}
+            column_widths = {"A": 20, "B": 20, "C": 60, "D": 20, "E": 20}
             for col_letter, width in column_widths.items():
                 ws.column_dimensions[col_letter].width = width
             texto_final = self.context.get("texto_final")
             if texto_final:
                 row += 1
-                ws.merge_cells(f"A{row}:D{row}")
+                ws.merge_cells(f"A{row}:E{row}")
                 cell = ws[f"A{row}"]
                 cell.value = self.processar_cabecalho_html(texto_final)
                 cell.font = normal_font
@@ -467,6 +471,7 @@ class LaudaVagas(RelatorioBase):
                     p_pr.append(shading_elm)
                     headers = [
                         "Tipo de unidade",
+                        "Código EOL",
                         "Unidade",
                         "Vagas Definitivas",
                         "Vagas Precárias",
@@ -494,13 +499,14 @@ class LaudaVagas(RelatorioBase):
                         escola = vaga.get("escola", {})
                         row_cells = table.add_row().cells
                         row_cells[0].text = escola.get("tipo_ue", "-")
-                        row_cells[1].text = escola.get("nome_oficial", "-")
-                        row_cells[2].text = str(
+                        row_cells[1].text = escola.get("codigo_eol", "-")
+                        row_cells[2].text = escola.get("nome_oficial", "-")
+                        row_cells[3].text = str(
                             vaga.get("vagas_definitivas", 0)
                         )
-                        row_cells[3].text = str(vaga.get("vagas_precarias", 0))
+                        row_cells[4].text = str(vaga.get("vagas_precarias", 0))
                         for i, cell in enumerate(row_cells):
-                            if i in [2, 3]:
+                            if i in [3, 4]:
                                 cell.paragraphs[
                                     0
                                 ].alignment = WD_ALIGN_PARAGRAPH.CENTER
