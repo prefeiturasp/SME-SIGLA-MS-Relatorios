@@ -15,6 +15,9 @@ from django.shortcuts import render
 from relatorios.services.agendas_api_service import AgendasService
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.candidatos_api_service import CandidatosService
+from relatorios.services.historico_classificacao import (
+    aplicar_historico_classificacao,
+)
 
 logger = logging.getLogger(__name__)
 try:
@@ -75,9 +78,9 @@ class ListaCandidatosSessao(RelatorioBase):
         )
         data = resp.json()
         if isinstance(data, dict) and "results" in data:
-            return data.get("results", [])  # type: ignore[no-any-return]
+            return aplicar_historico_classificacao(data.get("results", []))
         if isinstance(data, list):
-            return data
+            return aplicar_historico_classificacao(data)
         return []
 
     @staticmethod

@@ -16,6 +16,9 @@ from django.shortcuts import render
 from relatorios.services.base.relatorio_base import RelatorioBase
 from relatorios.services.candidatos_api_service import CandidatosService
 from relatorios.services.escolhas_api_service import EscolhasService
+from relatorios.services.historico_classificacao import (
+    aplicar_historico_classificacao,
+)
 from relatorios.utils import convert_uuids_to_strings
 
 try:
@@ -479,7 +482,7 @@ class ListagemEscolhasDres(RelatorioBase):
                 processo_uuid=str(processo_uuid) if processo_uuid else ""
             )
             candidatos_data = candidatos_response.json()
-            candidatos = (
+            candidatos = aplicar_historico_classificacao(
                 candidatos_data.get("results", [])
                 if isinstance(candidatos_data, dict)
                 else candidatos_data

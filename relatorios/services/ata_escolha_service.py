@@ -12,6 +12,7 @@ from typing import Any
 from requests import RequestException
 
 from .candidatos_api_service import CandidatosService
+from .historico_classificacao import aplicar_historico_classificacao
 
 
 class CargoObrigatorioError(Exception):
@@ -560,6 +561,9 @@ class AtaEscolhaService:
                         cargo_codigo,
                     )
                     candidatos_cargo = []
+                candidatos_cargo = aplicar_historico_classificacao(
+                    candidatos_cargo
+                )
                 candidatos_sep_cargo = self._separar_por_tipo(candidatos_cargo)
                 lacunas_geral = []
                 lacunas_nna = []
