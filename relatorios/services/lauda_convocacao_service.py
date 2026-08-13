@@ -11,6 +11,7 @@ from sigla_sdk.context import get_correlation_id
 from .agendas_api_service import AgendasService
 from .candidatos_api_service import CandidatosService
 from .escolhas_api_service import EscolhasService
+from .historico_classificacao import aplicar_historico_classificacao
 from .processo_convocacao_api_service import ProcessoConvocacaoService
 
 logger = logging.getLogger(__name__)
@@ -578,7 +579,9 @@ class LaudaConvocacaoService:
                         )
                     )
                     dados_candidatos = response_candidatos.json()
-                    candidatos_result = dados_candidatos.get("results", [])
+                    candidatos_result = aplicar_historico_classificacao(
+                        dados_candidatos.get("results", [])
+                    )
                     _classificacoes = [
                         c.get("classificacao")
                         for c in candidatos_result
