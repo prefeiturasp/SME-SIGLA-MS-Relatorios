@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from convocacao.services.processos_api_service import ProcessosService
+from relatorios.services.processos_api_service import ProcessosService
 
 
 class _Resp:
@@ -34,7 +34,7 @@ def _svc(base: Any = "http://api.local", timeout: Any = 9) -> Any:
     return ProcessosService(base_url=base, timeout_seconds=timeout)
 
 
-@patch("convocacao.services.processos_api_service.http_client.get")
+@patch("relatorios.services.processos_api_service.http_client.get")
 def test_buscar_cargos_por_processo_success(mock_get: Any) -> None:
     """Verifica buscar cargos por processo success."""
     mock_get.return_value = _Resp(payload={"cargos": []})
@@ -51,7 +51,7 @@ def test_buscar_cargos_por_processo_success(mock_get: Any) -> None:
     )
 
 
-@patch("convocacao.services.processos_api_service.http_client.get")
+@patch("relatorios.services.processos_api_service.http_client.get")
 def test_buscar_cargos_por_processo_http_error(mock_get: Any) -> None:
     """Verifica buscar cargos por processo http error."""
     mock_get.return_value = _Resp(None, status_code=502)

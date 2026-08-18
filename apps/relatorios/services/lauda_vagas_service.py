@@ -8,7 +8,7 @@ from typing import Any
 from django.conf import settings
 from django.shortcuts import render
 
-from escolhas.services.escolhas_api_service import EscolhasService
+from relatorios.services.escolhas_api_service import EscolhasService
 
 logger = logging.getLogger(__name__)
 

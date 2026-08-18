@@ -12,9 +12,9 @@ from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 
-from agendas.services.agendas_api_service import AgendasService
-from candidatos.services.candidatos_api_service import CandidatosService
+from relatorios.services.agendas_api_service import AgendasService
 from relatorios.services.base.relatorio_base import RelatorioBase
+from relatorios.services.candidatos_api_service import CandidatosService
 from relatorios.services.historico_classificacao import (
     aplicar_historico_classificacao,
 )

@@ -8,7 +8,7 @@ from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from integracao.base import BaseApiService
+from core.base import BaseApiService
 
 logger = logging.getLogger(__name__)
 

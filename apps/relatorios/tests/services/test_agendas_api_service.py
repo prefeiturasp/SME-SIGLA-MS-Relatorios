@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from agendas.services.agendas_api_service import AgendasService
+from relatorios.services.agendas_api_service import AgendasService
 
 
 class _Resp:
@@ -34,7 +34,7 @@ def _svc(base: Any = "http://api.local", timeout: Any = 30) -> Any:
     return AgendasService(base_url=base, timeout_seconds=timeout)
 
 
-@patch("agendas.services.agendas_api_service.http_client.get")
+@patch("relatorios.services.agendas_api_service.http_client.get")
 def test_buscar_agendas_success_with_pagination_and_headers(
     mock_get: Any,
 ) -> None:
@@ -61,7 +61,7 @@ def test_buscar_agendas_success_with_pagination_and_headers(
     )
 
 
-@patch("agendas.services.agendas_api_service.http_client.get")
+@patch("relatorios.services.agendas_api_service.http_client.get")
 def test_buscar_agendas_respects_trailing_slash_in_base_url(
     mock_get: Any,
 ) -> None:
@@ -73,7 +73,7 @@ def test_buscar_agendas_respects_trailing_slash_in_base_url(
     assert called_args[0] == "http://api.local/api/v1/agendas/"
 
 
-@patch("agendas.services.agendas_api_service.http_client.get")
+@patch("relatorios.services.agendas_api_service.http_client.get")
 def test_buscar_agendas_http_error_raises(mock_get: Any) -> None:
     """Verifica buscar agendas http error raises."""
     mock_get.return_value = _Resp(None, status_code=500)
@@ -83,7 +83,7 @@ def test_buscar_agendas_http_error_raises(mock_get: Any) -> None:
 
 
 @patch(
-    "agendas.services.agendas_api_service.http_client.get",
+    "relatorios.services.agendas_api_service.http_client.get",
     side_effect=requests.RequestException("boom"),
 )
 def test_buscar_agendas_request_exception_is_propagated(mock_get: Any) -> None:

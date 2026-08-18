@@ -8,8 +8,8 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from agendas.services.agendas_api_service import AgendasService
-from candidatos.services.candidatos_api_service import CandidatosService
+from relatorios.services.agendas_api_service import AgendasService
+from relatorios.services.candidatos_api_service import CandidatosService
 
 
 class _Resp:
@@ -30,7 +30,7 @@ class _Resp:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
-@patch("agendas.services.agendas_api_service.http_client.get")
+@patch("relatorios.services.agendas_api_service.http_client.get")
 def test_buscar_agenda_por_uuid_success_and_error(mock_get: Any) -> None:
     """Verifica buscar agenda por uuid success and error."""
     svc = AgendasService(base_url="http://api.local", timeout_seconds=9)
@@ -42,7 +42,7 @@ def test_buscar_agenda_por_uuid_success_and_error(mock_get: Any) -> None:
         svc.buscar_agenda_por_uuid("ag2")
 
 
-@patch("candidatos.services.candidatos_api_service.http_client.get")
+@patch("relatorios.services.candidatos_api_service.http_client.get")
 def test_candidatos_extra_endpoints_success(mock_get: Any) -> None:
     """Verifica candidatos extra endpoints success."""
     svc = CandidatosService(base_url="http://api.local", timeout_seconds=7)
@@ -63,7 +63,7 @@ def test_candidatos_extra_endpoints_success(mock_get: Any) -> None:
     )
 
 
-@patch("candidatos.services.candidatos_api_service.http_client.get")
+@patch("relatorios.services.candidatos_api_service.http_client.get")
 def test_candidatos_extra_endpoints_http_error(mock_get: Any) -> None:
     """Verifica candidatos extra endpoints http error."""
     svc = CandidatosService(base_url="http://api.local")

@@ -48,12 +48,6 @@ INSTALLED_APPS = [
     "auditlog",
     "drf_spectacular",
     "core",
-    "integracao",
-    "agendas",
-    "candidatos",
-    "concursos",
-    "escolhas",
-    "convocacao",
     "relatorios",
 ]
 
@@ -207,31 +201,6 @@ LOGGING = {
         },
         # Seu Logger de Aplicação (substitua pelo nome do seu app)
         "relatorios": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "agendas": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "candidatos": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "concursos": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "escolhas": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
-        "convocacao": {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,

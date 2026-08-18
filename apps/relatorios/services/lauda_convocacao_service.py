@@ -8,14 +8,13 @@ from typing import Any
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 
-from agendas.services.agendas_api_service import AgendasService
-from candidatos.services.candidatos_api_service import CandidatosService
-from convocacao.services.processo_convocacao_api_service import (
+from .agendas_api_service import AgendasService
+from .candidatos_api_service import CandidatosService
+from .escolhas_api_service import EscolhasService
+from .historico_classificacao import aplicar_historico_classificacao
+from .processo_convocacao_api_service import (
     ProcessoConvocacaoService,
 )
-from escolhas.services.escolhas_api_service import EscolhasService
-
-from .historico_classificacao import aplicar_historico_classificacao
 
 logger = logging.getLogger(__name__)
 

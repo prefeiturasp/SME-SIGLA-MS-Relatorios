@@ -11,8 +11,7 @@ from typing import Any
 
 from requests import RequestException
 
-from candidatos.services.candidatos_api_service import CandidatosService
-
+from .candidatos_api_service import CandidatosService
 from .historico_classificacao import aplicar_historico_classificacao
 
 
@@ -35,11 +34,11 @@ class CargoObrigatorioError(Exception):
         super().__init__(message)
 
 
-from agendas.services.agendas_api_service import AgendasService
-from convocacao.services.processo_convocacao_api_service import (
+from .agendas_api_service import AgendasService
+from .escolhas_api_service import EscolhasService
+from .processo_convocacao_api_service import (
     ProcessoConvocacaoService,
 )
-from escolhas.services.escolhas_api_service import EscolhasService
 
 logger = logging.getLogger(__name__)
 

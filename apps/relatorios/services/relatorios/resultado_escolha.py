@@ -15,14 +15,14 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 
-from agendas.services.agendas_api_service import AgendasService
-from candidatos.services.candidatos_api_service import CandidatosService
-from convocacao.services.processos_api_service import ProcessosService
-from escolhas.services.escolhas_api_service import EscolhasService
+from relatorios.services.agendas_api_service import AgendasService
 from relatorios.services.base.relatorio_base import RelatorioBase
+from relatorios.services.candidatos_api_service import CandidatosService
+from relatorios.services.escolhas_api_service import EscolhasService
 from relatorios.services.historico_classificacao import (
     aplicar_historico_classificacao,
 )
+from relatorios.services.processos_api_service import ProcessosService
 
 try:
     from openpyxl import Workbook

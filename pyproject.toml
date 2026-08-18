@@ -16,8 +16,8 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["E501", "SIM117", "B017", "E402", "F811", "E741"]
 "apps/relatorios/services/ata_escolha_service.py" = ["E402", "SIM116"]
-"apps/candidatos/services/candidatos_api_service.py" = ["E501"]
-"apps/escolhas/services/escolhas_api_service.py" = ["E501"]
+"apps/relatorios/services/candidatos_api_service.py" = ["E501"]
+"apps/relatorios/services/escolhas_api_service.py" = ["E501"]
 "apps/relatorios/services/**" = ["B007"]
 "apps/relatorios/services/relatorios/ata_escolha.py" = ["F401"]
 "**/gerar_relatorio_pep*.py" = ["D"]
@@ -26,17 +26,7 @@ ignore = [
 "*/settings*.py" = ["F401", "F403", "F405", "E501", "E402"]
 
 [tool.ruff.lint.isort]
-known-first-party = [
-    "relatorios",
-    "core",
-    "integracao",
-    "agendas",
-    "candidatos",
-    "concursos",
-    "escolhas",
-    "convocacao",
-    "config",
-]
+known-first-party = ["relatorios", "core", "config"]
 
 [tool.ruff.format]
 quote-style = "double"

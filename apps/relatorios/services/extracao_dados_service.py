@@ -9,12 +9,12 @@ from collections import defaultdict
 from django.conf import settings
 from rest_framework.exceptions import NotFound
 
-from candidatos.services.candidatos_api_service import CandidatosService
-from concursos.services.concurso_api_service import ConcursoService
-from convocacao.services.processo_convocacao_api_service import (
+from relatorios.services.candidatos_api_service import CandidatosService
+from relatorios.services.concurso_api_service import ConcursoService
+from relatorios.services.escolhas_api_service import EscolhasService
+from relatorios.services.processo_convocacao_api_service import (
     ProcessoConvocacaoService,
 )
-from escolhas.services.escolhas_api_service import EscolhasService
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from escolhas.services.escolhas_api_service import EscolhasService
+from relatorios.services.escolhas_api_service import EscolhasService
 
 
 class _Resp:
@@ -34,7 +34,7 @@ def _svc(base: Any = "http://api.local", timeout: Any = 15) -> Any:
     return EscolhasService(base_url=base, timeout_seconds=timeout)
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.get")
+@patch("relatorios.services.escolhas_api_service.http_client.get")
 def test_buscar_vagas_escolas_success(mock_get: Any) -> None:
     """Verifica buscar vagas escolas success."""
     mock_get.return_value = _Resp(payload={"results": []})
@@ -52,7 +52,7 @@ def test_buscar_vagas_escolas_success(mock_get: Any) -> None:
     )
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.get")
+@patch("relatorios.services.escolhas_api_service.http_client.get")
 def test_buscar_vagas_escolas_trailing_slash_base_url(mock_get: Any) -> None:
     """Verifica buscar vagas escolas trailing slash base url."""
     mock_get.return_value = _Resp(payload=[])
@@ -63,7 +63,7 @@ def test_buscar_vagas_escolas_trailing_slash_base_url(mock_get: Any) -> None:
     )
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.get")
+@patch("relatorios.services.escolhas_api_service.http_client.get")
 def test_buscar_vagas_escolas_http_error(mock_get: Any) -> None:
     """Verifica buscar vagas escolas http error."""
     mock_get.return_value = _Resp(None, status_code=500)
@@ -73,7 +73,7 @@ def test_buscar_vagas_escolas_http_error(mock_get: Any) -> None:
 
 
 @patch(
-    "escolhas.services.escolhas_api_service.http_client.get",
+    "relatorios.services.escolhas_api_service.http_client.get",
     side_effect=requests.RequestException("boom"),
 )
 def test_buscar_vagas_escolas_request_exception(mock_get: Any) -> None:
@@ -83,7 +83,7 @@ def test_buscar_vagas_escolas_request_exception(mock_get: Any) -> None:
         svc.buscar_vagas_escolas(processo_uuid="PERR")
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_escolhas_por_candidatos_success_list_default_filter(
     mock_post: Any,
 ) -> None:
@@ -107,7 +107,7 @@ def test_buscar_escolhas_por_candidatos_success_list_default_filter(
     )
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(
     mock_post: Any,
 ) -> None:
@@ -126,7 +126,7 @@ def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(
     assert out == [{"uuid": "u1", "situacao": "reconvocacao"}]
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(
     mock_post: Any,
 ) -> None:
@@ -137,7 +137,7 @@ def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(
     assert out == []
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_escolhas_por_candidatos_http_error(mock_post: Any) -> None:
     """Verifica buscar escolhas por candidatos http error."""
     mock_post.return_value = _Resp(None, status_code=400)
@@ -147,7 +147,7 @@ def test_buscar_escolhas_por_candidatos_http_error(mock_post: Any) -> None:
 
 
 @patch(
-    "escolhas.services.escolhas_api_service.http_client.post",
+    "relatorios.services.escolhas_api_service.http_client.post",
     side_effect=requests.RequestException("boom"),
 )
 def test_buscar_escolhas_por_candidatos_request_exception(
@@ -162,7 +162,7 @@ def test_buscar_escolhas_por_candidatos_request_exception(
 # ---------- buscar_extracao_dados ----------
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_extracao_dados_success(mock_post):
     filtros = [
         {
@@ -191,7 +191,7 @@ def test_buscar_extracao_dados_success(mock_post):
     )
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_extracao_dados_sem_parametros(mock_post):
     mock_post.return_value = _Resp(payload={"2026": {"escolha": 1000}})
     svc = _svc(timeout=5)
@@ -208,7 +208,7 @@ def test_buscar_extracao_dados_sem_parametros(mock_post):
     )
 
 
-@patch("escolhas.services.escolhas_api_service.http_client.post")
+@patch("relatorios.services.escolhas_api_service.http_client.post")
 def test_buscar_extracao_dados_http_error(mock_post):
     mock_post.return_value = _Resp(None, status_code=500)
     svc = _svc()

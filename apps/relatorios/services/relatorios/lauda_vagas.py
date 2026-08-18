@@ -13,8 +13,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from escolhas.services.escolhas_api_service import EscolhasService
 from relatorios.services.base.relatorio_base import RelatorioBase
+from relatorios.services.escolhas_api_service import EscolhasService
 from relatorios.utils import convert_uuids_to_strings
 
 try:

@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from convocacao.services.processo_convocacao_api_service import (
+from relatorios.services.processo_convocacao_api_service import (
     ProcessoConvocacaoService,
 )
 
@@ -36,7 +36,7 @@ def _svc(base: Any = "http://api.local", timeout: Any = 12) -> Any:
     return ProcessoConvocacaoService(base_url=base, timeout_seconds=timeout)
 
 
-@patch("convocacao.services.processo_convocacao_api_service.http_client.get")
+@patch("relatorios.services.processo_convocacao_api_service.http_client.get")
 def test_buscar_processo_convocacao_success(mock_get: Any) -> None:
     """Verifica buscar processo convocacao success."""
     mock_get.return_value = _Resp(payload={"uuid": "P1"})
@@ -53,7 +53,7 @@ def test_buscar_processo_convocacao_success(mock_get: Any) -> None:
     )
 
 
-@patch("convocacao.services.processo_convocacao_api_service.http_client.get")
+@patch("relatorios.services.processo_convocacao_api_service.http_client.get")
 def test_buscar_processo_convocacao_http_error(mock_get: Any) -> None:
     """Verifica buscar processo convocacao http error."""
     mock_get.return_value = _Resp(None, status_code=404)
@@ -62,7 +62,7 @@ def test_buscar_processo_convocacao_http_error(mock_get: Any) -> None:
         svc.buscar_processo_convocacao("PERR")
 
 
-@patch("convocacao.services.processo_convocacao_api_service.http_client.get")
+@patch("relatorios.services.processo_convocacao_api_service.http_client.get")
 def test_buscar_processos_por_concurso_success(mock_get: Any) -> None:
     """Verifica buscar processos por concurso success."""
     mock_get.return_value = _Resp(payload={"results": [{"uuid": "P1"}]})
@@ -81,7 +81,7 @@ def test_buscar_processos_por_concurso_success(mock_get: Any) -> None:
 
 
 @patch(
-    "convocacao.services.processo_convocacao_api_service.http_client.get",
+    "relatorios.services.processo_convocacao_api_service.http_client.get",
     side_effect=requests.RequestException("boom"),
 )
 def test_buscar_processos_por_concurso_request_exception(

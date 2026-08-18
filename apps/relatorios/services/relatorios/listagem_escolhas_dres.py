@@ -13,9 +13,9 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from candidatos.services.candidatos_api_service import CandidatosService
-from escolhas.services.escolhas_api_service import EscolhasService
 from relatorios.services.base.relatorio_base import RelatorioBase
+from relatorios.services.candidatos_api_service import CandidatosService
+from relatorios.services.escolhas_api_service import EscolhasService
 from relatorios.services.historico_classificacao import (
     aplicar_historico_classificacao,
 )

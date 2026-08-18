@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from concursos.services.concurso_api_service import ConcursoService
+from relatorios.services.concurso_api_service import ConcursoService
 
 
 class _Resp:
@@ -23,7 +23,7 @@ def _svc(base="http://api.local", timeout=15):
     return ConcursoService(base_url=base, timeout_seconds=timeout)
 
 
-@patch("concursos.services.concurso_api_service.http_client.post")
+@patch("relatorios.services.concurso_api_service.http_client.post")
 def test_buscar_extracao_dados_success(mock_post):
     mock_post.return_value = _Resp(
         payload={"concurso": {"nome": "Concurso X", "codigo": 1001}}
@@ -48,7 +48,7 @@ def test_buscar_extracao_dados_success(mock_post):
     )
 
 
-@patch("concursos.services.concurso_api_service.http_client.post")
+@patch("relatorios.services.concurso_api_service.http_client.post")
 def test_buscar_extracao_dados_com_dois_anos(mock_post):
     mock_post.return_value = _Resp(
         payload={
@@ -76,7 +76,7 @@ def test_buscar_extracao_dados_com_dois_anos(mock_post):
     )
 
 
-@patch("concursos.services.concurso_api_service.http_client.post")
+@patch("relatorios.services.concurso_api_service.http_client.post")
 def test_buscar_extracao_dados_sem_parametros(mock_post):
     mock_post.return_value = _Resp(
         payload={"2026": {"autorizacoes-publicadas": 500}}
@@ -95,7 +95,7 @@ def test_buscar_extracao_dados_sem_parametros(mock_post):
     )
 
 
-@patch("concursos.services.concurso_api_service.http_client.post")
+@patch("relatorios.services.concurso_api_service.http_client.post")
 def test_buscar_extracao_dados_http_error(mock_post):
     mock_post.return_value = _Resp(None, status_code=500)
     svc = _svc()
