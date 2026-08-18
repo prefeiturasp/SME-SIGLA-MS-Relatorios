@@ -1,4 +1,4 @@
-"""Módulo models/base."""
+"""Módulo models."""
 
 import uuid
 

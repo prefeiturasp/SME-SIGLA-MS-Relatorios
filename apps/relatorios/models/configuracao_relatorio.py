@@ -7,7 +7,8 @@ from typing import Any
 from auditlog.registry import auditlog
 from django.db import models
 
-from .base import BaseModel
+from core.models import BaseModel
+
 from .constants import TIPOS_RELATORIOS
 
 

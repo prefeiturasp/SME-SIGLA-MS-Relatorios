@@ -6,7 +6,7 @@ from typing import Any
 
 from django.db import models
 
-from .base import BaseModel
+from core.models import BaseModel
 
 
 class Parametrizacao(BaseModel):
