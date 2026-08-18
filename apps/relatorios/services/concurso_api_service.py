@@ -1,0 +1,86 @@
+"""
+Serviços para integração com API de concursos.
+"""
+
+import logging
+
+from requests import RequestException
+from sigla_sdk.context import get_correlation_id
+from sigla_sdk.http.api_client import http_client
+
+from core.api_service import BaseApiService
+
+logger = logging.getLogger(__name__)
+
+
+class ConcursoService(BaseApiService):
+    """Service para integração com API de concursos."""
+
+    def buscar_extracao_dados(
+        self,
+        concurso_uuid: str | None = None,
+        anos: list[int] | None = None,
+    ) -> dict:
+        """
+        Busca dados de extração do concurso.
+
+        Endpoint esperado do ms-concursos:
+            POST /api/v1/extracao-dados/
+
+        Args:
+            concurso_uuid: UUID do concurso (opcional)
+            anos: Anos de referência YYYY (opcional)
+
+        Returns:
+            Dados da API com extração do concurso
+
+        Raises:
+            RequestException: Em caso de erro na requisição
+        """
+        url = f"{self.base_url}/api/v1/extracao-dados/"
+        payload = {}
+        if concurso_uuid is not None:
+            payload["concurso_uuid"] = concurso_uuid
+        if anos is not None:
+            payload["anos"] = anos
+        logger.info(
+            "Buscando extração de dados em concursos",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "url": url,
+                "headers": self._headers,
+                "payload": payload,
+            },
+        )
+        try:
+            response = http_client.post(
+                url,
+                json=payload,
+                headers=self._headers,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+        except RequestException as exc:
+            logger.error(
+                "Erro ao buscar extração de dados em concursos "
+                "(concurso_uuid=%s, anos=%s): %s",
+                concurso_uuid,
+                anos,
+                exc,
+            )
+            raise
+
+        logger.info(
+            "Extração de dados em concursos buscada com sucesso",
+            extra={
+                "correlation_id": get_correlation_id(),
+                "method": "POST",
+                "url": url,
+                "headers": self._headers,
+                "payload": payload,
+                "status_code": response.status_code,
+                "response": str(response.json())[:100],
+            },
+        )
+        return response.json()

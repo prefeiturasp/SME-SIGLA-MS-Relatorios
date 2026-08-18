@@ -12,7 +12,7 @@ def healthcheck(_request):
 
 _core_urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/", include("relatorios.urls")),
+    path("api/v1/", include("relatorios.api.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/docs/",

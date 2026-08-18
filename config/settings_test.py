@@ -7,3 +7,5 @@ DATABASES = {
         "NAME": BASE_DIR / "test_db.sqlite3",
     }
 }
+
+ELASTIC_APM = {**ELASTIC_APM, "ENABLED": False}
