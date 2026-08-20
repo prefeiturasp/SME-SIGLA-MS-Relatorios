@@ -10,6 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from relatorios.models import Parametrizacao
+from relatorios.repository import ParametrizacaoRepository
 from relatorios.serializers import ParametrizacaoSerializer
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ class ParametrizacaoViewSet(
         Returns:
             Resposta HTTP com os dados solicitados.
         """
-        return self.queryset.first()
+        return ParametrizacaoRepository.obter_mais_recente()
 
     def create(self, request: Any, *args: Any, **kwargs: Any) -> Any:
         """Create.
