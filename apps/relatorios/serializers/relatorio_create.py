@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from relatorios.models import Relatorio
 from relatorios.models.constants import TIPOS_RELATORIOS
+from relatorios.repository import RelatorioRepository
 
 
 class RelatorioCreateSerializer(serializers.ModelSerializer):
@@ -63,6 +64,5 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
         """Persiste o relatório e atualiza os dados quando informados."""
         relatorio = super().save(**kwargs)
         if dados is not None:
-            relatorio.dados = dados
-            relatorio.save(update_fields=["dados"])
+            RelatorioRepository.atualizar(relatorio, dados=dados)
         return relatorio

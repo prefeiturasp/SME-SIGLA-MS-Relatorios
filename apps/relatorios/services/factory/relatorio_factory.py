@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from relatorios.models import ConfiguracaoRelatorio, Parametrizacao
+from relatorios.repository import (
+    ConfiguracaoRelatorioRepository,
+    ParametrizacaoRepository,
+)
 from relatorios.services.relatorios import (
     AtaEscolha,
     LaudaConvocacao,
@@ -49,10 +52,10 @@ class RelatorioFactory:
             ValueError: Se os dados informados forem inválidos.
         """
         classe = RelatorioFactory._MAPA.get(tipo_slug.upper())
-        configuracao = ConfiguracaoRelatorio.objects.get(
-            tipo=tipo_slug.upper()
+        configuracao = ConfiguracaoRelatorioRepository.obter_por_tipo(
+            tipo_slug.upper()
         )
-        parametrizacao = Parametrizacao.objects.first()
+        parametrizacao = ParametrizacaoRepository.obter_mais_recente()
         if not classe:
             raise ValueError(
                 f"O tipo '{tipo_slug}' não é um relatório válido."

@@ -6,7 +6,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand
 
-from relatorios.models import Relatorio
+from relatorios.repository import RelatorioRepository
 
 
 class Command(BaseCommand):
@@ -16,17 +16,17 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Roda a lógica principal do comando."""
-        total = Relatorio.objects.count()
+        total = RelatorioRepository.contar()
         self.stdout.write(
             self.style.SUCCESS(f"Removendo {total} relatórios...")
         )
         try:
             if total > 0:
-                Relatorio.objects.all().delete()
+                RelatorioRepository.excluir_todos()
                 self.stdout.write(
                     self.style.SUCCESS(f"✅ {total} relatórios removidos!")
                 )
-            restantes = Relatorio.objects.count()
+            restantes = RelatorioRepository.contar()
             if restantes == 0:
                 self.stdout.write(
                     self.style.SUCCESS(

@@ -44,10 +44,12 @@ def test_ajustar_logo_caminho_invalid_values_return_none() -> None:
 def test_relatorio_factory_invalid_type_raises_value_error() -> None:
     """Verifica relatorio factory invalid type raises value error."""
     with patch(
-        "relatorios.services.factory.relatorio_factory.ConfiguracaoRelatorio.objects.get"
+        "relatorios.services.factory.relatorio_factory."
+        "ConfiguracaoRelatorioRepository.obter_por_tipo"
     ) as mock_get:
         with patch(
-            "relatorios.services.factory.relatorio_factory.Parametrizacao.objects.first"
+            "relatorios.services.factory.relatorio_factory."
+            "ParametrizacaoRepository.obter_mais_recente"
         ) as mock_first:
             mock_get.return_value = object()
             mock_first.return_value = object()
