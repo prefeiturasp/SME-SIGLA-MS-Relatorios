@@ -31,7 +31,9 @@ class _Resp:
 
 def _svc(base: Any = "http://api.local", timeout: Any = 30) -> Any:
     """Svc."""
-    return AgendasService(base_url=base, timeout_seconds=timeout)
+    return AgendasService(
+        base_url=base, timeout_seconds=timeout, api_key="test-key"
+    )
 
 
 @patch("relatorios.services.agendas_api_service.http_client.get")
@@ -56,6 +58,7 @@ def test_buscar_agendas_success_with_pagination_and_headers(
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )

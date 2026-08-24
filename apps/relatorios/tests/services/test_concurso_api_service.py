@@ -20,7 +20,9 @@ class _Resp:
 
 
 def _svc(base="http://api.local", timeout=15):
-    return ConcursoService(base_url=base, timeout_seconds=timeout)
+    return ConcursoService(
+        base_url=base, timeout_seconds=timeout, api_key="test-key"
+    )
 
 
 @patch("relatorios.services.concurso_api_service.http_client.post")
@@ -43,6 +45,7 @@ def test_buscar_extracao_dados_success(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -71,6 +74,7 @@ def test_buscar_extracao_dados_com_dois_anos(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -90,6 +94,7 @@ def test_buscar_extracao_dados_sem_parametros(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )

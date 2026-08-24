@@ -4,6 +4,7 @@ Serviços para integração com API de concursos.
 
 import logging
 
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
@@ -15,6 +16,19 @@ logger = logging.getLogger(__name__)
 
 class ConcursoService(BaseApiService):
     """Service para integração com API de concursos."""
+
+    def __init__(
+        self,
+        base_url: str,
+        timeout_seconds: int = 30,
+        api_key: str | None = None,
+    ) -> None:
+        """Inicializa o serviço com a chave de API de concursos por padrão."""
+        super().__init__(
+            base_url,
+            timeout_seconds=timeout_seconds,
+            api_key=api_key or settings.CONCURSOS_API_KEY,
+        )
 
     def buscar_extracao_dados(
         self,

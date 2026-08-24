@@ -31,7 +31,9 @@ class _Resp:
 
 def _svc() -> Any:
     """Svc."""
-    return CandidatosService(base_url="http://api.local", timeout_seconds=5)
+    return CandidatosService(
+        base_url="http://api.local", timeout_seconds=5, api_key="test-key"
+    )
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
@@ -54,6 +56,7 @@ def test_buscar_habilitados_single_codigo(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -231,6 +234,7 @@ def test_buscar_por_uuids_success(mock_post: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -282,6 +286,7 @@ def test_buscar_extracao_dados_success(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -299,6 +304,7 @@ def test_buscar_extracao_dados_sem_parametros(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )

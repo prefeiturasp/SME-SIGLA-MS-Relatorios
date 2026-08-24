@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 import requests
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
@@ -16,6 +17,19 @@ logger = logging.getLogger(__name__)
 
 class ProcessoConvocacaoService(BaseApiService):
     """Service para integração com API de processos de convocação."""
+
+    def __init__(
+        self,
+        base_url: str,
+        timeout_seconds: int = 30,
+        api_key: str | None = None,
+    ) -> None:
+        """Inicializa o serviço com a chave de API de convocação por padrão."""
+        super().__init__(
+            base_url,
+            timeout_seconds=timeout_seconds,
+            api_key=api_key or settings.CONVOCACAO_API_KEY,
+        )
 
     def buscar_processo_convocacao(
         self, processo_uuid: str

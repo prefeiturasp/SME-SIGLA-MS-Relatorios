@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 import requests
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
@@ -16,6 +17,19 @@ logger = logging.getLogger(__name__)
 
 class ProcessosService(BaseApiService):
     """Serviço para operações de processos."""
+
+    def __init__(
+        self,
+        base_url: str,
+        timeout_seconds: int = 30,
+        api_key: str | None = None,
+    ) -> None:
+        """Inicializa o serviço com a chave de API de processos por padrão."""
+        super().__init__(
+            base_url,
+            timeout_seconds=timeout_seconds,
+            api_key=api_key or settings.PROCESSOS_API_KEY,
+        )
 
     def buscar_cargos_por_processo(
         self, processo_uuid: str

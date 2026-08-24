@@ -33,7 +33,9 @@ class _Resp:
 
 def _svc(base: Any = "http://api.local", timeout: Any = 12) -> Any:
     """Svc."""
-    return ProcessoConvocacaoService(base_url=base, timeout_seconds=timeout)
+    return ProcessoConvocacaoService(
+        base_url=base, timeout_seconds=timeout, api_key="test-key"
+    )
 
 
 @patch("relatorios.services.processo_convocacao_api_service.http_client.get")
@@ -48,6 +50,7 @@ def test_buscar_processo_convocacao_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -75,6 +78,7 @@ def test_buscar_processos_por_concurso_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=7,
     )

@@ -31,7 +31,9 @@ class _Resp:
 
 def _svc(base: Any = "http://api.local", timeout: Any = 15) -> Any:
     """Svc."""
-    return EscolhasService(base_url=base, timeout_seconds=timeout)
+    return EscolhasService(
+        base_url=base, timeout_seconds=timeout, api_key="test-key"
+    )
 
 
 @patch("relatorios.services.escolhas_api_service.http_client.get")
@@ -47,6 +49,7 @@ def test_buscar_vagas_escolas_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -102,6 +105,7 @@ def test_buscar_escolhas_por_candidatos_success_list_default_filter(
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=3,
     )
@@ -186,6 +190,7 @@ def test_buscar_extracao_dados_success(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -203,6 +208,7 @@ def test_buscar_extracao_dados_sem_parametros(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )

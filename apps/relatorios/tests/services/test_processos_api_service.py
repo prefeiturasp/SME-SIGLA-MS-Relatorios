@@ -31,7 +31,9 @@ class _Resp:
 
 def _svc(base: Any = "http://api.local", timeout: Any = 9) -> Any:
     """Svc."""
-    return ProcessosService(base_url=base, timeout_seconds=timeout)
+    return ProcessosService(
+        base_url=base, timeout_seconds=timeout, api_key="test-key"
+    )
 
 
 @patch("relatorios.services.processos_api_service.http_client.get")
@@ -46,6 +48,7 @@ def test_buscar_cargos_por_processo_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=4,
     )
