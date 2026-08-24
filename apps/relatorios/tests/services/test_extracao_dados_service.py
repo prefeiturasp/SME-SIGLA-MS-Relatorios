@@ -74,12 +74,7 @@ def test_extrair_por_concurso_chama_microservicos_com_filtros(
     }
     mock_concurso_cls.return_value = mock_concurso
 
-    service = ExtracaoDadosService(
-        convocacao_base_url="http://convocacao",
-        candidatos_base_url="http://candidatos",
-        escolhas_base_url="http://escolhas",
-        concursos_base_url="http://concursos",
-    )
+    service = ExtracaoDadosService()
     resultado = service.extrair(concurso_uuid=concurso_uuid, anos=[2026])
 
     assert resultado["concurso_uuid"] == concurso_uuid
@@ -188,12 +183,7 @@ def test_extrair_dois_anos_retorna_comparativo(
     }
     mock_concurso_cls.return_value = mock_concurso
 
-    service = ExtracaoDadosService(
-        convocacao_base_url="http://convocacao",
-        candidatos_base_url="http://candidatos",
-        escolhas_base_url="http://escolhas",
-        concursos_base_url="http://concursos",
-    )
+    service = ExtracaoDadosService()
     resultado = service.extrair(concurso_uuid=concurso_uuid, anos=[2026, 2025])
 
     comparativo = resultado["comparativo"]
@@ -245,12 +235,7 @@ def test_extrair_total_chama_microservicos_sem_parametros(
     }
     mock_concurso_cls.return_value = mock_concurso
 
-    service = ExtracaoDadosService(
-        convocacao_base_url="http://convocacao",
-        candidatos_base_url="http://candidatos",
-        escolhas_base_url="http://escolhas",
-        concursos_base_url="http://concursos",
-    )
+    service = ExtracaoDadosService()
     resultado = service.extrair_total()
 
     assert resultado["candidatos"]["habilitados"]["total"] == 50000
@@ -274,10 +259,7 @@ def test_extrair_ano_sem_processos_levanta_not_found(mock_processo_cls):
     )
     mock_processo_cls.return_value = mock_processo
 
-    service = ExtracaoDadosService(
-        convocacao_base_url="http://convocacao",
-        candidatos_base_url="http://candidatos",
-    )
+    service = ExtracaoDadosService()
 
     with pytest.raises(NotFound):
         service.extrair(
@@ -294,10 +276,7 @@ def test_extrair_concurso_sem_processos_levanta_not_found(mock_processo_cls):
     )
     mock_processo_cls.return_value = mock_processo
 
-    service = ExtracaoDadosService(
-        convocacao_base_url="http://convocacao",
-        candidatos_base_url="http://candidatos",
-    )
+    service = ExtracaoDadosService()
 
     with pytest.raises(NotFound):
         service.extrair(

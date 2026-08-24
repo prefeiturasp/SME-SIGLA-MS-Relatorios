@@ -10,26 +10,19 @@ from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from core.api_service import BaseApiService
-
 logger = logging.getLogger(__name__)
 
 
-class ProcessosService(BaseApiService):
+class ProcessosService:
     """Serviço para operações de processos."""
 
-    def __init__(
-        self,
-        base_url: str,
-        timeout_seconds: int = 30,
-        api_key: str | None = None,
-    ) -> None:
-        """Inicializa o serviço com a chave de API de processos por padrão."""
-        super().__init__(
-            base_url,
-            timeout_seconds=timeout_seconds,
-            api_key=api_key or settings.PROCESSOS_API_KEY,
-        )
+    base_url = settings.PROCESSOS_API_URL.rstrip("/")
+    timeout_seconds = 30
+    _headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        settings.API_KEY_HEADER: settings.PROCESSOS_API_KEY,
+    }
 
     def buscar_cargos_por_processo(
         self, processo_uuid: str

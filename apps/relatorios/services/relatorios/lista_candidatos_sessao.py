@@ -8,7 +8,6 @@ import tempfile
 from typing import Any
 
 import requests
-from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 
@@ -52,12 +51,8 @@ class ListaCandidatosSessao(RelatorioBase):
             **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
-        self.candidatos_service = CandidatosService(
-            base_url=settings.CANDIDATOS_API_URL
-        )
-        self.agendas_service = AgendasService(
-            base_url=settings.AGENDAS_API_URL
-        )
+        self.candidatos_service = CandidatosService()
+        self.agendas_service = AgendasService()
 
     def _fetch_candidatos(
         self, candidatos_uuids: list[str], order_by: str = "ranking_escolha"

@@ -9,26 +9,19 @@ from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from core.api_service import BaseApiService
-
 logger = logging.getLogger(__name__)
 
 
-class ConcursoService(BaseApiService):
+class ConcursoService:
     """Service para integração com API de concursos."""
 
-    def __init__(
-        self,
-        base_url: str,
-        timeout_seconds: int = 30,
-        api_key: str | None = None,
-    ) -> None:
-        """Inicializa o serviço com a chave de API de concursos por padrão."""
-        super().__init__(
-            base_url,
-            timeout_seconds=timeout_seconds,
-            api_key=api_key or settings.CONCURSOS_API_KEY,
-        )
+    base_url = settings.CONCURSOS_API_URL.rstrip("/")
+    timeout_seconds = 30
+    _headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        settings.API_KEY_HEADER: settings.CONCURSOS_API_KEY,
+    }
 
     def buscar_extracao_dados(
         self,

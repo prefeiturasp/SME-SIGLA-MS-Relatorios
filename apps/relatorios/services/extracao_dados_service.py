@@ -6,7 +6,6 @@ import logging
 import re
 from collections import defaultdict
 
-from django.conf import settings
 from rest_framework.exceptions import NotFound
 
 from relatorios.services.candidatos_api_service import CandidatosService
@@ -27,39 +26,12 @@ _DRE_NOME_REGEX = re.compile(
 class ExtracaoDadosService:
     """Agrega dados de convocação, candidatos, escolhas e concursos."""
 
-    def __init__(
-        self,
-        convocacao_base_url: str | None = None,
-        candidatos_base_url: str | None = None,
-        escolhas_base_url: str | None = None,
-        concursos_base_url: str | None = None,
-        timeout_seconds: int = 30,
-    ):
-        """Inicializa o serviço de extração de dados.
-
-        Args:
-            convocacao_base_url: URL base do microserviço de convocação
-            candidatos_base_url: URL base do microserviço de candidatos
-            escolhas_base_url: URL base do microserviço de escolhas
-            concursos_base_url: URL base do microserviço de concursos
-            timeout_seconds: Tempo limite em segundos para as requisições
-        """
-        convocacao_url = convocacao_base_url or settings.CONVOCACAO_API_URL
-        candidatos_url = candidatos_base_url or settings.CANDIDATOS_API_URL
-        escolhas_url = escolhas_base_url or settings.ESCOLHAS_API_URL
-        concursos_url = concursos_base_url or settings.CONCURSOS_API_URL
-        self.processo_service = ProcessoConvocacaoService(
-            base_url=convocacao_url, timeout_seconds=timeout_seconds
-        )
-        self.candidatos_service = CandidatosService(
-            base_url=candidatos_url, timeout_seconds=timeout_seconds
-        )
-        self.escolhas_service = EscolhasService(
-            base_url=escolhas_url, timeout_seconds=timeout_seconds
-        )
-        self.concurso_service = ConcursoService(
-            base_url=concursos_url, timeout_seconds=timeout_seconds
-        )
+    def __init__(self) -> None:
+        """Inicializa o serviço de extração de dados."""
+        self.processo_service = ProcessoConvocacaoService()
+        self.candidatos_service = CandidatosService()
+        self.escolhas_service = EscolhasService()
+        self.concurso_service = ConcursoService()
 
     def extrair_total(self) -> dict:
         """

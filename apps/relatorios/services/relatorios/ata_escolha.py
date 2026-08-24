@@ -14,7 +14,6 @@ from io import BytesIO
 from typing import Any
 
 import requests
-from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 
@@ -58,12 +57,7 @@ class AtaEscolha(RelatorioBase):
             **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
-        self.ata_service = AtaEscolhaService(
-            candidatos_base_url=settings.CANDIDATOS_API_URL,
-            processo_base_url=settings.CONVOCACAO_API_URL,
-            agendas_base_url=settings.AGENDAS_API_URL,
-            escolhas_base_url=settings.ESCOLHAS_API_URL,
-        )
+        self.ata_service = AtaEscolhaService()
 
     def _preencher_template(self, cabecalho_capa: Any, dados: Any) -> Any:
         """Preenche template com os dados informados."""

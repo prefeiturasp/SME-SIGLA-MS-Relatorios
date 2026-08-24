@@ -29,13 +29,7 @@ class _Resp:
 @pytest.fixture
 def service() -> Any:
     """Fixture para criar serviço com mocks."""
-    svc = AtaEscolhaService(
-        candidatos_base_url="http://candidatos",
-        processo_base_url="http://processos",
-        agendas_base_url="http://agendas",
-        escolhas_base_url="http://escolhas",
-        timeout_seconds=1,
-    )
+    svc = AtaEscolhaService()
     svc.candidatos_service = Mock()
     svc.processo_service = Mock()
     svc.agendas_service = Mock()

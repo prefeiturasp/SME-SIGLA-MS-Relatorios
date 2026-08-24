@@ -9,7 +9,6 @@ from io import BytesIO
 from typing import Any
 
 import requests
-from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -50,9 +49,7 @@ class LaudaVagas(RelatorioBase):
             **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
-        self.escolhas_service = EscolhasService(
-            base_url=settings.ESCOLHAS_API_URL
-        )
+        self.escolhas_service = EscolhasService()
 
     def gerar(
         self,

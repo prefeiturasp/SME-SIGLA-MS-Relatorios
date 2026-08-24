@@ -46,35 +46,12 @@ logger = logging.getLogger(__name__)
 class AtaEscolhaService:
     """Serviço para geração de Ata de Escolha."""
 
-    def __init__(
-        self,
-        candidatos_base_url: str = "https://example.com",
-        processo_base_url: str = "https://example.com",
-        agendas_base_url: str = "https://example.com",
-        escolhas_base_url: str = "https://example.com",
-        timeout_seconds: int = 30,
-    ) -> None:
-        """Inicializa a instância com os parâmetros informados.
-
-        Args:
-            candidatos_base_url: Candidatos base url.
-            processo_base_url: Processo base url.
-            agendas_base_url: Agendas base url.
-            escolhas_base_url: Escolhas base url.
-            timeout_seconds: Tempo máximo de espera, em segundos.
-        """
-        self.candidatos_service = CandidatosService(
-            base_url=candidatos_base_url, timeout_seconds=timeout_seconds
-        )
-        self.processo_service = ProcessoConvocacaoService(
-            base_url=processo_base_url, timeout_seconds=timeout_seconds
-        )
-        self.agendas_service = AgendasService(
-            base_url=agendas_base_url, timeout_seconds=timeout_seconds
-        )
-        self.escolhas_service = EscolhasService(
-            base_url=escolhas_base_url, timeout_seconds=timeout_seconds
-        )
+    def __init__(self) -> None:
+        """Inicializa a instância."""
+        self.candidatos_service = CandidatosService()
+        self.processo_service = ProcessoConvocacaoService()
+        self.agendas_service = AgendasService()
+        self.escolhas_service = EscolhasService()
 
     def _identificar_lacunas(self, classificacoes: list[int]) -> list[int]:
         """Identifica lacunas em uma lista de classificações.
