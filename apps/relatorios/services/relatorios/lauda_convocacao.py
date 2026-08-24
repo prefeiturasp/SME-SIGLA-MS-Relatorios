@@ -9,7 +9,6 @@ from io import BytesIO
 from typing import Any
 
 import requests
-from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 
@@ -49,12 +48,7 @@ class LaudaConvocacao(RelatorioBase):
             **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
-        self.lauda_service = LaudaConvocacaoService(
-            candidatos_base_url=settings.CANDIDATOS_API_URL,
-            processo_base_url=settings.CONVOCACAO_API_URL,
-            agendas_base_url=settings.AGENDAS_API_URL,
-            escolhas_base_url=settings.ESCOLHAS_API_URL,
-        )
+        self.lauda_service = LaudaConvocacaoService()
 
     def gerar(
         self,

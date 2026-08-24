@@ -29,16 +29,34 @@ class _Resp:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
-def _svc(base: Any = "http://api.local", timeout: Any = 9) -> Any:
+def _svc(
+    monkeypatch: Any,
+    base: Any = "http://api.local",
+    timeout: Any = 9,
+) -> Any:
     """Svc."""
-    return ProcessosService(base_url=base, timeout_seconds=timeout)
+    monkeypatch.setattr(ProcessosService, "base_url", base.rstrip("/"))
+    monkeypatch.setattr(ProcessosService, "timeout_seconds", timeout)
+    monkeypatch.setattr(
+        ProcessosService,
+        "_headers",
+        {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+    )
+    return ProcessosService()
 
 
 @patch("relatorios.services.processos_api_service.http_client.get")
-def test_buscar_cargos_por_processo_success(mock_get: Any) -> None:
+def test_buscar_cargos_por_processo_success(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar cargos por processo success."""
     mock_get.return_value = _Resp(payload={"cargos": []})
-    svc = _svc(timeout=4)
+    svc = _svc(monkeypatch, timeout=4)
     resp = svc.buscar_cargos_por_processo("P123")
     assert resp.status_code == 200
     mock_get.assert_called_once_with(
@@ -46,15 +64,19 @@ def test_buscar_cargos_por_processo_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=4,
     )
 
 
 @patch("relatorios.services.processos_api_service.http_client.get")
-def test_buscar_cargos_por_processo_http_error(mock_get: Any) -> None:
+def test_buscar_cargos_por_processo_http_error(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar cargos por processo http error."""
     mock_get.return_value = _Resp(None, status_code=502)
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_cargos_por_processo("PERR")

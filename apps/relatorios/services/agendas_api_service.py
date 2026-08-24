@@ -5,17 +5,24 @@ from __future__ import annotations
 import logging
 
 import requests
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from core.api_service import BaseApiService
-
 logger = logging.getLogger(__name__)
 
 
-class AgendasService(BaseApiService):
+class AgendasService:
     """Service para integração com API de agendas."""
+
+    base_url = settings.AGENDAS_API_URL.rstrip("/")
+    timeout_seconds = 30
+    _headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        settings.API_KEY_HEADER: settings.AGENDAS_API_KEY,
+    }
 
     def buscar_agendas(
         self,

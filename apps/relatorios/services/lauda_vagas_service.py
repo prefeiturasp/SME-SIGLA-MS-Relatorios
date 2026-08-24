@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from django.conf import settings
 from django.shortcuts import render
 
 from relatorios.services.escolhas_api_service import EscolhasService
@@ -20,9 +19,7 @@ class LaudaVagasService:
 
     def __init__(self) -> None:
         """Inicializa a instância com os parâmetros informados."""
-        self.escolhas_service = EscolhasService(
-            base_url=settings.ESCOLHAS_API_URL
-        )
+        self.escolhas_service = EscolhasService()
 
     def gerar_relatorio(self, processo_uuid: str, request: Any) -> Any:
         """Gera relatorio.

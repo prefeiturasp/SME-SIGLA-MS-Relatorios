@@ -31,16 +31,36 @@ class _Resp:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
-def _svc(base: Any = "http://api.local", timeout: Any = 12) -> Any:
+def _svc(
+    monkeypatch: Any,
+    base: Any = "http://api.local",
+    timeout: Any = 12,
+) -> Any:
     """Svc."""
-    return ProcessoConvocacaoService(base_url=base, timeout_seconds=timeout)
+    monkeypatch.setattr(
+        ProcessoConvocacaoService, "base_url", base.rstrip("/")
+    )
+    monkeypatch.setattr(ProcessoConvocacaoService, "timeout_seconds", timeout)
+    monkeypatch.setattr(
+        ProcessoConvocacaoService,
+        "_headers",
+        {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+    )
+    return ProcessoConvocacaoService()
 
 
 @patch("relatorios.services.processo_convocacao_api_service.http_client.get")
-def test_buscar_processo_convocacao_success(mock_get: Any) -> None:
+def test_buscar_processo_convocacao_success(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar processo convocacao success."""
     mock_get.return_value = _Resp(payload={"uuid": "P1"})
-    svc = _svc(timeout=5)
+    svc = _svc(monkeypatch, timeout=5)
     resp = svc.buscar_processo_convocacao("P1")
     assert resp.status_code == 200
     mock_get.assert_called_once_with(
@@ -48,25 +68,32 @@ def test_buscar_processo_convocacao_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
 
 
 @patch("relatorios.services.processo_convocacao_api_service.http_client.get")
-def test_buscar_processo_convocacao_http_error(mock_get: Any) -> None:
+def test_buscar_processo_convocacao_http_error(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar processo convocacao http error."""
     mock_get.return_value = _Resp(None, status_code=404)
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_processo_convocacao("PERR")
 
 
 @patch("relatorios.services.processo_convocacao_api_service.http_client.get")
-def test_buscar_processos_por_concurso_success(mock_get: Any) -> None:
+def test_buscar_processos_por_concurso_success(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar processos por concurso success."""
     mock_get.return_value = _Resp(payload={"results": [{"uuid": "P1"}]})
-    svc = _svc(timeout=7)
+    svc = _svc(monkeypatch, timeout=7)
     resp = svc.buscar_processos_por_concurso("CU1")
     assert resp.status_code == 200
     mock_get.assert_called_once_with(
@@ -75,6 +102,7 @@ def test_buscar_processos_por_concurso_success(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=7,
     )
@@ -86,16 +114,19 @@ def test_buscar_processos_por_concurso_success(mock_get: Any) -> None:
 )
 def test_buscar_processos_por_concurso_request_exception(
     mock_get: Any,
+    monkeypatch: Any,
 ) -> None:
     """Verifica buscar processos por concurso request exception."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.RequestException):
         svc.buscar_processos_por_concurso("CUERR")
 
 
-def test_separar_processos_por_principal_dict_results() -> None:
+def test_separar_processos_por_principal_dict_results(
+    monkeypatch: Any,
+) -> None:
     """Verifica separar processos por principal dict results."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_processo_convocacao = Mock(
         return_value=_Resp({"concurso_uuid": "CU1"})
     )
@@ -110,9 +141,11 @@ def test_separar_processos_por_principal_dict_results() -> None:
     assert set(outros) == {"PX", "PY"}
 
 
-def test_separar_processos_por_principal_list_shape() -> None:
+def test_separar_processos_por_principal_list_shape(
+    monkeypatch: Any,
+) -> None:
     """Verifica separar processos por principal list shape."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_processo_convocacao = Mock(
         return_value=_Resp({"concurso_uuid": "CU2"})
     )
@@ -125,9 +158,11 @@ def test_separar_processos_por_principal_list_shape() -> None:
     assert outros == ["PA", "PB"]
 
 
-def test_separar_processos_por_principal_single_object_wrapped() -> None:
+def test_separar_processos_por_principal_single_object_wrapped(
+    monkeypatch: Any,
+) -> None:
     """Verifica separar processos por principal single object wrapped."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_processo_convocacao = Mock(
         return_value=_Resp({"concurso_uuid": "CU3"})
     )
@@ -140,11 +175,11 @@ def test_separar_processos_por_principal_single_object_wrapped() -> None:
     assert outros == []
 
 
-def test_separar_processos_por_principal_missing_concurso_raises_value_error() -> (  # noqa: E501
-    None
-):
+def test_separar_processos_por_principal_missing_concurso_raises_value_error(  # noqa: E501
+    monkeypatch: Any,
+) -> None:
     """Verifica separar processos por principal missing concurso raises value."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_processo_convocacao = Mock(return_value=_Resp({}))
     processo_data = {"uuid": "PMAIN"}
     with pytest.raises(ValueError):

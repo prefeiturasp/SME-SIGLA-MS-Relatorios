@@ -29,17 +29,31 @@ class _Resp:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
-def _svc() -> Any:
+def _svc(monkeypatch: Any) -> Any:
     """Svc."""
-    return CandidatosService(base_url="http://api.local", timeout_seconds=5)
+    monkeypatch.setattr(CandidatosService, "base_url", "http://api.local")
+    monkeypatch.setattr(CandidatosService, "timeout_seconds", 5)
+    monkeypatch.setattr(
+        CandidatosService,
+        "_headers",
+        {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+    )
+    return CandidatosService()
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_buscar_habilitados_single_codigo(mock_get: Any) -> None:
+def test_buscar_habilitados_single_codigo(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar habilitados single codigo."""
     mock_resp = _Resp([{"uuid": "a"}])
     mock_get.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     resp = svc.buscar_habilitados(
         processo_uuid="proc1", codigo_cargo="123", ordering="ranking_escolha"
     )
@@ -54,17 +68,21 @@ def test_buscar_habilitados_single_codigo(mock_get: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_buscar_habilitados_multi_codigos_usa_in(mock_get: Any) -> None:
+def test_buscar_habilitados_multi_codigos_usa_in(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar habilitados multi codigos usa in."""
     mock_resp = _Resp([])
     mock_get.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados(processo_uuid="proc2", codigo_cargo=["111", "222"])
     called_kwargs = mock_get.call_args.kwargs
     assert called_kwargs["params"]["codigo_cargo__in"] == "111,222"
@@ -72,11 +90,14 @@ def test_buscar_habilitados_multi_codigos_usa_in(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_buscar_habilitados_http_error(mock_get: Any) -> None:
+def test_buscar_habilitados_http_error(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar habilitados http error."""
     mock_resp = _Resp(None, status_code=500)
     mock_get.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_habilitados(processo_uuid="proc1")
 
@@ -84,11 +105,12 @@ def test_buscar_habilitados_http_error(mock_get: Any) -> None:
 @patch("relatorios.services.candidatos_api_service.http_client.get")
 def test_buscar_habilitados_por_processos_e_classificacoes_success(
     mock_get: Any,
+    monkeypatch: Any,
 ) -> None:
     """Verifica buscar habilitados por processos e classificacoes success."""
     mock_resp = _Resp([{"uuid": "x"}])
     mock_get.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     resp = svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids=["p1", "p2"],
         classificacao=[1, 2],
@@ -108,11 +130,12 @@ def test_buscar_habilitados_por_processos_e_classificacoes_success(
 @patch("relatorios.services.candidatos_api_service.http_client.get")
 def test_buscar_habilitados_por_processos_e_classificacoes_http_error(
     mock_get: Any,
+    monkeypatch: Any,
 ) -> None:
     """Verifica buscar habilitados por processos e classificacoes http error."""
     mock_resp = _Resp(None, status_code=404)
     mock_get.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_habilitados_por_processos_e_classificacoes(
             processo_uuids="p1"
@@ -120,10 +143,13 @@ def test_buscar_habilitados_por_processos_e_classificacoes_http_error(
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_processo_uuid_single_list_uses_param(mock_get: Any) -> None:
+def test_bhpec_processo_uuid_single_list_uses_param(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec processo uuid single list uses param."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids=["only-one"]
     )
@@ -133,10 +159,13 @@ def test_bhpec_processo_uuid_single_list_uses_param(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_processo_uuid_csv_string_uses_in(mock_get: Any) -> None:
+def test_bhpec_processo_uuid_csv_string_uses_in(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec processo uuid csv string uses in."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids="p1,p2"
     )
@@ -146,10 +175,13 @@ def test_bhpec_processo_uuid_csv_string_uses_in(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_classificacao_single_list_sets_plain(mock_get: Any) -> None:
+def test_bhpec_classificacao_single_list_sets_plain(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec classificacao single list sets plain."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids=["p1", "p2"], classificacao=[7]
     )
@@ -159,10 +191,13 @@ def test_bhpec_classificacao_single_list_sets_plain(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_classificacao_csv_string_sets_in(mock_get: Any) -> None:
+def test_bhpec_classificacao_csv_string_sets_in(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec classificacao csv string sets in."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids="p1", classificacao="1,2"
     )
@@ -172,10 +207,13 @@ def test_bhpec_classificacao_csv_string_sets_in(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_classificacao_nna_single_list_sets_plain(mock_get: Any) -> None:
+def test_bhpec_classificacao_nna_single_list_sets_plain(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec classificacao nna single list sets plain."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids="p1", classificacao_nna=[3]
     )
@@ -185,10 +223,13 @@ def test_bhpec_classificacao_nna_single_list_sets_plain(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_classificacao_nna_csv_string_sets_in(mock_get: Any) -> None:
+def test_bhpec_classificacao_nna_csv_string_sets_in(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec classificacao nna csv string sets in."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids="p1", classificacao_nna="3,4"
     )
@@ -198,10 +239,13 @@ def test_bhpec_classificacao_nna_csv_string_sets_in(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_bhpec_codigo_cargo_string_paths(mock_get: Any) -> None:
+def test_bhpec_codigo_cargo_string_paths(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica bhpec codigo cargo string paths."""
     mock_get.return_value = _Resp([])
-    svc = _svc()
+    svc = _svc(monkeypatch)
     svc.buscar_habilitados_por_processos_e_classificacoes(
         processo_uuids="p1", codigo_cargo="10,20"
     )
@@ -217,11 +261,14 @@ def test_bhpec_codigo_cargo_string_paths(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.post")
-def test_buscar_por_uuids_success(mock_post: Any) -> None:
+def test_buscar_por_uuids_success(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar por uuids success."""
     mock_resp = _Resp({"results": [{"uuid": "a"}]})
     mock_post.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     resp = svc.buscar_por_uuids(uuids=["u1", "u2"], order_by="ranking")
     assert resp is mock_resp
     mock_post.assert_called_once_with(
@@ -231,23 +278,30 @@ def test_buscar_por_uuids_success(mock_post: Any) -> None:
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.post")
-def test_buscar_por_uuids_http_error(mock_post: Any) -> None:
+def test_buscar_por_uuids_http_error(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar por uuids http error."""
     mock_resp = _Resp(None, status_code=400)
     mock_post.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_por_uuids(uuids=["u1"])
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.post")
-def test_buscar_extracao_dados_success(mock_post):
+def test_buscar_extracao_dados_success(
+    mock_post,
+    monkeypatch: Any,
+) -> None:
     mock_resp = _Resp(
         {
             "habilitados": {"total": 100, "pcd": 5, "nna": 10, "geral": 85},
@@ -255,7 +309,7 @@ def test_buscar_extracao_dados_success(mock_post):
         }
     )
     mock_post.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     filtros = [
         {
             "ano": 2026,
@@ -282,15 +336,19 @@ def test_buscar_extracao_dados_success(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.post")
-def test_buscar_extracao_dados_sem_parametros(mock_post):
+def test_buscar_extracao_dados_sem_parametros(
+    mock_post,
+    monkeypatch: Any,
+) -> None:
     mock_post.return_value = _Resp({"habilitados": {"total": 50000}})
-    svc = _svc()
+    svc = _svc(monkeypatch)
     resp = svc.buscar_extracao_dados()
     assert resp == {"habilitados": {"total": 50000}}
     mock_post.assert_called_once_with(
@@ -299,16 +357,20 @@ def test_buscar_extracao_dados_sem_parametros(mock_post):
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.post")
-def test_buscar_extracao_dados_http_error(mock_post):
+def test_buscar_extracao_dados_http_error(
+    mock_post,
+    monkeypatch: Any,
+) -> None:
     mock_resp = _Resp(None, status_code=500)
     mock_post.return_value = mock_resp
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_extracao_dados(
             concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
@@ -320,7 +382,7 @@ def test_buscar_candidatos_por_agendas_success_extracts_both_formats(
     monkeypatch: Any,
 ) -> Any:
     """Verifica buscar candidatos por agendas success extracts both formats."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     agendas_response = _Resp(
         {
             "results": [
@@ -361,7 +423,7 @@ def test_buscar_candidatos_por_agendas_handles_request_exception(
     monkeypatch: Any,
 ) -> None:
     """Verifica buscar candidatos por agendas handles request exception."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     agendas_response = _Resp([{"uuid": "a1", "candidatos_uuids": ["z"]}])
 
     def _raise(*args: Any, **kwargs: Any) -> None:

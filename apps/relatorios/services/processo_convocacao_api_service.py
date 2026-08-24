@@ -5,17 +5,24 @@ from __future__ import annotations
 import logging
 
 import requests
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from core.api_service import BaseApiService
-
 logger = logging.getLogger(__name__)
 
 
-class ProcessoConvocacaoService(BaseApiService):
+class ProcessoConvocacaoService:
     """Service para integração com API de processos de convocação."""
+
+    base_url = settings.CONVOCACAO_API_URL.rstrip("/")
+    timeout_seconds = 30
+    _headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        settings.API_KEY_HEADER: settings.CONVOCACAO_API_KEY,
+    }
 
     def buscar_processo_convocacao(
         self, processo_uuid: str

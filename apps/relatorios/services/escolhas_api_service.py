@@ -5,17 +5,24 @@ from __future__ import annotations
 import logging
 
 import requests
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from core.api_service import BaseApiService
-
 logger = logging.getLogger(__name__)
 
 
-class EscolhasService(BaseApiService):
+class EscolhasService:
     """Serviço para operações de escolhas."""
+
+    base_url = settings.ESCOLHAS_API_URL.rstrip("/")
+    timeout_seconds = 30
+    _headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        settings.API_KEY_HEADER: settings.ESCOLHAS_API_KEY,
+    }
 
     def buscar_vagas_escolas(self, processo_uuid: str) -> requests.Response:
         """Busca vagas escolas.

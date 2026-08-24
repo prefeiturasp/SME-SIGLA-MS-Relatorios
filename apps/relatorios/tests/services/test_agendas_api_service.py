@@ -29,19 +29,35 @@ class _Resp:
             raise requests.HTTPError(f"status={self.status_code}")
 
 
-def _svc(base: Any = "http://api.local", timeout: Any = 30) -> Any:
+def _svc(
+    monkeypatch: Any,
+    base: Any = "http://api.local",
+    timeout: Any = 30,
+) -> Any:
     """Svc."""
-    return AgendasService(base_url=base, timeout_seconds=timeout)
+    monkeypatch.setattr(AgendasService, "base_url", base.rstrip("/"))
+    monkeypatch.setattr(AgendasService, "timeout_seconds", timeout)
+    monkeypatch.setattr(
+        AgendasService,
+        "_headers",
+        {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+    )
+    return AgendasService()
 
 
 @patch("relatorios.services.agendas_api_service.http_client.get")
 def test_buscar_agendas_success_with_pagination_and_headers(
     mock_get: Any,
+    monkeypatch: Any,
 ) -> None:
     """Verifica buscar agendas success with pagination and headers."""
     mock_resp = _Resp(payload={"results": []}, status_code=200)
     mock_get.return_value = mock_resp
-    svc = _svc(timeout=5)
+    svc = _svc(monkeypatch, timeout=5)
     resp = svc.buscar_agendas(
         processo_convocacao_uuid="PROC-1", page=2, page_size=50
     )
@@ -56,6 +72,7 @@ def test_buscar_agendas_success_with_pagination_and_headers(
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-API-Key": "test-key",
         },
         timeout=5,
     )
@@ -64,20 +81,24 @@ def test_buscar_agendas_success_with_pagination_and_headers(
 @patch("relatorios.services.agendas_api_service.http_client.get")
 def test_buscar_agendas_respects_trailing_slash_in_base_url(
     mock_get: Any,
+    monkeypatch: Any,
 ) -> None:
     """Verifica buscar agendas respects trailing slash in base url."""
     mock_get.return_value = _Resp(payload=[], status_code=200)
-    svc = _svc(base="http://api.local/", timeout=10)
+    svc = _svc(monkeypatch, base="http://api.local/", timeout=10)
     svc.buscar_agendas(processo_convocacao_uuid="P1")
     called_args = mock_get.call_args.args
     assert called_args[0] == "http://api.local/api/v1/agendas/"
 
 
 @patch("relatorios.services.agendas_api_service.http_client.get")
-def test_buscar_agendas_http_error_raises(mock_get: Any) -> None:
+def test_buscar_agendas_http_error_raises(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar agendas http error raises."""
     mock_get.return_value = _Resp(None, status_code=500)
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.HTTPError):
         svc.buscar_agendas(processo_convocacao_uuid="P-ERR")
 
@@ -86,8 +107,11 @@ def test_buscar_agendas_http_error_raises(mock_get: Any) -> None:
     "relatorios.services.agendas_api_service.http_client.get",
     side_effect=requests.RequestException("boom"),
 )
-def test_buscar_agendas_request_exception_is_propagated(mock_get: Any) -> None:
+def test_buscar_agendas_request_exception_is_propagated(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar agendas request exception is propagated."""
-    svc = _svc()
+    svc = _svc(monkeypatch)
     with pytest.raises(requests.RequestException):
         svc.buscar_agendas(processo_convocacao_uuid="P-EXC")

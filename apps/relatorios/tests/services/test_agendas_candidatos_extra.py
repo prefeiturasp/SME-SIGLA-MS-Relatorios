@@ -31,9 +31,14 @@ class _Resp:
 
 
 @patch("relatorios.services.agendas_api_service.http_client.get")
-def test_buscar_agenda_por_uuid_success_and_error(mock_get: Any) -> None:
+def test_buscar_agenda_por_uuid_success_and_error(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar agenda por uuid success and error."""
-    svc = AgendasService(base_url="http://api.local", timeout_seconds=9)
+    monkeypatch.setattr(AgendasService, "base_url", "http://api.local")
+    monkeypatch.setattr(AgendasService, "timeout_seconds", 9)
+    svc = AgendasService()
     ok = _Resp({"uuid": "ag1"})
     mock_get.return_value = ok
     assert svc.buscar_agenda_por_uuid("ag1") is ok
@@ -43,9 +48,14 @@ def test_buscar_agenda_por_uuid_success_and_error(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_candidatos_extra_endpoints_success(mock_get: Any) -> None:
+def test_candidatos_extra_endpoints_success(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica candidatos extra endpoints success."""
-    svc = CandidatosService(base_url="http://api.local", timeout_seconds=7)
+    monkeypatch.setattr(CandidatosService, "base_url", "http://api.local")
+    monkeypatch.setattr(CandidatosService, "timeout_seconds", 7)
+    svc = CandidatosService()
     mock_get.return_value = _Resp({"results": []})
     assert (
         svc.buscar_concurso_candidatos_por_processo("proc-1").status_code
@@ -64,9 +74,13 @@ def test_candidatos_extra_endpoints_success(mock_get: Any) -> None:
 
 
 @patch("relatorios.services.candidatos_api_service.http_client.get")
-def test_candidatos_extra_endpoints_http_error(mock_get: Any) -> None:
+def test_candidatos_extra_endpoints_http_error(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
     """Verifica candidatos extra endpoints http error."""
-    svc = CandidatosService(base_url="http://api.local")
+    monkeypatch.setattr(CandidatosService, "base_url", "http://api.local")
+    svc = CandidatosService()
     mock_get.return_value = _Resp(status_code=500)
     with pytest.raises(requests.HTTPError):
         svc.buscar_concurso_candidatos_por_processo("proc-err")
@@ -76,9 +90,12 @@ def test_candidatos_extra_endpoints_http_error(mock_get: Any) -> None:
         svc.buscar_eliminados_por_concurso("conc-err", "proc-err", 10, 1)
 
 
-def test_buscar_candidatos_por_agendas_invalid_payload_raises() -> None:
+def test_buscar_candidatos_por_agendas_invalid_payload_raises(
+    monkeypatch: Any,
+) -> None:
     """Verifica buscar candidatos por agendas invalid payload raises."""
-    svc = CandidatosService(base_url="http://api.local")
+    monkeypatch.setattr(CandidatosService, "base_url", "http://api.local")
+    svc = CandidatosService()
     broken = _Resp()
     broken.json = lambda: (_ for _ in ()).throw(ValueError("json quebrado"))  # type: ignore[method-assign]
     with pytest.raises(ValueError):

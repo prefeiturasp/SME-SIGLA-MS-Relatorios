@@ -165,6 +165,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
+        # "sigla_sdk.autenticacao.authentication.ApiKeyAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
@@ -255,17 +256,32 @@ SPECTACULAR_SETTINGS = {
 PROCESSOS_API_URL = os.environ.get(
     "PROCESSOS_API_URL", "http://localhost:8000"
 )
+PROCESSOS_API_KEY = os.environ.get("PROCESSOS_API_KEY", "api-key-processos")
+
 ESCOLHAS_API_URL = os.environ.get("ESCOLHAS_API_URL", "http://localhost:8004")
+ESCOLHAS_API_KEY = os.environ.get("ESCOLHAS_API_KEY", "api-key-escolhas")
+
 CONVOCACAO_API_URL = os.environ.get(
     "CONVOCACAO_API_URL", "http://localhost:8000"
 )
+CONVOCACAO_API_KEY = os.environ.get("CONVOCACAO_API_KEY", "api-key-convocacao")
+
 CANDIDATOS_API_URL = os.environ.get(
     "CANDIDATOS_API_URL", "http://localhost:8002"
 )
+CANDIDATOS_API_KEY = os.environ.get("CANDIDATOS_API_KEY", "api-key-candidatos")
+
 CONCURSOS_API_URL = os.environ.get(
     "CONCURSOS_API_URL", "http://localhost:8001"
 )
+CONCURSOS_API_KEY = os.environ.get("CONCURSOS_API_KEY", "api-key-concursos")
+
 AGENDAS_API_URL = os.environ.get("AGENDAS_API_URL", "http://localhost:8005")
+AGENDAS_API_KEY = os.environ.get("AGENDAS_API_KEY", "api-key-agendas")
+
+# API Key (autenticação entre microsserviços)
+API_KEY = os.environ.get("API_KEY", "api-key-relatorios")
+API_KEY_HEADER = os.environ.get("API_KEY_HEADER", "X-API-Key")
 
 # Relatórios configuration
 RELATORIO_CABECALHO_PADRAO = (

@@ -4,17 +4,24 @@ Serviços para integração com API de concursos.
 
 import logging
 
+from django.conf import settings
 from requests import RequestException
 from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
-from core.api_service import BaseApiService
-
 logger = logging.getLogger(__name__)
 
 
-class ConcursoService(BaseApiService):
+class ConcursoService:
     """Service para integração com API de concursos."""
+
+    base_url = settings.CONCURSOS_API_URL.rstrip("/")
+    timeout_seconds = 30
+    _headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        settings.API_KEY_HEADER: settings.CONCURSOS_API_KEY,
+    }
 
     def buscar_extracao_dados(
         self,

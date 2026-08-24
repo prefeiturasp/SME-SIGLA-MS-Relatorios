@@ -25,12 +25,7 @@ class _Resp:
 
 def _make_service_with_mocks() -> Any:
     """Make service with mocks."""
-    svc = LaudaConvocacaoService(
-        candidatos_base_url="http://candidatos",
-        processo_base_url="http://processos",
-        agendas_base_url="http://agendas",
-        timeout_seconds=1,
-    )
+    svc = LaudaConvocacaoService()
     svc.candidatos_service = Mock()
     svc.processo_service = Mock()
     svc.agendas_service = Mock()

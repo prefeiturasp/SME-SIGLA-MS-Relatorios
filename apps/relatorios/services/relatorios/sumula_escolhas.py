@@ -9,7 +9,6 @@ from io import BytesIO
 from typing import Any
 
 import requests
-from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -54,15 +53,9 @@ class SumulaEscolhas(RelatorioBase):
             **kwargs: Argumentos nomeados repassados ao comando.
         """
         super().__init__(**kwargs)
-        self.escolhas_service = EscolhasService(
-            base_url=settings.ESCOLHAS_API_URL
-        )
-        self.candidatos_service = CandidatosService(
-            base_url=settings.CANDIDATOS_API_URL
-        )
-        self.processos_service = ProcessosService(
-            base_url=settings.PROCESSOS_API_URL
-        )
+        self.escolhas_service = EscolhasService()
+        self.candidatos_service = CandidatosService()
+        self.processos_service = ProcessosService()
 
     def gerar(
         self,
