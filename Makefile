@@ -1,7 +1,7 @@
 # Makefile para o projeto SME-SIGLA-MS-Relatorios
 # Comandos úteis para desenvolvimento Django
 
-.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check
+.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check docs
 
 PEP_APP_DIRS = apps/relatorios apps/core
 
@@ -15,6 +15,7 @@ help:
 	@echo "  make test            - Executa todos os testes"
 	@echo "  make clean           - Remove arquivos temporários"
 	@echo "  make install         - Instala dependências"
+	@echo "  make docs            - Gera documentação HTML (Sphinx)"
 
 # Cria migrações do Django
 makemigrations:
@@ -83,3 +84,8 @@ pep484:
 
 # PEP 257 + PEP 484
 pep-check: pep257 pep484
+
+# Gera documentação HTML com Sphinx
+docs:
+	@echo "Gerando documentação Sphinx..."
+	sphinx-build -b html docs/ docs/_build/html
