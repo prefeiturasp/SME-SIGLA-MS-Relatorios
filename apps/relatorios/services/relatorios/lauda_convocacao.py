@@ -297,13 +297,13 @@ class LaudaConvocacao(RelatorioBase):
                         )
                         for i, cell in enumerate(row_cells):
                             if i in [0, 1, 3, 4, 5]:
-                                cell.paragraphs[
-                                    0
-                                ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                cell.paragraphs[0].alignment = (
+                                    WD_ALIGN_PARAGRAPH.CENTER
+                                )
                             else:
-                                cell.paragraphs[
-                                    0
-                                ].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                                cell.paragraphs[0].alignment = (
+                                    WD_ALIGN_PARAGRAPH.LEFT
+                                )
                             cell.paragraphs[0].runs[0].font.size = Pt(10)
                     doc.add_paragraph()
             if texto_final:
@@ -517,17 +517,24 @@ class LaudaConvocacao(RelatorioBase):
                     values.append(nome)
                     values.extend(
                         [
-                            "-"
-                            if str(cand.get("classificacao", "-")) == "None"
-                            else cand.get("classificacao", "-"),
-                            "-"
-                            if str(cand.get("classificacao_pcd", "-"))
-                            == "None"
-                            else cand.get("classificacao_pcd", "-"),
-                            "-"
-                            if str(cand.get("classificacao_nna", "-"))
-                            == "None"
-                            else cand.get("classificacao_nna", "-"),
+                            (
+                                "-"
+                                if str(cand.get("classificacao", "-"))
+                                == "None"
+                                else cand.get("classificacao", "-")
+                            ),
+                            (
+                                "-"
+                                if str(cand.get("classificacao_pcd", "-"))
+                                == "None"
+                                else cand.get("classificacao_pcd", "-")
+                            ),
+                            (
+                                "-"
+                                if str(cand.get("classificacao_nna", "-"))
+                                == "None"
+                                else cand.get("classificacao_nna", "-")
+                            ),
                         ]
                     )
                     for col, val in enumerate(values, start=1):

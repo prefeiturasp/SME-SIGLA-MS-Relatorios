@@ -194,9 +194,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar html success."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -219,9 +225,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar pdf success."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             sumula_escolhas_service,
             "render_to_pdf",
@@ -247,9 +259,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar xls success."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             sumula_escolhas_service,
             "render_to_xls",
@@ -275,9 +293,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar docx success."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             sumula_escolhas_service,
             "render_to_docx",
@@ -303,9 +327,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar com cabecalho padrao."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         sumula_escolhas_service.context["cabecalho_padrao"] = (
             "Cabeçalho Padrão"
         )
@@ -331,9 +361,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar filtra escolhas realizadas."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -345,7 +381,9 @@ class TestGerar:
             )
         assert isinstance(response, HttpResponse)
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.assert_called_once()
-        call_args = sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.call_args  # noqa: E501
+        call_args = (
+            sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.call_args
+        )  # noqa: E501
         assert call_args[1]["situacao"] is None
 
     def test_gerar_filtra_reconvocacao(
@@ -381,9 +419,15 @@ class TestGerar:
                 },
             },
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -473,9 +517,15 @@ class TestGerar:
                 },
             },
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -522,9 +572,15 @@ class TestGerar:
                 },
             }
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -540,7 +596,9 @@ class TestGerar:
         self, sumula_escolhas_service: Any, mock_cargos_response: Any
     ) -> None:
         """Verifica gerar erro buscar candidatos."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro API"
         )
@@ -558,8 +616,12 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar erro buscar escolhas."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = Exception(  # noqa: E501
             "Erro Escolhas"
         )
@@ -581,9 +643,15 @@ class TestGerar:
             {"candidato_uuid": None},
             {"candidato_uuid": "candidato-uuid-1"},
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -616,9 +684,15 @@ class TestGerar:
                 },
             }
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -645,11 +719,15 @@ class TestGerar:
                 "candidato": {"nome": "João", "rg": "123", "cpf": "123"},
             }
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
         sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = _MockResponse(  # noqa: E501
             candidatos_lista
         )
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -669,9 +747,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato csv."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             sumula_escolhas_service,
             "render_to_xls",
@@ -696,9 +780,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato doc."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             sumula_escolhas_service,
             "render_to_docx",
@@ -725,8 +815,12 @@ class TestGerar:
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -748,9 +842,15 @@ class TestGerar:
         cargos_response = _MockResponse(
             [{"cargo_codigo": 123, "cargo_nome": "Professor"}]
         )
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -772,8 +872,12 @@ class TestGerar:
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro Cargos"
         )
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -806,9 +910,15 @@ class TestGerar:
                 },
             }
         ]
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -847,8 +957,12 @@ class TestGerar:
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -891,8 +1005,12 @@ class TestGerar:
         sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -926,9 +1044,15 @@ class TestGerar:
                 ]
             }
         )
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),
@@ -1493,7 +1617,9 @@ class TestRenderToDocx:
         mock_paragraph.add_run.return_value = mock_run
         mock_paragraph._element = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
-        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
+        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = (
+            None  # noqa: E501
+        )
         mock_doc.add_paragraph.return_value = mock_paragraph
         mock_table = MagicMock()
         mock_header_row = MagicMock()
@@ -1504,7 +1630,9 @@ class TestRenderToDocx:
             mock_cell.paragraphs[0].runs = [MagicMock()]
             mock_cell._element = MagicMock()
             mock_cell._element.get_or_add_tcPr.return_value = MagicMock()
-            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = None  # noqa: E501
+            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = (
+                None  # noqa: E501
+            )
             mock_header_cells.append(mock_cell)
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
@@ -1612,7 +1740,9 @@ class TestRenderToDocx:
         mock_paragraph.add_run.return_value = mock_run
         mock_paragraph._element = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
-        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
+        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = (
+            None  # noqa: E501
+        )
         mock_doc.add_paragraph.return_value = mock_paragraph
         mock_table = MagicMock()
         mock_table.rows = [MagicMock()]
@@ -1776,9 +1906,15 @@ class TestIntegracaoCompleta:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica fluxo completo html."""
-        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        sumula_escolhas_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        sumula_escolhas_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        sumula_escolhas_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.sumula_escolhas.render",
             return_value=HttpResponse("OK"),

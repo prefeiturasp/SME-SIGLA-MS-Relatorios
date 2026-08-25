@@ -69,9 +69,9 @@ class ResultadoEscolha(RelatorioBase):
         request: Any,
         formato: str = "html",
         cabecalho: str = "",
-        agenda_uuid: str = None,
+        agenda_uuid: str | None = None,
         **kwargs: Any,
-    ) -> Any:  # type: ignore[assignment]
+    ) -> Any:
         """Gera o relatório de Resultado da Escolha SIM.
 
         Args:
@@ -114,9 +114,9 @@ class ResultadoEscolha(RelatorioBase):
         agendas_por_candidato = {}
         try:
             agendas_response = self.agendas_service.buscar_agendas(
-                processo_convocacao_uuid=str(processo_uuid)
-                if processo_uuid
-                else "",
+                processo_convocacao_uuid=(
+                    str(processo_uuid) if processo_uuid else ""
+                ),
                 page=1,
                 page_size=1000,
             )
@@ -186,20 +186,24 @@ class ResultadoEscolha(RelatorioBase):
                     )
             escolhas_data = todas_escolhas
         else:
-            tipo_escolha = (
+            situacao_filtro = (
                 "escolha"
                 if self.tipo == "RESULTADO_ESCOLHA_SIM"
-                else "nao-escolha"
-                if self.tipo == "RESULTADO_ESCOLHA_NAO"
-                else "reconvocacao"
-                if self.tipo == "RESULTADO_ESCOLHA_RECONVOCACAO"
-                else None
-            )  # type: ignore[assignment]
+                else (
+                    "nao-escolha"
+                    if self.tipo == "RESULTADO_ESCOLHA_NAO"
+                    else (
+                        "reconvocacao"
+                        if self.tipo == "RESULTADO_ESCOLHA_RECONVOCACAO"
+                        else None
+                    )
+                )
+            )
             try:
                 escolhas_data = (
                     self.escolhas_service.buscar_escolhas_por_candidatos(
                         candidato_uuids=concurso_candidato_uuids,
-                        situacao=tipo_escolha,
+                        situacao=situacao_filtro,
                     )
                 )
             except Exception as exc:
@@ -212,33 +216,37 @@ class ResultadoEscolha(RelatorioBase):
             candidato_uuid = escolha.get("candidato_uuid")
             if not candidato_uuid:
                 continue
-            candidato = candidatos_map.get(
+            candidato_info: dict | None = candidatos_map.get(
                 str(candidato_uuid)
             ) or candidatos_map.get(candidato_uuid)
-            if not candidato:
+            if not candidato_info:
                 continue
             candidato_obj = (
-                candidato.get("candidato", {})
-                if isinstance(candidato.get("candidato"), dict)
+                candidato_info.get("candidato", {})
+                if isinstance(candidato_info.get("candidato"), dict)
                 else {}
             )
-            classificacao_geral = candidato.get("classificacao") or "-"
-            classificacao_def = candidato.get("classificacao_pcd") or "-"
-            classificacao_nna = candidato.get("classificacao_nna") or "-"
+            classificacao_geral = candidato_info.get("classificacao") or "-"
+            classificacao_def = candidato_info.get("classificacao_pcd") or "-"
+            classificacao_nna = candidato_info.get("classificacao_nna") or "-"
             nome = candidato_obj.get("nome") or "-"
             rg = candidato_obj.get("rg") or "-"
             cpf = candidato_obj.get("cpf") or "-"
             agenda_data = agendas_por_candidato.get(str(candidato_uuid))
             if not agenda_data:
-                cargo_codigo_candidato = candidato.get("codigo_cargo") or ""
+                cargo_codigo_candidato = (
+                    candidato_info.get("codigo_cargo") or ""
+                )
                 for agenda in agendas_map.values():
                     if agenda.get("cargo_codigo") == cargo_codigo_candidato:
                         agenda_data = agenda
                         break
             if not agenda_data:
-                cargo_codigo_candidato = candidato.get("codigo_cargo") or ""
+                cargo_codigo_candidato = (
+                    candidato_info.get("codigo_cargo") or ""
+                )
                 cargo_descricao_candidato = (
-                    candidato.get("descricao_cargo") or ""
+                    candidato_info.get("descricao_cargo") or ""
                 )
                 if not cargo_descricao_candidato and cargo_codigo_candidato:
                     cargo_descricao_candidato = (
@@ -302,13 +310,15 @@ class ResultadoEscolha(RelatorioBase):
                 "cargo_codigo": cargo_codigo,
                 "cargo_descricao": cargo_descricao,
                 "tipo_escolha": tipo_escolha_nome,
-                "tipo_escolha_ordem": 1
-                if tipo_escolha_nome == "Escolha"
-                else 2
-                if tipo_escolha_nome == "Não Escolha"
-                else 3
-                if tipo_escolha_nome == "Reconvocação"
-                else 4,
+                "tipo_escolha_ordem": (
+                    1
+                    if tipo_escolha_nome == "Escolha"
+                    else (
+                        2
+                        if tipo_escolha_nome == "Não Escolha"
+                        else 3 if tipo_escolha_nome == "Reconvocação" else 4
+                    )
+                ),
                 "agenda_uuid": agenda_data.get("uuid"),
                 "agenda_nome": agenda_data.get("cargo_nome")
                 or cargo_descricao,
@@ -358,9 +368,7 @@ class ResultadoEscolha(RelatorioBase):
                 item_escolha["tipo_vaga"] = (
                     "definitiva"
                     if tipo_vaga_raw == "definitiva"
-                    else "precaria"
-                    if tipo_vaga_raw == "precaria"
-                    else ""
+                    else "precaria" if tipo_vaga_raw == "precaria" else ""
                 )
             else:
                 item_escolha["dre_nome"] = ""
@@ -479,9 +487,11 @@ class ResultadoEscolha(RelatorioBase):
                 agenda_chave = f"{agenda_nome}_{agenda_data}_{agenda_sessao}"
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
-                    "codigo": cargo_codigo
-                    if cargo_codigo and cargo_codigo != "-"
-                    else "",
+                    "codigo": (
+                        cargo_codigo
+                        if cargo_codigo and cargo_codigo != "-"
+                        else ""
+                    ),
                     "descricao": cargo_descricao,
                     "agendas": {},
                 }
@@ -501,20 +511,22 @@ class ResultadoEscolha(RelatorioBase):
             agendas_list = []
             for agenda_chave, agenda_data in cargo_data["agendas"].items():
                 agenda_data["candidatos"].sort(
-                    key=lambda e: e["classificacao_geral"]
-                    if isinstance(e["classificacao_geral"], int | float)
-                    and e["classificacao_geral"] != "-"
-                    else float("inf")
+                    key=lambda e: (
+                        e["classificacao_geral"]
+                        if isinstance(e["classificacao_geral"], int | float)
+                        and e["classificacao_geral"] != "-"
+                        else float("inf")
+                    )
                 )
                 agendas_list.append(agenda_data)
             agendas_list.sort(
                 key=lambda a: (
                     a["data"] if a["data"] != "-" else "",
-                    int(a["sessao"])
-                    if a["sessao"] != "-" and str(a["sessao"]).isdigit()
-                    else float("inf")
-                    if a["sessao"] != "-"
-                    else "",
+                    (
+                        int(a["sessao"])
+                        if a["sessao"] != "-" and str(a["sessao"]).isdigit()
+                        else float("inf") if a["sessao"] != "-" else ""
+                    ),
                 )
             )
             cargos_list.append(
@@ -558,9 +570,11 @@ class ResultadoEscolha(RelatorioBase):
                 agenda_chave = f"{agenda_nome}_{agenda_data}_{agenda_sessao}"
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
-                    "codigo": cargo_codigo
-                    if cargo_codigo and cargo_codigo != "-"
-                    else "",
+                    "codigo": (
+                        cargo_codigo
+                        if cargo_codigo and cargo_codigo != "-"
+                        else ""
+                    ),
                     "descricao": cargo_descricao,
                     "tipos_escolha": {},
                 }
@@ -599,20 +613,25 @@ class ResultadoEscolha(RelatorioBase):
                     "agendas"
                 ].items():
                     agenda_data["candidatos"].sort(
-                        key=lambda e: e["classificacao_geral"]
-                        if isinstance(e["classificacao_geral"], int | float)
-                        and e["classificacao_geral"] != "-"
-                        else float("inf")
+                        key=lambda e: (
+                            e["classificacao_geral"]
+                            if isinstance(
+                                e["classificacao_geral"], int | float
+                            )
+                            and e["classificacao_geral"] != "-"
+                            else float("inf")
+                        )
                     )
                     agendas_list.append(agenda_data)
                 agendas_list.sort(
                     key=lambda a: (
                         a["data"] if a["data"] != "-" else "",
-                        int(a["sessao"])
-                        if a["sessao"] != "-" and str(a["sessao"]).isdigit()
-                        else float("inf")
-                        if a["sessao"] != "-"
-                        else "",
+                        (
+                            int(a["sessao"])
+                            if a["sessao"] != "-"
+                            and str(a["sessao"]).isdigit()
+                            else float("inf") if a["sessao"] != "-" else ""
+                        ),
                     )
                 )
                 tipos_escolha_list.append(
@@ -949,33 +968,27 @@ class ResultadoEscolha(RelatorioBase):
                             sessao = agenda.get("sessao", "-")
                             for candidato in agenda.get("candidatos", []):
                                 ws.cell(row=row, column=1).value = sessao
-                                ws.cell(
-                                    row=row, column=2
-                                ).value = candidato.get(
-                                    "classificacao_geral", "-"
+                                ws.cell(row=row, column=2).value = (
+                                    candidato.get("classificacao_geral", "-")
                                 )
-                                ws.cell(
-                                    row=row, column=3
-                                ).value = candidato.get(
-                                    "classificacao_nna", "-"
+                                ws.cell(row=row, column=3).value = (
+                                    candidato.get("classificacao_nna", "-")
                                 )
-                                ws.cell(
-                                    row=row, column=4
-                                ).value = candidato.get(
-                                    "classificacao_def", "-"
+                                ws.cell(row=row, column=4).value = (
+                                    candidato.get("classificacao_def", "-")
                                 )
-                                ws.cell(
-                                    row=row, column=5
-                                ).value = candidato.get("nome", "-")
-                                ws.cell(
-                                    row=row, column=6
-                                ).value = candidato.get("rg", "-")
-                                ws.cell(
-                                    row=row, column=7
-                                ).value = candidato.get("cpf", "-")
-                                ws.cell(
-                                    row=row, column=8
-                                ).value = candidato.get("escolha", "-")
+                                ws.cell(row=row, column=5).value = (
+                                    candidato.get("nome", "-")
+                                )
+                                ws.cell(row=row, column=6).value = (
+                                    candidato.get("rg", "-")
+                                )
+                                ws.cell(row=row, column=7).value = (
+                                    candidato.get("cpf", "-")
+                                )
+                                ws.cell(row=row, column=8).value = (
+                                    candidato.get("escolha", "-")
+                                )
                                 for col in range(1, 9):
                                     cell = ws.cell(row=row, column=col)
                                     cell.border = border
@@ -1062,7 +1075,7 @@ class ResultadoEscolha(RelatorioBase):
                     for dre in cargo.get("resumo_dre_escola", []):
                         ws.merge_cells(f"A{row}:G{row}")
                         cell = ws[f"A{row}"]
-                        cell.value = f'  DRE - {dre.get('nome', '')}'
+                        cell.value = f"  DRE - {dre.get('nome', '')}"
                         cell.font = Font(bold=True, size=10)
                         cell.fill = PatternFill(
                             start_color="BDC3C7",
@@ -1354,13 +1367,13 @@ class ResultadoEscolha(RelatorioBase):
                                 )
                                 for i, cell in enumerate(row_cells):
                                     if i in [0, 1, 2, 3, 7]:
-                                        cell.paragraphs[
-                                            0
-                                        ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                        cell.paragraphs[0].alignment = (
+                                            WD_ALIGN_PARAGRAPH.CENTER
+                                        )
                                     else:
-                                        cell.paragraphs[
-                                            0
-                                        ].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                                        cell.paragraphs[0].alignment = (
+                                            WD_ALIGN_PARAGRAPH.LEFT
+                                        )
                                     cell.paragraphs[0].runs[0].font.size = Pt(
                                         10
                                     )
@@ -1418,13 +1431,13 @@ class ResultadoEscolha(RelatorioBase):
                             )
                             for i, cell in enumerate(row_cells):
                                 if i in [0, 1, 2, 3, 7]:
-                                    cell.paragraphs[
-                                        0
-                                    ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                    cell.paragraphs[0].alignment = (
+                                        WD_ALIGN_PARAGRAPH.CENTER
+                                    )
                                 else:
-                                    cell.paragraphs[
-                                        0
-                                    ].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                                    cell.paragraphs[0].alignment = (
+                                        WD_ALIGN_PARAGRAPH.LEFT
+                                    )
                                 cell.paragraphs[0].runs[0].font.size = Pt(10)
                 if cargo.get("resumo_dre_escola"):
                     p = doc.add_paragraph()
@@ -1446,7 +1459,7 @@ class ResultadoEscolha(RelatorioBase):
                     for dre in cargo.get("resumo_dre_escola", []):
                         p = doc.add_paragraph()
                         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                        run = p.add_run(f'  DRE - {dre.get('nome', '')}')
+                        run = p.add_run(f"  DRE - {dre.get('nome', '')}")
                         run.font.size = Pt(10)
                         run.font.bold = True
                         p_pr = p._element.get_or_add_pPr()

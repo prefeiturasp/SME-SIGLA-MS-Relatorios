@@ -435,10 +435,18 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar html success."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",
@@ -468,10 +476,18 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar pdf success."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch.object(
                 resultado_escolha_service,
@@ -504,10 +520,18 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar xls success."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             resultado_escolha_service,
             "render_to_xls",
@@ -534,10 +558,18 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar docx success."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             resultado_escolha_service,
             "render_to_docx",
@@ -567,9 +599,15 @@ class TestGerar:
         resultado_escolha_service.context["cabecalho_padrao"] = (
             "Cabeçalho Padrão"
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -626,7 +664,9 @@ class TestGerar:
         service.agendas_service.buscar_agendas.return_value = (
             mock_agendas_response
         )
-        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         escolhas_com_situacao = [
             {**item, "situacao": "escolha"} if isinstance(item, dict) else item
             for item in mock_escolhas_response
@@ -693,7 +733,9 @@ class TestGerar:
         service.agendas_service.buscar_agendas.return_value = (
             mock_agendas_response
         )
-        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
             [],
             mock_escolhas_response,
@@ -749,7 +791,9 @@ class TestGerar:
         service.agendas_service.buscar_agendas.return_value = (
             mock_agendas_response
         )
-        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
             [],
             [],
@@ -814,7 +858,9 @@ class TestGerar:
         service.agendas_service.buscar_agendas.return_value = (
             mock_agendas_response
         )
-        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [
             [],
             [
@@ -856,9 +902,15 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar escolha valor s."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             [{"candidato_uuid": "candidato-uuid-1", "situacao": "escolha"}],
             [],
@@ -894,8 +946,12 @@ class TestGerar:
         mock_agendas_response: Any,
     ) -> None:
         """Verifica gerar erro buscar candidatos."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro API"
         )
@@ -914,9 +970,15 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar erro buscar escolhas."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             Exception("Erro Escolhas"),
             [],
@@ -947,9 +1009,15 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar sem candidato na escolha."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             [{"candidato_uuid": None}, {"candidato_uuid": "candidato-uuid-1"}],
             [],
@@ -989,9 +1057,15 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar candidato nao encontrado."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             [{"candidato_uuid": "candidato-inexistente"}],
             [],
@@ -1030,11 +1104,15 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar agenda nao encontrada cria vazia."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = _MockResponse(  # noqa: E501
             {"results": []}
         )
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             [{"candidato_uuid": "candidato-uuid-1"}],
             [],
@@ -1074,8 +1152,12 @@ class TestGerar:
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.side_effect = Exception(  # noqa: E501
             "Erro Cargos"
         )
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1106,11 +1188,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar erro buscar agendas continua."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
         resultado_escolha_service.agendas_service.buscar_agendas.side_effect = Exception(  # noqa: E501
             "Erro Agendas"
         )
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1149,8 +1235,12 @@ class TestGerar:
                 "candidato": {"nome": "João", "rg": "123", "cpf": "123"},
             }
         ]
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
         resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = _MockResponse(  # noqa: E501
             candidatos_lista
         )
@@ -1187,11 +1277,15 @@ class TestGerar:
         cargos_response = _MockResponse(
             [{"cargo_codigo": "123", "cargo_nome": ""}]
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = cargos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            cargos_response  # noqa: E501
+        )
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = _MockResponse(  # noqa: E501
             {"results": []}
         )
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1225,9 +1319,15 @@ class TestGerar:
         cargos_response = _MockResponse(
             [{"cargo_codigo": 123, "cargo_nome": "Professor"}]
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1270,9 +1370,15 @@ class TestGerar:
                 ]
             }
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1317,9 +1423,15 @@ class TestGerar:
                 ]
             }
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            agenda_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1351,9 +1463,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato csv."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1384,9 +1502,15 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato doc."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = [  # noqa: E501
             mock_escolhas_response,
             [],
@@ -1446,8 +1570,12 @@ class TestGerar:
         service.agendas_service.buscar_agendas.return_value = (
             mock_agendas_response
         )
-        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",
@@ -1498,8 +1626,12 @@ class TestGerar:
         resultado_escolha_service.agendas_service.buscar_agendas.return_value = _MockResponse(  # noqa: E501
             {"results": []}
         )
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",
@@ -1540,10 +1672,18 @@ class TestGerar:
                 ]
             }
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            agenda_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",
@@ -1585,9 +1725,15 @@ class TestGerar:
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            agenda_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",
@@ -1634,9 +1780,15 @@ class TestGerar:
         resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = _MockResponse(  # noqa: E501
             []
         )
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            agenda_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",
@@ -1855,7 +2007,9 @@ class TestRenderToDocx:
         mock_paragraph.add_run.return_value = mock_run
         mock_paragraph._element = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
-        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
+        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = (
+            None  # noqa: E501
+        )
         mock_doc.add_paragraph.return_value = mock_paragraph
         mock_table = MagicMock()
         mock_header_row = MagicMock()
@@ -1866,7 +2020,9 @@ class TestRenderToDocx:
             mock_cell.paragraphs[0].runs = [MagicMock()]
             mock_cell._element = MagicMock()
             mock_cell._element.get_or_add_tcPr.return_value = MagicMock()
-            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = None  # noqa: E501
+            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = (
+                None  # noqa: E501
+            )
             mock_header_cells.append(mock_cell)
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
@@ -1985,7 +2141,9 @@ class TestRenderToDocx:
         mock_paragraph.add_run.return_value = mock_run
         mock_paragraph._element = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
-        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
+        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = (
+            None  # noqa: E501
+        )
         mock_doc.add_paragraph.return_value = mock_paragraph
         mock_table = MagicMock()
         mock_header_row = MagicMock()
@@ -1996,7 +2154,9 @@ class TestRenderToDocx:
             mock_cell.paragraphs[0].runs = [MagicMock()]
             mock_cell._element = MagicMock()
             mock_cell._element.get_or_add_tcPr.return_value = MagicMock()
-            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = None  # noqa: E501
+            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = (
+                None  # noqa: E501
+            )
             mock_header_cells.append(mock_cell)
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
@@ -2075,7 +2235,9 @@ class TestRenderToDocx:
         mock_paragraph.add_run.return_value = mock_run
         mock_paragraph._element = MagicMock()
         mock_paragraph._element.get_or_add_pPr.return_value = MagicMock()
-        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = None  # noqa: E501
+        mock_paragraph._element.get_or_add_pPr.return_value.find.return_value = (
+            None  # noqa: E501
+        )
         mock_doc.add_paragraph.return_value = mock_paragraph
         mock_table = MagicMock()
         mock_header_row = MagicMock()
@@ -2086,7 +2248,9 @@ class TestRenderToDocx:
             mock_cell.paragraphs[0].runs = [MagicMock()]
             mock_cell._element = MagicMock()
             mock_cell._element.get_or_add_tcPr.return_value = MagicMock()
-            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = None  # noqa: E501
+            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = (
+                None  # noqa: E501
+            )
             mock_header_cells.append(mock_cell)
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
@@ -2763,7 +2927,9 @@ class TestTiposAntigosCompatibilidade:
         service.agendas_service.buscar_agendas.return_value = (
             mock_agendas_response
         )
-        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [  # noqa: E501
             {"candidato_uuid": "candidato-uuid-1"}
         ]
@@ -2961,9 +3127,15 @@ class TestIntegracaoCompleta:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica fluxo completo html."""
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = mock_agendas_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            mock_agendas_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         escolhas_com_situacao = [
             {**item, "situacao": "escolha"} if isinstance(item, dict) else item
             for item in mock_escolhas_response
@@ -3019,10 +3191,18 @@ class TestIntegracaoCompleta:
                 ]
             }
         )
-        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = mock_cargos_response  # noqa: E501
-        resultado_escolha_service.agendas_service.buscar_agendas.return_value = agenda_response  # noqa: E501
-        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        resultado_escolha_service.processos_service.buscar_cargos_por_processo.return_value = (
+            mock_cargos_response  # noqa: E501
+        )
+        resultado_escolha_service.agendas_service.buscar_agendas.return_value = (
+            agenda_response  # noqa: E501
+        )
+        resultado_escolha_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        resultado_escolha_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with (
             patch(
                 "relatorios.services.relatorios.resultado_escolha.render",

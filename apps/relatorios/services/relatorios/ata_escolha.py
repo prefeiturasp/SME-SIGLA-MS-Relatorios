@@ -76,9 +76,9 @@ class AtaEscolha(RelatorioBase):
         request: Any,
         formato: str = "html",
         cabecalho: str = "",
-        cargo_codigo: str = None,
+        cargo_codigo: str | None = None,
         **kwargs: Any,
-    ) -> Any:  # type: ignore[assignment]
+    ) -> Any:
         """Gera o relatório de Ata de Escolha para um único cargo.
 
         Args:
@@ -397,13 +397,13 @@ class AtaEscolha(RelatorioBase):
                         )
                         for i, cell in enumerate(row_cells):
                             if i < 6 or (i >= 7 and i < 12):
-                                cell.paragraphs[
-                                    0
-                                ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                cell.paragraphs[0].alignment = (
+                                    WD_ALIGN_PARAGRAPH.CENTER
+                                )
                             else:
-                                cell.paragraphs[
-                                    0
-                                ].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                                cell.paragraphs[0].alignment = (
+                                    WD_ALIGN_PARAGRAPH.LEFT
+                                )
                             cell.paragraphs[0].runs[0].font.size = Pt(7)
                     doc.add_paragraph()
             buffer = BytesIO()
@@ -584,15 +584,23 @@ class AtaEscolha(RelatorioBase):
                         else {}
                     )
                     values = [
-                        "-"
-                        if str(cand.get("classificacao", "-")) == "None"
-                        else str(cand.get("classificacao", "-")),
-                        "-"
-                        if str(cand.get("classificacao_pcd", "-")) == "None"
-                        else str(cand.get("classificacao_pcd", "-")),
-                        "-"
-                        if str(cand.get("classificacao_nna", "-")) == "None"
-                        else str(cand.get("classificacao_nna", "-")),
+                        (
+                            "-"
+                            if str(cand.get("classificacao", "-")) == "None"
+                            else str(cand.get("classificacao", "-"))
+                        ),
+                        (
+                            "-"
+                            if str(cand.get("classificacao_pcd", "-"))
+                            == "None"
+                            else str(cand.get("classificacao_pcd", "-"))
+                        ),
+                        (
+                            "-"
+                            if str(cand.get("classificacao_nna", "-"))
+                            == "None"
+                            else str(cand.get("classificacao_nna", "-"))
+                        ),
                     ]
                     rf = (
                         cand.get("rf", "")

@@ -674,8 +674,8 @@ def test_processar_ata_escolha_ordem_escolha_com_status_especial(
         candidatos,
         processo_data={"concurso_uuid": "cu1"},
     )
-    service.candidatos_service.buscar_habilitados_por_processos_e_classificacoes.side_effect = (  # noqa: E501
-        lambda **kwargs: _Resp(
+    service.candidatos_service.buscar_habilitados_por_processos_e_classificacoes.side_effect = lambda **kwargs: (  # noqa: E501
+        _Resp(
             [
                 {
                     "uuid": "faltante_nna",

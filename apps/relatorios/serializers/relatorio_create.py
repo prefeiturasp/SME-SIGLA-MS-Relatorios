@@ -44,7 +44,7 @@ class RelatorioCreateSerializer(serializers.ModelSerializer):
         tipos_validos = [choice[0] for choice in TIPOS_RELATORIOS]
         if value not in tipos_validos:
             raise serializers.ValidationError(
-                f'Tipo inválido. Tipos válidos: {', '.join(tipos_validos)}'
+                f"Tipo inválido. Tipos válidos: {', '.join(tipos_validos)}"
             )
         return value
 

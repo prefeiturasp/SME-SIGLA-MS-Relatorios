@@ -5,6 +5,8 @@ Serviço de orquestração para extração de dados agregados de microserviços.
 import logging
 import re
 from collections import defaultdict
+from datetime import date
+from typing import Any
 
 from rest_framework.exceptions import NotFound
 
@@ -177,10 +179,11 @@ class ExtracaoDadosService:
         return processos
 
     @staticmethod
-    def _extrair_lista(data) -> list[dict]:
+    def _extrair_lista(data: Any) -> list[dict]:
         """Extrai a lista de processos de convocação."""
         if isinstance(data, dict) and "results" in data:
-            return data["results"]
+            resultados: list[dict] = data["results"]
+            return resultados
         if isinstance(data, list):
             return data
         if isinstance(data, dict):
@@ -233,7 +236,7 @@ class ExtracaoDadosService:
         if isinstance(data_convocacao, str):
             return int(data_convocacao[:4])
 
-        if hasattr(data_convocacao, "year"):
+        if isinstance(data_convocacao, date):
             return data_convocacao.year
 
         return None

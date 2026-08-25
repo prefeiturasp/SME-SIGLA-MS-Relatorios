@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import requests
 from django.conf import settings
@@ -292,7 +293,7 @@ class CandidatosService:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/habilitados/extracao-dados/"
-        payload = {}
+        payload: dict[str, Any] = {}
         if concurso_uuid is not None:
             payload["concurso_uuid"] = concurso_uuid
         if filtros is not None:
@@ -336,7 +337,7 @@ class CandidatosService:
                 "response": str(response.json())[:100],
             },
         )
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     def buscar_candidatos_por_agendas(
         self,

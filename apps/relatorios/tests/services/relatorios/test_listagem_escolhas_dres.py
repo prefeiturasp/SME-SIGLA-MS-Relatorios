@@ -174,8 +174,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar html success."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.listagem_escolhas_dres.render",
             return_value=HttpResponse("OK"),
@@ -198,8 +202,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar pdf success."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             listagem_escolhas_dres_service,
             "render_to_pdf",
@@ -224,8 +232,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar xls success."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             listagem_escolhas_dres_service,
             "render_to_xls",
@@ -250,8 +262,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar docx success."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         mock_response = HttpResponse(
             b"DOCX",
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -282,8 +298,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar com cabecalho padrao."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         listagem_escolhas_dres_service.context["cabecalho_padrao"] = (
             "Cabeçalho Padrão"
         )
@@ -321,7 +341,9 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar erro buscar escolhas."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.side_effect = Exception(  # noqa: E501
             "Erro Escolhas"
         )
@@ -338,7 +360,9 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar escolha sem candidato uuid."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [  # noqa: E501
             {"candidato_uuid": None},
             {"candidato_uuid": "candidato-uuid-1"},
@@ -360,7 +384,9 @@ class TestGerar:
         mock_candidatos_response: Any,
     ) -> None:
         """Verifica gerar candidato nao encontrado."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
         listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = [  # noqa: E501
             {
                 "candidato_uuid": "candidato-inexistente",
@@ -393,7 +419,9 @@ class TestGerar:
         listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = _MockResponse(  # noqa: E501
             candidatos_lista
         )
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.listagem_escolhas_dres.render",
             return_value=HttpResponse("OK"),
@@ -412,8 +440,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato csv."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             listagem_escolhas_dres_service,
             "render_to_xls",
@@ -437,8 +469,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato xlsx."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch.object(
             listagem_escolhas_dres_service,
             "render_to_xls",
@@ -462,8 +498,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato doc."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         mock_response = HttpResponse(
             b"DOCX",
             content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -490,8 +530,12 @@ class TestGerar:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica gerar formato json."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         response, dados = listagem_escolhas_dres_service.gerar(
             processo_uuid="proc-123", request=_make_request(), formato="json"
         )
@@ -532,8 +576,12 @@ class TestGerar:
                 },
             },
         ]
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.listagem_escolhas_dres.render",
             return_value=HttpResponse("OK"),
@@ -562,8 +610,12 @@ class TestGerar:
                 "vaga_escola": None,
             }
         ]
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.listagem_escolhas_dres.render",
             return_value=HttpResponse("OK"),
@@ -597,8 +649,12 @@ class TestGerar:
                 },
             }
         ]
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = escolhas  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            escolhas  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.listagem_escolhas_dres.render",
             return_value=HttpResponse("OK"),
@@ -908,7 +964,9 @@ class TestRenderToDocx:
             mock_cell.paragraphs[0].runs = [MagicMock()]
             mock_cell._element = MagicMock()
             mock_cell._element.get_or_add_tcPr.return_value = MagicMock()
-            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = None  # noqa: E501
+            mock_cell._element.get_or_add_tcPr.return_value.find.return_value = (
+                None  # noqa: E501
+            )
             mock_header_cells.append(mock_cell)
         mock_header_row.cells = mock_header_cells
         mock_table.rows = [mock_header_row]
@@ -1406,8 +1464,12 @@ class TestIntegracaoCompleta:
         mock_escolhas_response: Any,
     ) -> None:
         """Verifica fluxo completo html."""
-        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = mock_candidatos_response  # noqa: E501
-        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = mock_escolhas_response  # noqa: E501
+        listagem_escolhas_dres_service.candidatos_service.buscar_concurso_candidatos_por_processo.return_value = (
+            mock_candidatos_response  # noqa: E501
+        )
+        listagem_escolhas_dres_service.escolhas_service.buscar_escolhas_por_candidatos.return_value = (
+            mock_escolhas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.relatorios.listagem_escolhas_dres.render",
             return_value=HttpResponse("OK"),

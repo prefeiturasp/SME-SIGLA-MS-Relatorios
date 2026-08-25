@@ -1,7 +1,7 @@
 # Makefile para o projeto SME-SIGLA-MS-Relatorios
 # Comandos úteis para desenvolvimento Django
 
-.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install format lint check docs
+.PHONY: help pep257 pep484 pep-check makemigrations migrate runserver coverage test clean install pre-commit-install pre-commit format lint check docs
 
 PEP_APP_DIRS = apps/relatorios apps/core
 
@@ -56,6 +56,16 @@ clean:
 install:
 	@echo "Instalando dependências..."
 	pip install -r requirements/local.txt
+
+# Configura hooks do pre-commit no repositório local
+pre-commit-install:
+	@echo "Instalando hooks do pre-commit..."
+	pre-commit install
+
+# Roda pre-commit em todos os arquivos
+pre-commit:
+	@echo "Executando pre-commit em todos os arquivos..."
+	pre-commit run --all-files
 
 # Formata o código (ruff auto-fix + format)
 format:

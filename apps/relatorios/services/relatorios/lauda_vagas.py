@@ -479,9 +479,9 @@ class LaudaVagas(RelatorioBase):
                     for i, header in enumerate(headers):
                         cell = header_cells[i]
                         cell.text = header
-                        cell.paragraphs[
-                            0
-                        ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        cell.paragraphs[0].alignment = (
+                            WD_ALIGN_PARAGRAPH.CENTER
+                        )
                         cell.paragraphs[0].runs[0].font.bold = True
                         cell.paragraphs[0].runs[0].font.size = Pt(10)
                         tc_pr = cell._element.get_or_add_tcPr()
@@ -504,13 +504,13 @@ class LaudaVagas(RelatorioBase):
                         row_cells[4].text = str(vaga.get("vagas_precarias", 0))
                         for i, cell in enumerate(row_cells):
                             if i in [3, 4]:
-                                cell.paragraphs[
-                                    0
-                                ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                                cell.paragraphs[0].alignment = (
+                                    WD_ALIGN_PARAGRAPH.CENTER
+                                )
                             else:
-                                cell.paragraphs[
-                                    0
-                                ].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                                cell.paragraphs[0].alignment = (
+                                    WD_ALIGN_PARAGRAPH.LEFT
+                                )
                             cell.paragraphs[0].runs[0].font.size = Pt(10)
                     doc.add_paragraph()
             if texto_final:
