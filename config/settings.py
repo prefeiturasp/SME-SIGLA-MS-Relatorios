@@ -192,22 +192,26 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "json",
         },
+        "elasticapm": {
+            "level": "INFO",
+            "class": "elasticapm.handlers.logging.LoggingHandler",
+        },
     },
     "loggers": {
         # Logger do Django (Framework)
         "django": {
-            "handlers": ["console"],
+            "handlers": ["console", "elasticapm"],
             "level": "INFO",
             "propagate": False,
         },
         # Seu Logger de Aplicação (substitua pelo nome do seu app)
         "relatorios": {
-            "handlers": ["console"],
+            "handlers": ["console", "elasticapm"],
             "level": "DEBUG",
             "propagate": False,
         },
         "django.server": {
-            "handlers": ["console"],
+            "handlers": ["console", "elasticapm"],
             "level": "ERROR",  # Alterando para ERROR, ele para de mostrar os GET/POST/OPTIONS de rotina (INFO)
             "propagate": False,
         },
