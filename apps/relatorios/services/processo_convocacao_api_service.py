@@ -124,7 +124,7 @@ class ProcessoConvocacaoService:
                 "response": str(response.json())[:100],
             },
         )
-        return response
+        return response  # type: ignore[no-any-return]
 
     def separar_processos_por_principal(
         self, processo_data: dict
@@ -150,7 +150,7 @@ class ProcessoConvocacaoService:
         concurso_uuid = processo_data.get("concurso_uuid")
         if not concurso_uuid:
             raise ValueError(
-                f'Processo {processo_data.get('uuid')} não possui concurso_uuid'  # noqa: E501
+                f"Processo {processo_data.get('uuid')} não possui concurso_uuid"  # noqa: E501
             )
         response_processos = self.buscar_processos_por_concurso(concurso_uuid)
         processos_data = response_processos.json()

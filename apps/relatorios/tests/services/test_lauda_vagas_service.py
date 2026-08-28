@@ -104,7 +104,9 @@ class TestGerarRelatorio:
         self, lauda_vagas_service: Any, mock_vagas_response: Any
     ) -> None:
         """Verifica gerar relatorio html success."""
-        lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = mock_vagas_response  # noqa: E501
+        lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = (
+            mock_vagas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),
@@ -154,7 +156,9 @@ class TestGerarRelatorio:
         self, lauda_vagas_service: Any, mock_vagas_response: Any
     ) -> None:
         """Verifica gerar relatorio processo uuid none."""
-        lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = mock_vagas_response  # noqa: E501
+        lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = (
+            mock_vagas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),
@@ -478,7 +482,9 @@ class TestIntegracaoCompleta:
         self, lauda_vagas_service: Any, mock_vagas_response: Any
     ) -> None:
         """Verifica fluxo completo html."""
-        lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = mock_vagas_response  # noqa: E501
+        lauda_vagas_service.escolhas_service.buscar_vagas_escolas.return_value = (
+            mock_vagas_response  # noqa: E501
+        )
         with patch(
             "relatorios.services.lauda_vagas_service.render",
             return_value=HttpResponse("OK"),

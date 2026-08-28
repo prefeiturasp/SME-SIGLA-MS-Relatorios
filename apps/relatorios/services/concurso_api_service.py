@@ -3,6 +3,7 @@ Serviços para integração com API de concursos.
 """
 
 import logging
+from typing import Any
 
 from django.conf import settings
 from requests import RequestException
@@ -45,7 +46,7 @@ class ConcursoService:
             RequestException: Em caso de erro na requisição
         """
         url = f"{self.base_url}/api/v1/extracao-dados/"
-        payload = {}
+        payload: dict[str, Any] = {}
         if concurso_uuid is not None:
             payload["concurso_uuid"] = concurso_uuid
         if anos is not None:
@@ -90,4 +91,4 @@ class ConcursoService:
                 "response": str(response.json())[:100],
             },
         )
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]

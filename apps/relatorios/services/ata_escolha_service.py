@@ -197,9 +197,11 @@ class AtaEscolhaService:
                     candidato["status_especial"] = (
                         "JÁ CONVOCADO - LEI 13.398/02"
                         if candidato.get("classificacao_nna") is not None
-                        else "JÁ CONVOCADO - LEI 15.939/13"
-                        if candidato.get("classificacao_pcd") is not None
-                        else ""
+                        else (
+                            "JÁ CONVOCADO - LEI 15.939/13"
+                            if candidato.get("classificacao_pcd") is not None
+                            else ""
+                        )
                     )
                 logger.info(
                     "Encontrados %d candidatos Gerais faltantes",
@@ -256,7 +258,7 @@ class AtaEscolhaService:
                 self.escolhas_service.buscar_escolhas_por_candidatos(
                     candidato_uuids=candidato_uuids, situacao=None
                 )
-            )  # type: ignore[arg-type]
+            )
             for escolha in escolhas_data:
                 candidato_uuid = escolha.get("candidato_uuid")
                 if candidato_uuid:
@@ -441,9 +443,7 @@ class AtaEscolhaService:
             codigo_cargo_param = (
                 codigos_cargo[0]
                 if len(codigos_cargo) == 1
-                else codigos_cargo
-                if codigos_cargo
-                else None
+                else codigos_cargo if codigos_cargo else None
             )
             logger.info(
                 "Códigos de cargo extraídos das agendas: %s",
@@ -960,28 +960,40 @@ class AtaEscolhaService:
                 "cargos": [],
                 "intervalos_classificacoes": {
                     "pcd": {
-                        "min": min(classificacoes_pcd)
-                        if classificacoes_pcd
-                        else 0,
-                        "max": max(classificacoes_pcd)
-                        if classificacoes_pcd
-                        else 0,
+                        "min": (
+                            min(classificacoes_pcd)
+                            if classificacoes_pcd
+                            else 0
+                        ),
+                        "max": (
+                            max(classificacoes_pcd)
+                            if classificacoes_pcd
+                            else 0
+                        ),
                     },
                     "geral": {
-                        "min": min(classificacoes_geral)
-                        if classificacoes_geral
-                        else 0,
-                        "max": max(classificacoes_geral)
-                        if classificacoes_geral
-                        else 0,
+                        "min": (
+                            min(classificacoes_geral)
+                            if classificacoes_geral
+                            else 0
+                        ),
+                        "max": (
+                            max(classificacoes_geral)
+                            if classificacoes_geral
+                            else 0
+                        ),
                     },
                     "nna": {
-                        "min": min(classificacoes_nna)
-                        if classificacoes_nna
-                        else 0,
-                        "max": max(classificacoes_nna)
-                        if classificacoes_nna
-                        else 0,
+                        "min": (
+                            min(classificacoes_nna)
+                            if classificacoes_nna
+                            else 0
+                        ),
+                        "max": (
+                            max(classificacoes_nna)
+                            if classificacoes_nna
+                            else 0
+                        ),
                     },
                 },
             }

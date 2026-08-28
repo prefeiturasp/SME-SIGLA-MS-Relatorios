@@ -233,7 +233,7 @@ class ListagemEscolhasDres(RelatorioBase):
             ws.merge_cells(f"A{row}:O{row}")
             cell = ws[f"A{row}"]
             cell.value = (
-                f'Total de escolhas: {len(context.get('escolhas', []))}'
+                f"Total de escolhas: {len(context.get('escolhas', []))}"
             )
             cell.font = Font(bold=True, size=9)
             cell.alignment = Alignment(horizontal="right", vertical="center")
@@ -406,19 +406,19 @@ class ListagemEscolhasDres(RelatorioBase):
                 row_cells[14].text = str(tipo_vaga)
                 if tipo_vaga == "D":
                     row_cells[14].paragraphs[0].runs[0].font.bold = True
-                    row_cells[14].paragraphs[0].runs[
-                        0
-                    ].font.color.rgb = RGBColor(45, 80, 22)
+                    row_cells[14].paragraphs[0].runs[0].font.color.rgb = (
+                        RGBColor(45, 80, 22)
+                    )
                 elif tipo_vaga == "P":
                     row_cells[14].paragraphs[0].runs[0].font.bold = True
-                    row_cells[14].paragraphs[0].runs[
-                        0
-                    ].font.color.rgb = RGBColor(217, 119, 6)
+                    row_cells[14].paragraphs[0].runs[0].font.color.rgb = (
+                        RGBColor(217, 119, 6)
+                    )
                 for i, cell in enumerate(row_cells):
                     if i in [1, 2, 3, 11, 14]:
-                        cell.paragraphs[
-                            0
-                        ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        cell.paragraphs[0].alignment = (
+                            WD_ALIGN_PARAGRAPH.CENTER
+                        )
                     else:
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                     cell.paragraphs[0].runs[0].font.size = Pt(7)
@@ -517,32 +517,32 @@ class ListagemEscolhasDres(RelatorioBase):
             candidato_uuid = escolha.get("candidato_uuid")
             if not candidato_uuid:
                 continue
-            candidato = candidatos_map.get(
+            candidato_info: dict | None = candidatos_map.get(
                 str(candidato_uuid)
             ) or candidatos_map.get(candidato_uuid)
-            if not candidato:
+            if not candidato_info:
                 logger.warning(
                     "Candidato UUID %s não encontrado no mapa", candidato_uuid
                 )
                 continue
             candidato_obj = (
-                candidato.get("candidato", {})
-                if isinstance(candidato.get("candidato"), dict)
+                candidato_info.get("candidato", {})
+                if isinstance(candidato_info.get("candidato"), dict)
                 else {}
             )
             nome = candidato_obj.get("nome") or "-"
-            classificacao = candidato.get("classificacao") or "-"
+            classificacao = candidato_info.get("classificacao") or "-"
             classificacao_deficiente = (
-                candidato.get("classificacao_pcd") or "-"
+                candidato_info.get("classificacao_pcd") or "-"
             )
-            classificacao_nna = candidato.get("classificacao_nna") or "-"
+            classificacao_nna = candidato_info.get("classificacao_nna") or "-"
             cpf = candidato_obj.get("cpf") or "-"
             rg = candidato_obj.get("rg") or "-"
             telefone = candidato_obj.get("telefone") or "-"
             registro_funcional = candidato_obj.get("registro_funcional") or "-"
             inscricao = (
-                candidato.get("inscricao")
-                or candidato.get("numero_inscricao")
+                candidato_info.get("inscricao")
+                or candidato_info.get("numero_inscricao")
                 or "-"
             )
             vaga_escola = escolha.get("vaga_escola", {})
@@ -581,18 +581,20 @@ class ListagemEscolhasDres(RelatorioBase):
             escolhas_com_candidatos.append(
                 {
                     "cargo": cargo_descricao,
-                    "classificacao": classificacao
-                    if classificacao != "-"
-                    else "",
-                    "classificacao_deficiente": classificacao_deficiente
-                    if classificacao_deficiente != "-"
-                    else "",
-                    "classificacao_nna": classificacao_nna
-                    if classificacao_nna != "-"
-                    else "",
-                    "rf": registro_funcional
-                    if registro_funcional != "-"
-                    else "",
+                    "classificacao": (
+                        classificacao if classificacao != "-" else ""
+                    ),
+                    "classificacao_deficiente": (
+                        classificacao_deficiente
+                        if classificacao_deficiente != "-"
+                        else ""
+                    ),
+                    "classificacao_nna": (
+                        classificacao_nna if classificacao_nna != "-" else ""
+                    ),
+                    "rf": (
+                        registro_funcional if registro_funcional != "-" else ""
+                    ),
                     "rg": rg if rg != "-" else "",
                     "cpf": cpf if cpf != "-" else "",
                     "inscricao": inscricao if inscricao != "-" else "",
@@ -621,10 +623,12 @@ class ListagemEscolhasDres(RelatorioBase):
             items_ordenados = sorted(
                 items,
                 key=lambda x: (
-                    int(x.get("classificacao", 0))
-                    if x.get("classificacao")
-                    and str(x.get("classificacao")).isdigit()
-                    else float("inf"),
+                    (
+                        int(x.get("classificacao", 0))
+                        if x.get("classificacao")
+                        and str(x.get("classificacao")).isdigit()
+                        else float("inf")
+                    ),
                     x.get("dre", ""),
                     x.get("unidade", ""),
                 ),

@@ -46,9 +46,9 @@ class RelatorioBase(ABC):
             "texto_final": configuracao.texto_final,
             "usar_logotipo": bool(configuracao.usar_logotipo),
             "logo_url": logo_url,
-            "cabecalho_padrao": parametrizacao.cabecalho
-            if parametrizacao
-            else "",
+            "cabecalho_padrao": (
+                parametrizacao.cabecalho if parametrizacao else ""
+            ),
         }
 
     @abstractmethod

@@ -2,6 +2,8 @@
 Serializer para validação dos parâmetros de entrada da extração de dados.
 """
 
+from typing import Any
+
 from rest_framework import serializers
 
 
@@ -16,11 +18,13 @@ class ExtracaoDadosQuerySerializer(serializers.Serializer):
         allow_empty=False,
     )
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: Any) -> dict[str, Any]:
         dados_modificados = (
             data.dict() if hasattr(data, "dict") else dict(data)
         )
         ano_param = dados_modificados.get("ano")
         if isinstance(ano_param, str) and ano_param:
             dados_modificados["ano"] = ano_param.split(",")
-        return super().to_internal_value(dados_modificados)
+        return super().to_internal_value(  # type: ignore[no-any-return]
+            dados_modificados
+        )

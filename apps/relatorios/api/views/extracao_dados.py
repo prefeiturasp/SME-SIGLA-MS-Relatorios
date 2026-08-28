@@ -3,6 +3,7 @@ View para extração de dados agregados de microserviços.
 """
 
 import logging
+from typing import Any
 
 from requests import RequestException
 from rest_framework import status, viewsets
@@ -26,7 +27,7 @@ class ExtracaoDadosViewSet(viewsets.GenericViewSet):
 
     permission_classes = [AllowAny]
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request: Any, *args: Any, **kwargs: Any) -> Any:
         serializer = ExtracaoDadosQuerySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
@@ -53,7 +54,7 @@ class ExtracaoDadosViewSet(viewsets.GenericViewSet):
         return Response(dados, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="total")
-    def total(self, request, *args, **kwargs):
+    def total(self, request: Any, *args: Any, **kwargs: Any) -> Any:
         try:
             dados = ExtracaoDadosService().extrair_total()
         except RequestException as exc:

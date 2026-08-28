@@ -154,9 +154,11 @@ class LaudaConvocacaoService:
                     status_especial = (
                         "JÁ CONVOCADO - LEI 13.398/02"
                         if candidato.get("classificacao_nna") is not None
-                        else "JÁ CONVOCADO - LEI 15.939/13"
-                        if candidato.get("classificacao_pcd") is not None
-                        else ""
+                        else (
+                            "JÁ CONVOCADO - LEI 15.939/13"
+                            if candidato.get("classificacao_pcd") is not None
+                            else ""
+                        )
                     )
                     if str(candidato.get("uuid")) in reconvocacao_uuids:
                         status_especial = (
@@ -343,15 +345,16 @@ class LaudaConvocacaoService:
                 cand = lista_segmento[j]
                 cand_class = cand.get(classificacao_attr)
                 if isinstance(cand_class, int):
-                    candidatos_para_inserir = [
+                    candidatos_para_inserir: list[dict] = [
                         r
                         for r in reclass_filtrados
-                        if r.get(classificacao_attr) < cand_class
+                        if isinstance(r.get(classificacao_attr), int)
+                        and r[classificacao_attr] < cand_class
                         and str(r.get("uuid")) not in existentes
-                    ]  # type: ignore[operator]
+                    ]
                     candidatos_para_inserir.sort(
-                        key=lambda x: x.get(classificacao_attr)
-                    )  # type: ignore[arg-type,return-value]
+                        key=lambda x: x[classificacao_attr]
+                    )
                     for r in candidatos_para_inserir:
                         copia = dict(r)
                         copia["status_especial"] = (
@@ -424,14 +427,15 @@ class LaudaConvocacaoService:
                         == cand.get("categoria_efetiva")
                         and (not cand.get("foi_reclassificado", False))
                         and (not r.get("foi_eliminado", False))
-                        and (r.get(classificacao_attr) < cand_class)
+                        and isinstance(r.get(classificacao_attr), int)
+                        and (r[classificacao_attr] < cand_class)
                         and (str(r.get("uuid")) not in existentes)
-                    ):  # type: ignore[operator]
+                    ):
                         r["foi_eliminado"] = True
                         candidatos_para_inserir.append(r)
                 candidatos_para_inserir.sort(
-                    key=lambda x: x.get(classificacao_attr)
-                )  # type: ignore[arg-type,return-value]
+                    key=lambda x: x[classificacao_attr]
+                )
                 for r in candidatos_para_inserir:
                     copia = dict(r)
                     copia["status_especial"] = "Eliminado do certame"
@@ -481,9 +485,7 @@ class LaudaConvocacaoService:
             codigo_cargo_param = (
                 codigos_cargo[0]
                 if len(codigos_cargo) == 1
-                else codigos_cargo
-                if codigos_cargo
-                else None
+                else codigos_cargo if codigos_cargo else None
             )
             logger.info(
                 "Códigos de cargo extraídos das agendas: %s",
@@ -514,9 +516,9 @@ class LaudaConvocacaoService:
                     not agendas_por_cargo[cargo_codigo]["cargo_codigo"]
                     and cargo_codigo
                 ):
-                    agendas_por_cargo[cargo_codigo]["cargo_codigo"] = (
-                        cargo_codigo
-                    )
+                    agendas_por_cargo[cargo_codigo][
+                        "cargo_codigo"
+                    ] = cargo_codigo
             logger.info(
                 "Agendas agrupadas por cargo: %s",
                 {
@@ -561,10 +563,10 @@ class LaudaConvocacaoService:
                     candidatos_result = aplicar_historico_classificacao(
                         dados_candidatos.get("results", [])
                     )
-                    _classificacoes = [
-                        c.get("classificacao")
+                    _classificacoes: list[int] = [
+                        c["classificacao"]
                         for c in candidatos_result
-                        if c.get("classificacao") is not None
+                        if isinstance(c.get("classificacao"), int)
                     ]
                     classificacao_max_default = (
                         max(_classificacoes) if _classificacoes else 0
@@ -574,8 +576,8 @@ class LaudaConvocacaoService:
                         for c in candidatos_result
                     ):
                         classificacao_max = classificacao_max_default
-                        classificacao_max_sem_pcd = candidatos_result[-1].get(
-                            "classificacao"
+                        classificacao_max_sem_pcd = (
+                            candidatos_result[-1].get("classificacao") or 0
                         )
                     else:
                         classificacao_min = (
@@ -776,25 +778,31 @@ class LaudaConvocacaoService:
                     )
                     self._inserir_eliminados_em_segmento(
                         lista_segmento=candidatos_base_ordenados,
-                        eliminados=(eliminados_data or {}).get("pcd", [])
-                        if eliminados_data
-                        else [],
+                        eliminados=(
+                            (eliminados_data or {}).get("pcd", [])
+                            if eliminados_data
+                            else []
+                        ),
                         cargo_codigo=cargo_codigo,
                         classificacao_attr="classificacao_pcd",
                     )
                     self._inserir_eliminados_em_segmento(
                         lista_segmento=candidatos_base_ordenados,
-                        eliminados=(eliminados_data or {}).get("nna", [])
-                        if eliminados_data
-                        else [],
+                        eliminados=(
+                            (eliminados_data or {}).get("nna", [])
+                            if eliminados_data
+                            else []
+                        ),
                         cargo_codigo=cargo_codigo,
                         classificacao_attr="classificacao_nna",
                     )
                     self._inserir_eliminados_em_segmento(
                         lista_segmento=candidatos_base_ordenados,
-                        eliminados=(eliminados_data or {}).get("geral", [])
-                        if eliminados_data
-                        else [],
+                        eliminados=(
+                            (eliminados_data or {}).get("geral", [])
+                            if eliminados_data
+                            else []
+                        ),
                         cargo_codigo=cargo_codigo,
                         classificacao_attr="classificacao",
                     )

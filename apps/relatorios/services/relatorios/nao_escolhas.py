@@ -240,9 +240,11 @@ class SumulaNaoEscolhas(RelatorioBase):
                     cargo_descricao = "Cargo não informado"
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
-                    "codigo": cargo_codigo
-                    if cargo_codigo and cargo_codigo != "-"
-                    else "",
+                    "codigo": (
+                        cargo_codigo
+                        if cargo_codigo and cargo_codigo != "-"
+                        else ""
+                    ),
                     "descricao": cargo_descricao,
                     "candidatos": [],
                 }
@@ -251,9 +253,11 @@ class SumulaNaoEscolhas(RelatorioBase):
         cargos_list.sort(key=lambda x: x["descricao"])
         for cargo in cargos_list:
             cargo["candidatos"].sort(
-                key=lambda c: c["classificacao_geral"]
-                if isinstance(c["classificacao_geral"], int | float)
-                else float("inf")
+                key=lambda c: (
+                    c["classificacao_geral"]
+                    if isinstance(c["classificacao_geral"], int | float)
+                    else float("inf")
+                )
             )
         return cargos_list
 
@@ -538,13 +542,13 @@ class SumulaNaoEscolhas(RelatorioBase):
                     row_cells[3].text = str(candidato.get("nome", "-"))
                     for i, cell in enumerate(row_cells):
                         if i in [0, 1, 2]:
-                            cell.paragraphs[
-                                0
-                            ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            cell.paragraphs[0].alignment = (
+                                WD_ALIGN_PARAGRAPH.CENTER
+                            )
                         else:
-                            cell.paragraphs[
-                                0
-                            ].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            cell.paragraphs[0].alignment = (
+                                WD_ALIGN_PARAGRAPH.LEFT
+                            )
                         cell.paragraphs[0].runs[0].font.size = Pt(10)
                 doc.add_paragraph()
             if texto_final:

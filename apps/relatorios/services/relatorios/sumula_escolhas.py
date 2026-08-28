@@ -130,7 +130,7 @@ class SumulaEscolhas(RelatorioBase):
                 self.escolhas_service.buscar_escolhas_por_candidatos(
                     candidato_uuids=concurso_candidato_uuids, situacao=None
                 )
-            )  # type: ignore[arg-type]
+            )
         except Exception as exc:
             logger.error("Falha ao buscar escolhas da API externa: %s", exc)
             raise
@@ -144,21 +144,21 @@ class SumulaEscolhas(RelatorioBase):
             candidato_uuid = escolha.get("candidato_uuid")
             if not candidato_uuid:
                 continue
-            candidato = candidatos_map.get(
+            candidato_encontrado: dict | None = candidatos_map.get(
                 str(candidato_uuid)
             ) or candidatos_map.get(candidato_uuid)
-            if not candidato:
+            if not candidato_encontrado:
                 continue
             candidato_obj = (
-                candidato.get("candidato", {})
-                if isinstance(candidato.get("candidato"), dict)
+                candidato_encontrado.get("candidato", {})
+                if isinstance(candidato_encontrado.get("candidato"), dict)
                 else {}
             )
-            classificacao_geral = candidato.get("classificacao")
-            classificacao_nna = candidato.get("classificacao_nna")
-            classificacao_pcd = candidato.get("classificacao_pcd")
+            classificacao_geral = candidato_encontrado.get("classificacao")
+            classificacao_nna = candidato_encontrado.get("classificacao_nna")
+            classificacao_pcd = candidato_encontrado.get("classificacao_pcd")
             categoria_efetiva = (
-                candidato.get("categoria_efetiva") or ""
+                candidato_encontrado.get("categoria_efetiva") or ""
             ).upper()
             classificacao_coluna_geral = (
                 classificacao_geral if classificacao_geral is not None else "-"
@@ -190,8 +190,8 @@ class SumulaEscolhas(RelatorioBase):
                 else {}
             )
             dre = escola.get("dre", {}) if isinstance(escola, dict) else {}
-            cargo_codigo = candidato.get("codigo_cargo") or ""
-            cargo_descricao = candidato.get("descricao_cargo") or ""
+            cargo_codigo = candidato_encontrado.get("codigo_cargo") or ""
+            cargo_descricao = candidato_encontrado.get("descricao_cargo") or ""
             if not cargo_descricao and cargo_codigo:
                 cargo_descricao = (
                     cargos_map.get(str(cargo_codigo))
@@ -320,9 +320,11 @@ class SumulaEscolhas(RelatorioBase):
             )
             if cargo_codigo not in cargos_dict:
                 cargos_dict[cargo_codigo] = {
-                    "codigo": cargo_codigo
-                    if cargo_codigo and cargo_codigo != "-"
-                    else "",
+                    "codigo": (
+                        cargo_codigo
+                        if cargo_codigo and cargo_codigo != "-"
+                        else ""
+                    ),
                     "descricao": cargo_descricao,
                     "dres": {},
                 }
@@ -353,13 +355,19 @@ class SumulaEscolhas(RelatorioBase):
                 escolas_list = []
                 for escola_chave, escola_data in dre_data["escolas"].items():
                     escola_data["escolhas"].sort(
-                        key=lambda e: e.get("classificacao_ordem")
-                        if isinstance(
-                            e.get("classificacao_ordem"), int | float
+                        key=lambda e: (
+                            e.get("classificacao_ordem")
+                            if isinstance(
+                                e.get("classificacao_ordem"), int | float
+                            )
+                            else (
+                                e.get("classificacao")
+                                if isinstance(
+                                    e.get("classificacao"), int | float
+                                )
+                                else float("inf")
+                            )
                         )
-                        else e.get("classificacao")
-                        if isinstance(e.get("classificacao"), int | float)
-                        else float("inf")
                     )
                     escolas_list.append(escola_data)
                 escolas_list.sort(key=lambda e: e["nome"])
@@ -699,9 +707,9 @@ class SumulaEscolhas(RelatorioBase):
                         for i, header in enumerate(headers):
                             cell = header_cells[i]
                             cell.text = header
-                            cell.paragraphs[
-                                0
-                            ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                            cell.paragraphs[0].alignment = (
+                                WD_ALIGN_PARAGRAPH.CENTER
+                            )
                             cell.paragraphs[0].runs[0].font.bold = True
                             cell.paragraphs[0].runs[0].font.size = Pt(10)
                             tc_pr = cell._element.get_or_add_tcPr()

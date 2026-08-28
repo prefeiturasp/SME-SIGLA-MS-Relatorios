@@ -349,13 +349,12 @@ class ListaCandidatosSessao(RelatorioBase):
         ws.column_dimensions["D"].width = 16
         ws.column_dimensions["E"].width = 40
         ws.column_dimensions["F"].width = 20
-        if context.get("texto_final"):
+        texto_final = context.get("texto_final")
+        if texto_final:
             row_idx += 1
             ws.merge_cells(f"A{row_idx}:C{row_idx}")
             cell = ws[f"A{row_idx}"]
-            cell.value = self.processar_cabecalho_html(
-                context.get("texto_final")
-            )  # type: ignore[arg-type]
+            cell.value = self.processar_cabecalho_html(texto_final)
             cell.font = normal_font
             cell.alignment = Alignment(
                 horizontal="left", vertical="top", wrap_text=True
@@ -516,21 +515,20 @@ class ListaCandidatosSessao(RelatorioBase):
                     cell = cells[col_idx]
                     cell.text = val
                     if col_idx in (0, 1, 2):
-                        cell.paragraphs[
-                            0
-                        ].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        cell.paragraphs[0].alignment = (
+                            WD_ALIGN_PARAGRAPH.CENTER
+                        )
                     else:
                         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                     cell.paragraphs[0].runs[0].font.size = Pt(9)
             if idx < len(sections_list) - 1:
                 doc.add_paragraph()
-        if context.get("texto_final"):
+        texto_final = context.get("texto_final")
+        if texto_final:
             doc.add_paragraph()
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            run = p.add_run(
-                self.processar_cabecalho_html(context.get("texto_final"))
-            )  # type: ignore[arg-type]
+            run = p.add_run(self.processar_cabecalho_html(texto_final))
             run.font.size = Pt(10)
             doc.add_paragraph()
         import io
@@ -545,7 +543,7 @@ class ListaCandidatosSessao(RelatorioBase):
         resp["Content-Disposition"] = f'attachment; filename="{filename}"'
         return resp
 
-    def gerar(
+    def gerar(  # type: ignore[override]
         self,
         processo_uuid: str,
         request: Any,
@@ -553,7 +551,7 @@ class ListaCandidatosSessao(RelatorioBase):
         cabecalho: str = "",
         agenda_uuid: str = "",
         **kwargs: Any,
-    ) -> tuple[HttpResponse, dict[str, Any]]:  # type: ignore[override]
+    ) -> tuple[HttpResponse, dict[str, Any]]:
         """Gera a lista de candidatos por sessão a partir de UUIDs.
 
         Args:

@@ -17,7 +17,6 @@ DEFAULT_PAGE_SIZE = 10
 class CustomPagination(PageNumberPagination):
     """Representa CustomPagination."""
 
-    page = DEFAULT_PAGE  # type: ignore[assignment]
     page_size = DEFAULT_PAGE_SIZE
     page_size_query_param = "page_size"
 
@@ -30,6 +29,8 @@ class CustomPagination(PageNumberPagination):
         Returns:
             Valor do campo serializado.
         """
+        assert self.request is not None
+        assert self.page is not None
         return Response(
             {
                 "links": {
@@ -43,7 +44,7 @@ class CustomPagination(PageNumberPagination):
                 ),
                 "results": data,
             }
-        )  # type: ignore[has-type,union-attr]
+        )
 
 
 def convert_uuids_to_strings(obj: Any) -> Any:
