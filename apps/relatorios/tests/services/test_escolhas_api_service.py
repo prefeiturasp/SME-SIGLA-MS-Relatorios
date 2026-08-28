@@ -1,0 +1,266 @@
+"""Módulo tests/services/test_escolhas_api_service."""
+
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import patch
+
+import pytest
+import requests
+
+from relatorios.services.escolhas_api_service import EscolhasService
+
+
+class _Resp:
+    """Representa Resp."""
+
+    def __init__(self, payload: Any = None, status_code: Any = 200) -> None:
+        """Inicializa a instância com os parâmetros informados."""
+        self._payload = payload
+        self.status_code = status_code
+
+    def json(self) -> Any:
+        """Json."""
+        return self._payload
+
+    def raise_for_status(self) -> None:
+        """Raise for status."""
+        if self.status_code and self.status_code >= 400:
+            raise requests.HTTPError(f"status={self.status_code}")
+
+
+def _svc(
+    monkeypatch: Any,
+    base: Any = "http://api.local",
+    timeout: Any = 15,
+) -> Any:
+    """Svc."""
+    monkeypatch.setattr(EscolhasService, "base_url", base.rstrip("/"))
+    monkeypatch.setattr(EscolhasService, "timeout_seconds", timeout)
+    monkeypatch.setattr(
+        EscolhasService,
+        "_headers",
+        {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+    )
+    return EscolhasService()
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.get")
+def test_buscar_vagas_escolas_success(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar vagas escolas success."""
+    mock_get.return_value = _Resp(payload={"results": []})
+    svc = _svc(monkeypatch, timeout=5)
+    resp = svc.buscar_vagas_escolas(processo_uuid="PROC-123")
+    assert resp.status_code == 200
+    mock_get.assert_called_once_with(
+        "http://api.local/api/v1/vagas-escolas/",
+        params={"processo_uuid": "PROC-123"},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.get")
+def test_buscar_vagas_escolas_trailing_slash_base_url(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar vagas escolas trailing slash base url."""
+    mock_get.return_value = _Resp(payload=[])
+    svc = _svc(monkeypatch, base="http://api.local/")
+    svc.buscar_vagas_escolas(processo_uuid="P1")
+    assert (
+        mock_get.call_args.args[0] == "http://api.local/api/v1/vagas-escolas/"
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.get")
+def test_buscar_vagas_escolas_http_error(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar vagas escolas http error."""
+    mock_get.return_value = _Resp(None, status_code=500)
+    svc = _svc(monkeypatch)
+    with pytest.raises(requests.HTTPError):
+        svc.buscar_vagas_escolas(processo_uuid="PERR")
+
+
+@patch(
+    "relatorios.services.escolhas_api_service.http_client.get",
+    side_effect=requests.RequestException("boom"),
+)
+def test_buscar_vagas_escolas_request_exception(
+    mock_get: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar vagas escolas request exception."""
+    svc = _svc(monkeypatch)
+    with pytest.raises(requests.RequestException):
+        svc.buscar_vagas_escolas(processo_uuid="PERR")
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_escolhas_por_candidatos_success_list_default_filter(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos success list default filter."""
+    payload = [
+        {"uuid": "u1", "situacao": "nao-escolha"},
+        {"uuid": "u2", "situacao": "reconvocacao"},
+    ]
+    mock_post.return_value = _Resp(payload=payload)
+    svc = _svc(monkeypatch, timeout=3)
+    out = svc.buscar_escolhas_por_candidatos(candidato_uuids=["c1", "c2"])
+    assert out == [{"uuid": "u1", "situacao": "nao-escolha"}]
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/escolhas/busca/",
+        json={"candidato_uuid": ["c1", "c2"]},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+        timeout=3,
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_escolhas_por_candidatos_success_dict_results_custom_situacao(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos success dict results custom."""
+    payload = {
+        "results": [
+            {"uuid": "u1", "situacao": "reconvocacao"},
+            {"uuid": "u2", "situacao": "nao-escolha"},
+        ]
+    }
+    mock_post.return_value = _Resp(payload=payload)
+    svc = _svc(monkeypatch)
+    out = svc.buscar_escolhas_por_candidatos(
+        candidato_uuids=["x", "y"], situacao="reconvocacao"
+    )
+    assert out == [{"uuid": "u1", "situacao": "reconvocacao"}]
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_escolhas_por_candidatos_unexpected_payload_returns_empty(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos unexpected payload returns."""
+    mock_post.return_value = _Resp(payload={"unexpected": True})
+    svc = _svc(monkeypatch)
+    out = svc.buscar_escolhas_por_candidatos(candidato_uuids=["a"])
+    assert out == []
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_escolhas_por_candidatos_http_error(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos http error."""
+    mock_post.return_value = _Resp(None, status_code=400)
+    svc = _svc(monkeypatch)
+    with pytest.raises(requests.HTTPError):
+        svc.buscar_escolhas_por_candidatos(candidato_uuids=["a"])
+
+
+@patch(
+    "relatorios.services.escolhas_api_service.http_client.post",
+    side_effect=requests.RequestException("boom"),
+)
+def test_buscar_escolhas_por_candidatos_request_exception(
+    mock_post: Any,
+    monkeypatch: Any,
+) -> None:
+    """Verifica buscar escolhas por candidatos request exception."""
+    svc = _svc(monkeypatch)
+    with pytest.raises(requests.RequestException):
+        svc.buscar_escolhas_por_candidatos(candidato_uuids=["a"])
+
+
+# ---------- buscar_extracao_dados ----------
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_extracao_dados_success(
+    mock_post,
+    monkeypatch: Any,
+):
+    filtros = [
+        {
+            "ano": 2026,
+            "processo_uuids": ["a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"],
+        }
+    ]
+    mock_post.return_value = _Resp(payload={"escolhas": {"total": 100}})
+    svc = _svc(monkeypatch, timeout=5)
+    resp = svc.buscar_extracao_dados(
+        concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+        filtros=filtros,
+    )
+    assert resp == {"escolhas": {"total": 100}}
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/extracao-dados/",
+        json={
+            "concurso_uuid": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            "filtros": filtros,
+        },
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_extracao_dados_sem_parametros(
+    mock_post,
+    monkeypatch: Any,
+):
+    mock_post.return_value = _Resp(payload={"2026": {"escolha": 1000}})
+    svc = _svc(monkeypatch, timeout=5)
+    resp = svc.buscar_extracao_dados()
+    assert resp == {"2026": {"escolha": 1000}}
+    mock_post.assert_called_once_with(
+        "http://api.local/api/v1/extracao-dados/",
+        json={},
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": "test-key",
+        },
+        timeout=5,
+    )
+
+
+@patch("relatorios.services.escolhas_api_service.http_client.post")
+def test_buscar_extracao_dados_http_error(
+    mock_post,
+    monkeypatch: Any,
+):
+    mock_post.return_value = _Resp(None, status_code=500)
+    svc = _svc(monkeypatch)
+    with pytest.raises(requests.HTTPError):
+        svc.buscar_extracao_dados(
+            concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+            filtros=[{"ano": 2026, "processo_uuids": ["p1"]}],
+        )

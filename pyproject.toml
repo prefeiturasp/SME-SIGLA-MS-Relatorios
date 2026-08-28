@@ -1,3 +1,8 @@
+[tool.black]
+line-length = 79
+target-version = ["py312"]
+exclude = "/migrations/"
+
 [tool.ruff]
 line-length = 79
 target-version = "py312"
@@ -15,18 +20,18 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["E501", "SIM117", "B017", "E402", "F811", "E741"]
-"relatorios/services/ata_escolha_service.py" = ["E402", "SIM116"]
-"relatorios/services/candidatos_api_service.py" = ["E501"]
-"relatorios/services/escolhas_api_service.py" = ["E501"]
-"relatorios/services/**" = ["B007"]
-"relatorios/services/relatorios/ata_escolha.py" = ["F401"]
+"apps/relatorios/services/ata_escolha_service.py" = ["E402", "SIM116"]
+"apps/relatorios/services/candidatos_api_service.py" = ["E501"]
+"apps/relatorios/services/escolhas_api_service.py" = ["E501"]
+"apps/relatorios/services/**" = ["B007"]
+"apps/relatorios/services/relatorios/ata_escolha.py" = ["F401"]
 "**/gerar_relatorio_pep*.py" = ["D"]
 "__init__.py" = ["F401", "F403", "F405", "D104"]
 "config/settings*.py" = ["F401", "F403", "F405", "E501", "E402"]
 "*/settings*.py" = ["F401", "F403", "F405", "E501", "E402"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["relatorios"]
+known-first-party = ["relatorios", "core", "config"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -46,6 +51,8 @@ ignore-decorators = ["pytest.fixture", "extend_schema", "action"]
 # ---------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.12"
+mypy_path = "apps"
+explicit_package_bases = true
 plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 exclude = [
     "migrations/",
@@ -73,6 +80,10 @@ module = ["*.migrations.*"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
+module = ["*.tests.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
 module = ["sigla_sdk.*"]
 ignore_missing_imports = true
 
@@ -85,6 +96,7 @@ module = [
     "factory.*",
     "factory_boy.*",
     "auditlog.*",
+    "elasticapm.*",
 ]
 ignore_missing_imports = true
 

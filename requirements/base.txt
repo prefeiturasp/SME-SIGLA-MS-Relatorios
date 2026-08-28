@@ -16,4 +16,5 @@ python-docx>=1.1.0
 pdf2docx==0.5.8
 python-json-logger==4.0.0
 djangorestframework_simplejwt==5.5.1
-git+https://github.com/prefeiturasp/SME-SIGLA-SDK-Microsservico.git@1.0.1#egg=sigla-sdk
+elastic-apm>=6.0,<7
+git+https://github.com/prefeiturasp/SME-SIGLA-SDK-Microsservico.git@1.1.0#egg=sigla-sdk
