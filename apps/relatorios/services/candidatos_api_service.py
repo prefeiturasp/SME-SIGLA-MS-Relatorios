@@ -8,7 +8,6 @@ from typing import Any
 import requests
 from django.conf import settings
 from requests import RequestException
-from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
 logger = logging.getLogger(__name__)
@@ -58,13 +57,8 @@ class CandidatosService:
                 else:
                     params["codigo_cargo"] = codigo_cargo_param
         logger.info(
-            "Buscando candidatos habilitados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-            },
+            f"Buscando candidatos habilitados | method=GET url={url} "
+            f"headers={self._headers}"
         )
         try:
             response = http_client.get(
@@ -76,22 +70,17 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar candidatos habilitados (processo_uuid=%s, codigo_cargo=%s): %s",
-                processo_uuid,
-                params.get("codigo_cargo") or params.get("codigo_cargo__in"),
-                exc,
+                f"Erro ao buscar candidatos habilitados | "
+                f"processo_uuid={processo_uuid} "
+                f"codigo_cargo={params.get('codigo_cargo') or params.get('codigo_cargo__in')} "
+                f"error={exc}"
             )
             raise
         logger.info(
-            "Candidatos habilitados buscados com sucesso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Candidatos habilitados buscados com sucesso | method=GET "
+            f"url={url} headers={self._headers} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -172,14 +161,8 @@ class CandidatosService:
                 else:
                     params["codigo_cargo"] = codigo_cargo_param
         logger.info(
-            "Buscando candidatos habilitados por processos e classificações",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-            },
+            f"Buscando candidatos habilitados por processos e classificações | "
+            f"method=GET url={url} headers={self._headers} params={params}"
         )
         try:
             response = http_client.get(
@@ -191,25 +174,18 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar candidatos habilitados (processo_uuids=%s, classificacao=%s, classificacao_nna=%s, codigo_cargo=%s): %s",
-                processo_uuid_param,
-                params.get("classificacao"),
-                params.get("classificacao_nna"),
-                params.get("codigo_cargo"),
-                exc,
+                f"Erro ao buscar candidatos habilitados | "
+                f"processo_uuids={processo_uuid_param} "
+                f"classificacao={params.get('classificacao')} "
+                f"classificacao_nna={params.get('classificacao_nna')} "
+                f"codigo_cargo={params.get('codigo_cargo')} error={exc}"
             )
             raise
         logger.info(
-            "Candidatos habilitados buscados com sucesso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Candidatos habilitados buscados com sucesso | method=GET "
+            f"url={url} headers={self._headers} params={params} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -229,15 +205,8 @@ class CandidatosService:
         params = {"order_by": order_by}
         payload = {"uuids": uuids}
         logger.info(
-            "Buscando candidatos por UUIDs",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "params": params,
-                "payload": payload,
-                "url": url,
-                "headers": self._headers,
-            },
+            f"Buscando candidatos por UUIDs | method=POST params={params} "
+            f"payload={payload} url={url} headers={self._headers}"
         )
         try:
             response = http_client.post(
@@ -250,24 +219,15 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar candidatos por UUIDs (total_uuids=%d, order_by=%s): %s",
-                len(uuids),
-                order_by,
-                exc,
+                f"Erro ao buscar candidatos por UUIDs | "
+                f"total_uuids={len(uuids)} order_by={order_by} error={exc}"
             )
             raise
         logger.info(
-            "Candidatos buscados por UUIDs com sucesso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "payload": payload,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Candidatos buscados por UUIDs com sucesso | method=POST "
+            f"url={url} headers={self._headers} params={params} "
+            f"payload={payload} status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -299,14 +259,8 @@ class CandidatosService:
         if filtros is not None:
             payload["filtros"] = filtros
         logger.info(
-            "Buscando totais de habilitados por processo e ano",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "payload": payload,
-            },
+            f"Buscando totais de habilitados por processo e ano | "
+            f"method=POST url={url} headers={self._headers} payload={payload}"
         )
         try:
             response = http_client.post(
@@ -318,24 +272,16 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar totais de habilitados por processo e ano "
-                "(concurso_uuid=%s): %s",
-                concurso_uuid,
-                exc,
+                f"Erro ao buscar totais de habilitados por processo e ano | "
+                f"concurso_uuid={concurso_uuid} error={exc}"
             )
             raise
 
         logger.info(
-            "Totais de habilitados por processo e ano buscados com sucesso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "payload": payload,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Totais de habilitados por processo e ano buscados com sucesso | "
+            f"method=POST url={url} headers={self._headers} "
+            f"payload={payload} status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response.json()  # type: ignore[no-any-return]
 
@@ -362,15 +308,15 @@ class CandidatosService:
             else:
                 agendas = []
             logger.info(
-                "Processando %d agendas para buscar candidatos", len(agendas)
+                f"Processando {len(agendas)} agendas para buscar candidatos"
             )
             resultado = {"agendas": []}  # type: ignore[var-annotated]
             for agenda in agendas:
                 candidatos_uuids = agenda.get("candidatos_uuids", [])
                 if not candidatos_uuids:
                     logger.warning(
-                        "Agenda %s não possui candidatos_uuids",
-                        agenda.get("uuid", "desconhecido"),
+                        f"Agenda {agenda.get('uuid', 'desconhecido')} "
+                        f"não possui candidatos_uuids"
                     )
                     resultado["agendas"].append(
                         {"agenda": agenda, "candidatos": []}
@@ -391,31 +337,29 @@ class CandidatosService:
                     else:
                         candidatos = []
                     logger.info(
-                        "Encontrados %d candidatos para agenda %s (de %d UUIDs)",
-                        len(candidatos),
-                        agenda.get("uuid", "desconhecido"),
-                        len(candidatos_uuids),
+                        f"Encontrados {len(candidatos)} candidatos para agenda "
+                        f"{agenda.get('uuid', 'desconhecido')} "
+                        f"(de {len(candidatos_uuids)} UUIDs)"
                     )
                     resultado["agendas"].append(
                         {"agenda": agenda, "candidatos": candidatos}
                     )
                 except RequestException as exc:
                     logger.error(
-                        "Erro ao buscar candidatos para agenda %s: %s",
-                        agenda.get("uuid", "desconhecido"),
-                        exc,
+                        f"Erro ao buscar candidatos para agenda "
+                        f"{agenda.get('uuid', 'desconhecido')}: {exc}"
                     )
                     resultado["agendas"].append(
                         {"agenda": agenda, "candidatos": [], "erro": str(exc)}
                     )
             logger.info(
-                "Processamento concluído: %d agendas processadas",
-                len(resultado["agendas"]),
+                f"Processamento concluído: "
+                f"{len(resultado['agendas'])} agendas processadas"
             )
             return resultado
         except Exception as exc:
             logger.error(
-                "Erro ao processar agendas e buscar candidatos: %s", exc
+                f"Erro ao processar agendas e buscar candidatos: {exc}"
             )
             raise
 
@@ -433,14 +377,8 @@ class CandidatosService:
         url = f"{self.base_url}/api/v1/habilitados/"
         params = {"processo_uuid": processo_uuid, "page_size": 10000}
         logger.info(
-            "Buscando ConcursoCandidato",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-            },
+            f"Buscando ConcursoCandidato | method=GET url={url} "
+            f"headers={self._headers} params={params}"
         )
         try:
             response = http_client.get(
@@ -451,19 +389,13 @@ class CandidatosService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error("Erro ao buscar ConcursoCandidato: %s", exc)
+            logger.error(f"Erro ao buscar ConcursoCandidato: {exc}")
             raise
         logger.info(
-            "ConcursoCandidato encontrado",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"ConcursoCandidato encontrado | method=GET url={url} "
+            f"headers={self._headers} params={params} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -485,14 +417,8 @@ class CandidatosService:
             "processo_uuid": processo_uuid,
         }
         logger.info(
-            "Buscando reclassificados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-            },
+            f"Buscando reclassificados | method=GET url={url} "
+            f"headers={self._headers} params={params}"
         )
         try:
             response = http_client.get(
@@ -504,22 +430,15 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar reclassificados (concurso_uuid=%s): %s",
-                concurso_uuid,
-                exc,
+                f"Erro ao buscar reclassificados | "
+                f"concurso_uuid={concurso_uuid} error={exc}"
             )
             raise
         logger.info(
-            "Reclassificados encontrados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Reclassificados encontrados | method=GET url={url} "
+            f"headers={self._headers} params={params} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -549,14 +468,8 @@ class CandidatosService:
             "classificacao_min": classificacao_min,
         }
         logger.info(
-            "Buscando eliminados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-            },
+            f"Buscando eliminados | method=GET url={url} "
+            f"headers={self._headers} params={params}"
         )
         try:
             response = http_client.get(
@@ -568,24 +481,16 @@ class CandidatosService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar eliminados (concurso_uuid=%s, processo_uuid=%s, classificacao_max=%s, classificacao_min=%s): %s",
-                concurso_uuid,
-                processo_uuid,
-                classificacao_max,
-                classificacao_min,
-                exc,
+                f"Erro ao buscar eliminados | concurso_uuid={concurso_uuid} "
+                f"processo_uuid={processo_uuid} "
+                f"classificacao_max={classificacao_max} "
+                f"classificacao_min={classificacao_min} error={exc}"
             )
             raise
         logger.info(
-            "Eliminados encontrados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Eliminados encontrados | method=GET url={url} "
+            f"headers={self._headers} params={params} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
