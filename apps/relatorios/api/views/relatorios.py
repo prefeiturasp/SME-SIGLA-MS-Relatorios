@@ -10,8 +10,6 @@ from rest_framework import status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from sigla_sdk.context import get_correlation_id
-
 from relatorios.models import Relatorio
 from relatorios.serializers import (
     RelatorioCreateSerializer,
@@ -49,19 +47,13 @@ class RelatorioViewSet(viewsets.ModelViewSet):
             Resposta HTTP com os dados serializados.
         """
         logger.info(
-            "Criando relatório",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": request.method,
-                "path": request.path,
-                "tipo_relatorio": request.data.get("tipo"),
-                "processo_uuid": request.data.get("processo_uuid"),
-                "agenda_uuid": request.data.get("agenda_uuid"),
-                "cargo_codigo": request.data.get("cargo_codigo"),
-                "parametros": request.query_params,
-                "headers": request.headers,
-                "user": request.user,
-            },
+            f"Criando relatório | method={request.method} path={request.path} "
+            f"tipo_relatorio={request.data.get('tipo')} "
+            f"processo_uuid={request.data.get('processo_uuid')} "
+            f"agenda_uuid={request.data.get('agenda_uuid')} "
+            f"cargo_codigo={request.data.get('cargo_codigo')} "
+            f"parametros={request.query_params} "
+            f"headers={dict(request.headers)} user={request.user}"
         )
         serializer = RelatorioCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
