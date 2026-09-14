@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(BASE_DIR, "apps"))
 SECRET_KEY = os.environ.get(
     "SECRET_KEY", "django-insecure-your-secret-key-here"
 )
-DEBUG = True#os.environ.get("DEBUG", "True").lower() == "true"
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
@@ -241,7 +241,6 @@ ELASTIC_APM = {
         "ELASTIC_APM_ENVIRONMENT", AMBIENTE_APLICACAO
     ),
     "ENABLED": os.environ.get("ELASTIC_APM_ENABLED", "0") == "1",
-    "RECORDING": True,
     "CAPTURE_BODY": os.environ.get("ELASTIC_APM_CAPTURE_BODY", "all"),
     "CAPTURE_HEADERS": os.environ.get("ELASTIC_APM_CAPTURE_HEADERS", "1")
     == "1",
