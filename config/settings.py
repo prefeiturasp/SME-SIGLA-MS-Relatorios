@@ -193,8 +193,8 @@ LOGGING = {
             "formatter": "json",
         },
         "elasticapm": {
-            "level": "INFO",
-            "class": "elasticapm.handlers.logging.LoggingHandler",
+            "level": "DEBUG",
+            "class": "elasticapm.contrib.django.handlers.LoggingHandler",
         },
     },
     "loggers": {
@@ -215,6 +215,16 @@ LOGGING = {
             "level": "ERROR",  # Alterando para ERROR, ele para de mostrar os GET/POST/OPTIONS de rotina (INFO)
             "propagate": False,
         },
+        "elasticapm.errors": {
+            "level": "ERROR",
+            "handlers": ["console"],
+            "propagate": False,
+        },
+        "elasticapm.logging": {
+            "level": "INFO",
+            "handlers": ["console"],
+            "propagate": False,
+        },
     },
 }
 
@@ -226,10 +236,12 @@ ELASTIC_APM = {
     "SERVER_URL": os.environ.get(
         "ELASTIC_APM_SERVER_URL", "http://localhost:8200"
     ),
+    "SERVER_TIMEOUT": os.environ.get("ELASTIC_APM_SERVER_TIMEOUT", "35s"),
     "ENVIRONMENT": os.environ.get(
         "ELASTIC_APM_ENVIRONMENT", AMBIENTE_APLICACAO
     ),
     "ENABLED": os.environ.get("ELASTIC_APM_ENABLED", "0") == "1",
+    "CAPTURE_BODY": os.environ.get("ELASTIC_APM_CAPTURE_BODY", "all"),
     "CAPTURE_HEADERS": os.environ.get("ELASTIC_APM_CAPTURE_HEADERS", "1")
     == "1",
     "TRANSACTION_SAMPLE_RATE": float(
@@ -246,7 +258,21 @@ ELASTIC_APM = {
     "TRANSACTION_MAX_SPANS": int(
         os.environ.get("ELASTIC_APM_TRANSACTION_MAX_SPANS", "500")
     ),
+    "DJANGO_TRANSACTION_NAME_FROM_ROUTE": True,
     "LOG_LEVEL": os.environ.get("ELASTIC_APM_LOG_LEVEL", "INFO"),
+    "LOG_ECS_REFORMATTING": os.environ.get(
+        "ELASTIC_APM_LOG_ECS_REFORMATTING", "off"
+    ),
+    'RECORDING': True,               # Garante que o APM está ativo
+    'TRANSACTIONS_ROOT_UNNAMED': True, # Captura rotas mesmo se não tiverem nome definido nas URLs
+    'CAPTURE_BODY': 'all',
+    'CAPTURE_HEADERS': True,
+    'CAPTURE_ERRORS': True,
+    'CAPTURE_PERFORMANCE': True,
+    'CAPTURE_TRANSACTIONS': True,
+    'CAPTURE_SPANS': True,
+    'CAPTURE_TRANSACTION_STACKTRACES': True,
+    'CAPTURE_TRANSACTION_STACKTRACES_LIMIT': 10,
 }
 
 SPECTACULAR_SETTINGS = {

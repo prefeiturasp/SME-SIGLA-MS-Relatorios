@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from requests import RequestException
-from sigla_sdk.context import get_correlation_id
 
 from .agendas_api_service import AgendasService
 from .candidatos_api_service import CandidatosService
@@ -207,13 +206,9 @@ class LaudaConvocacaoService:
                         )
                     except RequestException:
                         logger.exception(
-                            "Erro ao buscar escolhas (reconvocacao) para candidatos NNA faltantes",  # noqa: E501
-                            extra={
-                                "correlation_id": get_correlation_id(),
-                                "candidatos_uuids_count": len(
-                                    candidatos_uuids
-                                ),
-                            },
+                            f"Erro ao buscar escolhas (reconvocacao) para "
+                            f"candidatos NNA faltantes | "
+                            f"candidatos_uuids_count={len(candidatos_uuids)}"
                         )
                 for candidato in candidatos_faltantes["nna"]:
                     status_especial = "CANDIDATOS JÁ CLASSIFICADO."
@@ -274,13 +269,9 @@ class LaudaConvocacaoService:
                         )
                     except RequestException:
                         logger.exception(
-                            "Erro ao buscar escolhas (reconvocacao) para candidatos PCD faltantes",  # noqa: E501
-                            extra={
-                                "correlation_id": get_correlation_id(),
-                                "candidatos_uuids_count": len(
-                                    candidatos_uuids
-                                ),
-                            },
+                            f"Erro ao buscar escolhas (reconvocacao) para "
+                            f"candidatos PCD faltantes | "
+                            f"candidatos_uuids_count={len(candidatos_uuids)}"
                         )
                 for candidato in candidatos_faltantes["pcd"]:
                     status_especial = "CANDIDATOS JÁ CLASSIFICADO."

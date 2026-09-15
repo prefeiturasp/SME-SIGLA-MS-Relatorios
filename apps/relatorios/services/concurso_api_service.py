@@ -7,7 +7,6 @@ from typing import Any
 
 from django.conf import settings
 from requests import RequestException
-from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
 logger = logging.getLogger(__name__)
@@ -52,14 +51,8 @@ class ConcursoService:
         if anos is not None:
             payload["anos"] = anos
         logger.info(
-            "Buscando extração de dados em concursos",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "payload": payload,
-            },
+            f"Buscando extração de dados em concursos | method=POST "
+            f"url={url} headers={self._headers} payload={payload}"
         )
         try:
             response = http_client.post(
@@ -71,24 +64,15 @@ class ConcursoService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar extração de dados em concursos "
-                "(concurso_uuid=%s, anos=%s): %s",
-                concurso_uuid,
-                anos,
-                exc,
+                f"Erro ao buscar extração de dados em concursos | "
+                f"concurso_uuid={concurso_uuid} anos={anos} error={exc}"
             )
             raise
 
         logger.info(
-            "Extração de dados em concursos buscada com sucesso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "payload": payload,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Extração de dados em concursos buscada com sucesso | "
+            f"method=POST url={url} headers={self._headers} "
+            f"payload={payload} status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response.json()  # type: ignore[no-any-return]

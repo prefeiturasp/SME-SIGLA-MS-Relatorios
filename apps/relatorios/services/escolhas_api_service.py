@@ -8,7 +8,6 @@ from typing import Any
 import requests
 from django.conf import settings
 from requests import RequestException
-from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
 logger = logging.getLogger(__name__)
@@ -37,15 +36,9 @@ class EscolhasService:
         url = f"{self.base_url}/api/v1/vagas-escolas/"
         params = {"processo_uuid": processo_uuid}
         logger.info(
-            "Buscando vagas de escolas",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "processo_uuid": processo_uuid,
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-            },
+            f"Buscando vagas de escolas | method=GET "
+            f"processo_uuid={processo_uuid} url={url} "
+            f"headers={self._headers} params={params}"
         )
         try:
             response = http_client.get(
@@ -56,20 +49,14 @@ class EscolhasService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error("Erro ao buscar vagas de escolas: %s", exc)
+            logger.error(f"Erro ao buscar vagas de escolas | error={exc}")
             raise
         logger.info(
-            "Vagas de escolas encontradas",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "processo_uuid": processo_uuid,
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Vagas de escolas encontradas | method=GET "
+            f"processo_uuid={processo_uuid} url={url} "
+            f"headers={self._headers} params={params} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -88,15 +75,9 @@ class EscolhasService:
         url = f"{self.base_url}/api/v1/escolhas/busca/"
         data = {"candidato_uuid": candidato_uuids}
         logger.info(
-            "Buscando escolhas por candidatos",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "candidato_uuids": candidato_uuids,
-                "situacao": situacao,
-                "url": url,
-                "headers": self._headers,
-            },
+            f"Buscando escolhas por candidatos | method=POST "
+            f"candidato_uuids={candidato_uuids} situacao={situacao} "
+            f"url={url} headers={self._headers}"
         )
         try:
             response = http_client.post(
@@ -107,7 +88,7 @@ class EscolhasService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error("Erro ao buscar escolhas: %s", exc)
+            logger.error(f"Erro ao buscar escolhas | error={exc}")
             raise
         escolhas_data = response.json()
         if isinstance(escolhas_data, list):
@@ -123,10 +104,9 @@ class EscolhasService:
                 e for e in escolhas if e.get("situacao") == situacao
             ]
         logger.info(
-            "Escolhas buscadas com sucesso (candidatos=%d, situacao=%s, filtradas=%d)",
-            len(candidato_uuids),
-            situacao,
-            len(escolhas_filtradas),
+            f"Escolhas buscadas com sucesso | "
+            f"candidatos={len(candidato_uuids)} situacao={situacao} "
+            f"filtradas={len(escolhas_filtradas)}"
         )
         return escolhas_filtradas
 
@@ -158,14 +138,8 @@ class EscolhasService:
         if filtros is not None:
             payload["filtros"] = filtros
         logger.info(
-            "Buscando extração de dados em escolhas",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "payload": payload,
-            },
+            f"Buscando extração de dados em escolhas | method=POST "
+            f"url={url} headers={self._headers} payload={payload}"
         )
         try:
             response = http_client.post(
@@ -177,23 +151,15 @@ class EscolhasService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar extração de dados em escolhas "
-                "(concurso_uuid=%s): %s",
-                concurso_uuid,
-                exc,
+                f"Erro ao buscar extração de dados em escolhas | "
+                f"concurso_uuid={concurso_uuid} error={exc}"
             )
             raise
 
         logger.info(
-            "Extração de dados em escolhas buscada com sucesso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "POST",
-                "url": url,
-                "headers": self._headers,
-                "payload": payload,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Extração de dados em escolhas buscada com sucesso | "
+            f"method=POST url={url} headers={self._headers} "
+            f"payload={payload} status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response.json()  # type: ignore[no-any-return]

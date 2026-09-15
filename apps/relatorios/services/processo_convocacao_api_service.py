@@ -7,7 +7,6 @@ import logging
 import requests
 from django.conf import settings
 from requests import RequestException
-from sigla_sdk.context import get_correlation_id
 from sigla_sdk.http.api_client import http_client
 
 logger = logging.getLogger(__name__)
@@ -37,14 +36,8 @@ class ProcessoConvocacaoService:
         """
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/"
         logger.info(
-            "Buscando processo de convocação",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "processo_uuid": processo_uuid,
-            },
+            f"Buscando processo de convocação | method=GET url={url} "
+            f"headers={self._headers} processo_uuid={processo_uuid}"
         )
         try:
             response = http_client.get(
@@ -55,22 +48,15 @@ class ProcessoConvocacaoService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar processo de convocação (processo_uuid=%s): %s",
-                processo_uuid,
-                exc,
+                f"Erro ao buscar processo de convocação | "
+                f"processo_uuid={processo_uuid} error={exc}"
             )
             raise
         logger.info(
-            "Processo de convocação encontrado",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "processo_uuid": processo_uuid,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Processo de convocação encontrado | method=GET url={url} "
+            f"headers={self._headers} processo_uuid={processo_uuid} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -88,14 +74,8 @@ class ProcessoConvocacaoService:
         url = f"{self.base_url}/api/v1/processos-convocacao/"
         params = {"concurso_uuid": concurso_uuid}
         logger.info(
-            "Buscando processos de convocação por concurso",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-            },
+            f"Buscando processos de convocação por concurso | method=GET "
+            f"url={url} headers={self._headers} params={params}"
         )
         try:
             response = http_client.get(
@@ -107,22 +87,15 @@ class ProcessoConvocacaoService:
             response.raise_for_status()
         except RequestException as exc:
             logger.error(
-                "Erro ao buscar processos de convocação (concurso_uuid=%s): %s",  # noqa: E501
-                concurso_uuid,
-                exc,
+                f"Erro ao buscar processos de convocação | "
+                f"concurso_uuid={concurso_uuid} error={exc}"
             )
             raise
         logger.info(
-            "Processos de convocação por concursos encontrados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "method": "GET",
-                "url": url,
-                "headers": self._headers,
-                "params": params,
-                "status_code": response.status_code,
-                "response": str(response.json())[:100],
-            },
+            f"Processos de convocação por concursos encontrados | "
+            f"method=GET url={url} headers={self._headers} params={params} "
+            f"status_code={response.status_code} "
+            f"response={str(response.json())[:100]}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -141,11 +114,7 @@ class ProcessoConvocacaoService:
             ValueError: Se os dados informados forem inválidos.
         """
         logger.info(
-            "Separando processos por principal",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "processo_data": processo_data,
-            },
+            f"Separando processos por principal | processo_data={processo_data}"
         )
         concurso_uuid = processo_data.get("concurso_uuid")
         if not concurso_uuid:
@@ -166,12 +135,8 @@ class ProcessoConvocacaoService:
             if processo_uuid and processo_uuid != processo_data.get("uuid"):
                 outros_processos_uuid.append(processo_uuid)
         logger.info(
-            "Processos por principal separados",
-            extra={
-                "correlation_id": get_correlation_id(),
-                "processo_data": processo_data,
-                "processos_list": processos_list,
-                "outros_processos_uuid": outros_processos_uuid,
-            },
+            f"Processos por principal separados | "
+            f"processo_data={processo_data} processos_list={processos_list} "
+            f"outros_processos_uuid={outros_processos_uuid}"
         )
         return (processo_data.get("uuid"), outros_processos_uuid)  # type: ignore[return-value]
