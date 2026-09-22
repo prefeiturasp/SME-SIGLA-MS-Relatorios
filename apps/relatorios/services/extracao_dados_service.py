@@ -24,6 +24,8 @@ _DRE_NOME_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+_CHAVES_CATEGORIA = ("total", "geral", "pcd", "nna")
+
 
 class ExtracaoDadosService:
     """Agrega dados de convocação, candidatos, escolhas e concursos."""
@@ -83,6 +85,12 @@ class ExtracaoDadosService:
             "candidatos": candidatos_data,
             "escolhas": escolhas_data,
             "concurso": concurso_data,
+            "pendentes": self._calcular_pendentes(
+                candidatos_data.get("convocados"),
+                escolhas_data.get("escolha"),
+                escolhas_data.get("nao-escolha"),
+                escolhas_data.get("reconvocacao"),
+            ),
         }
 
     def _extrair_por_concurso(
@@ -143,6 +151,11 @@ class ExtracaoDadosService:
             "candidatos": candidatos_data,
             "escolhas": escolhas_data,
             "concurso": concurso_data,
+            "pendentes": self._calcular_pendentes_por_ano(
+                anos=anos_ordenados,
+                candidatos_data=candidatos_data,
+                escolhas_data=escolhas_data,
+            ),
         }
 
         if len(anos_ordenados) == 2:
@@ -252,7 +265,76 @@ class ExtracaoDadosService:
         if not isinstance(dados, dict):
             return padrao
         valor = dados.get(chave, padrao)
+        if isinstance(valor, dict):
+            total = valor.get("total", padrao)
+            return int(total) if total is not None else padrao
         return int(valor) if valor is not None else padrao
+
+    @classmethod
+    def _normalizar_contagem_por_categoria(cls, valor: Any) -> dict[str, int]:
+        """Converte qualquer contagem para o formato com total e modalidades."""
+        
+        if isinstance(valor, dict):
+            return {
+                chave: int(valor.get(chave, 0) or 0)
+                for chave in _CHAVES_CATEGORIA
+            }
+        total = int(valor or 0)
+        return {
+            "total": total,
+            "geral": 0,
+            "pcd": 0,
+            "nna": 0,
+        }
+
+    @classmethod
+    def _calcular_pendentes(
+        cls,
+        convocados: Any,
+        escolha: Any,
+        nao_escolha: Any,
+        reconvocacao: Any,
+    ) -> dict[str, int]:
+        """Pendentes = convocados − escolha − não-escolha − reconvocação."""
+        base = cls._normalizar_contagem_por_categoria(convocados)
+        realizada = cls._normalizar_contagem_por_categoria(escolha)
+        sem_escolha = cls._normalizar_contagem_por_categoria(nao_escolha)
+        reconvocados = cls._normalizar_contagem_por_categoria(reconvocacao)
+        return {
+            chave: max(
+                0,
+                base[chave]
+                - realizada[chave]
+                - sem_escolha[chave]
+                - reconvocados[chave],
+            )
+            for chave in _CHAVES_CATEGORIA
+        }
+
+    @classmethod
+    def _calcular_pendentes_por_ano(
+        cls,
+        anos: list[int],
+        candidatos_data: dict,
+        escolhas_data: dict,
+    ) -> dict[str, dict[str, int]]:
+        """Calcula pendentes por ano a partir dos blocos filtrados."""
+        pendentes: dict[str, dict[str, int]] = {}
+        for ano in anos:
+            ano_chave = str(ano)
+            candidatos_ano = candidatos_data.get(ano_chave, {})
+            escolhas_ano = escolhas_data.get(ano_chave, {})
+            if not isinstance(candidatos_ano, dict):
+                candidatos_ano = {}
+            if not isinstance(escolhas_ano, dict):
+                escolhas_ano = {}
+            pendentes[ano_chave] = cls._calcular_pendentes(
+                candidatos_ano.get("convocados"),
+                escolhas_ano.get("escolha"),
+                escolhas_ano.get("nao-escolha"),
+                escolhas_ano.get("reconvocacao"),
+            )
+        return pendentes
 
     @staticmethod
     def _percentual_preenchimento(escolhas: int, vagas: int) -> float:
