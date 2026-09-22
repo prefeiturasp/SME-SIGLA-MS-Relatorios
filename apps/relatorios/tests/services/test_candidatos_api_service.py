@@ -305,7 +305,15 @@ def test_buscar_extracao_dados_success(
     mock_resp = _Resp(
         {
             "habilitados": {"total": 100, "pcd": 5, "nna": 10, "geral": 85},
-            "2026": {"convocados": 30, "nao-convocados": 20},
+            "2026": {
+                "convocados": {"total": 30, "geral": 20, "pcd": 5, "nna": 5},
+                "nao-convocados": {
+                    "total": 20,
+                    "geral": 15,
+                    "pcd": 3,
+                    "nna": 2,
+                },
+            },
         }
     )
     mock_post.return_value = mock_resp
@@ -320,7 +328,10 @@ def test_buscar_extracao_dados_success(
     ]
     payload_esperado = {
         "habilitados": {"total": 100, "pcd": 5, "nna": 10, "geral": 85},
-        "2026": {"convocados": 30, "nao-convocados": 20},
+        "2026": {
+            "convocados": {"total": 30, "geral": 20, "pcd": 5, "nna": 5},
+            "nao-convocados": {"total": 20, "geral": 15, "pcd": 3, "nna": 2},
+        },
     }
     resp = svc.buscar_extracao_dados(
         concurso_uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",

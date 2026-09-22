@@ -58,13 +58,26 @@ def test_extrair_por_concurso_chama_microservicos_com_filtros(
 
     mock_candidatos = Mock()
     mock_candidatos.buscar_extracao_dados.return_value = {
-        "habilitados": {"total": 10000}
+        "habilitados": {"total": 10000, "geral": 8000, "pcd": 1000, "nna": 1000},
+        "2026": {
+            "convocados": {"total": 150, "geral": 100, "pcd": 30, "nna": 20},
+            "nao-convocados": {
+                "total": 9850,
+                "geral": 7900,
+                "pcd": 970,
+                "nna": 980,
+            },
+        },
     }
     mock_candidatos_cls.return_value = mock_candidatos
 
     mock_escolhas = Mock()
     mock_escolhas.buscar_extracao_dados.return_value = {
-        "2026": {"escolha": 100}
+        "2026": {
+            "escolha": {"total": 100, "geral": 70, "pcd": 20, "nna": 10},
+            "nao-escolha": {"total": 20, "geral": 10, "pcd": 5, "nna": 5},
+            "reconvocacao": {"total": 10, "geral": 5, "pcd": 3, "nna": 2},
+        }
     }
     mock_escolhas_cls.return_value = mock_escolhas
 
@@ -89,7 +102,13 @@ def test_extrair_por_concurso_chama_microservicos_com_filtros(
         },
     ]
     assert resultado["candidatos"]["habilitados"]["total"] == 10000
-    assert resultado["escolhas"]["2026"]["escolha"] == 100
+    assert resultado["escolhas"]["2026"]["escolha"]["total"] == 100
+    assert resultado["pendentes"]["2026"] == {
+        "total": 20,
+        "geral": 15,
+        "pcd": 2,
+        "nna": 3,
+    }
     assert "comparativo" not in resultado
     filtros_esperados = [
         {
@@ -141,18 +160,24 @@ def test_extrair_dois_anos_retorna_comparativo(
 
     mock_candidatos = Mock()
     mock_candidatos.buscar_extracao_dados.return_value = {
-        "habilitados": {"total": 100},
-        "2025": {"convocados": 80, "nao-convocados": 20},
-        "2026": {"convocados": 100, "nao-convocados": 0},
+        "habilitados": {"total": 100, "geral": 80, "pcd": 10, "nna": 10},
+        "2025": {
+            "convocados": {"total": 80, "geral": 60, "pcd": 10, "nna": 10},
+            "nao-convocados": {"total": 20, "geral": 20, "pcd": 0, "nna": 0},
+        },
+        "2026": {
+            "convocados": {"total": 100, "geral": 80, "pcd": 10, "nna": 10},
+            "nao-convocados": {"total": 0, "geral": 0, "pcd": 0, "nna": 0},
+        },
     }
     mock_candidatos_cls.return_value = mock_candidatos
 
     mock_escolhas = Mock()
     mock_escolhas.buscar_extracao_dados.return_value = {
         "2025": {
-            "escolha": 50,
-            "reconvocacao": 10,
-            "nao-escolha": 5,
+            "escolha": {"total": 50, "geral": 40, "pcd": 5, "nna": 5},
+            "reconvocacao": {"total": 10, "geral": 8, "pcd": 1, "nna": 1},
+            "nao-escolha": {"total": 5, "geral": 4, "pcd": 1, "nna": 0},
             "dres": [
                 {
                     "nome": "Diretoria Regional de Educação Centro",
@@ -162,9 +187,9 @@ def test_extrair_dois_anos_retorna_comparativo(
             ],
         },
         "2026": {
-            "escolha": 75,
-            "reconvocacao": 5,
-            "nao-escolha": 10,
+            "escolha": {"total": 75, "geral": 60, "pcd": 10, "nna": 5},
+            "reconvocacao": {"total": 5, "geral": 4, "pcd": 1, "nna": 0},
+            "nao-escolha": {"total": 10, "geral": 8, "pcd": 1, "nna": 1},
             "dres": [
                 {
                     "nome": "Diretoria Regional de Educação Centro",
@@ -219,19 +244,33 @@ def test_extrair_total_chama_microservicos_sem_parametros(
 ):
     mock_candidatos = Mock()
     mock_candidatos.buscar_extracao_dados.return_value = {
-        "habilitados": {"total": 50000}
+        "habilitados": {
+            "total": 50000,
+            "geral": 40000,
+            "pcd": 5000,
+            "nna": 5000,
+        },
+        "convocados": {"total": 1000, "geral": 800, "pcd": 100, "nna": 100},
+        "nao-convocados": {
+            "total": 49000,
+            "geral": 39200,
+            "pcd": 4900,
+            "nna": 4900,
+        },
     }
     mock_candidatos_cls.return_value = mock_candidatos
 
     mock_escolhas = Mock()
     mock_escolhas.buscar_extracao_dados.return_value = {
-        "2026": {"escolha": 1000}
+        "escolha": {"total": 600, "geral": 480, "pcd": 60, "nna": 60},
+        "nao-escolha": {"total": 200, "geral": 160, "pcd": 20, "nna": 20},
+        "reconvocacao": {"total": 100, "geral": 80, "pcd": 10, "nna": 10},
     }
     mock_escolhas_cls.return_value = mock_escolhas
 
     mock_concurso = Mock()
     mock_concurso.buscar_extracao_dados.return_value = {
-        "2026": {"autorizacoes-publicadas": 500}
+        "autorizacoes-publicadas": 500
     }
     mock_concurso_cls.return_value = mock_concurso
 
@@ -239,6 +278,12 @@ def test_extrair_total_chama_microservicos_sem_parametros(
     resultado = service.extrair_total()
 
     assert resultado["candidatos"]["habilitados"]["total"] == 50000
+    assert resultado["pendentes"] == {
+        "total": 100,
+        "geral": 80,
+        "pcd": 10,
+        "nna": 10,
+    }
     mock_candidatos.buscar_extracao_dados.assert_called_once_with()
     mock_escolhas.buscar_extracao_dados.assert_called_once_with()
     mock_concurso.buscar_extracao_dados.assert_called_once_with()
@@ -291,3 +336,22 @@ def test_diferenca_absoluta_calcula_variacao_numerica():
 
 def test_diferenca_absoluta_arredonda_uma_casa():
     assert ExtracaoDadosService._diferenca_absoluta(3, 4.15) == 1.2
+
+
+def test_calcular_pendentes_por_categoria():
+    pendentes = ExtracaoDadosService._calcular_pendentes(
+        {"total": 100, "geral": 70, "pcd": 20, "nna": 10},
+        {"total": 40, "geral": 30, "pcd": 5, "nna": 5},
+        {"total": 20, "geral": 10, "pcd": 5, "nna": 5},
+        {"total": 10, "geral": 5, "pcd": 5, "nna": 0},
+    )
+    assert pendentes == {"total": 30, "geral": 25, "pcd": 5, "nna": 0}
+
+
+def test_obter_valor_aceita_contagem_detalhada():
+    assert (
+        ExtracaoDadosService._obter_valor(
+            {"convocados": {"total": 80, "geral": 60}}, "convocados"
+        )
+        == 80
+    )
