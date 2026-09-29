@@ -746,6 +746,26 @@ class AtaEscolhaService:
                         if isinstance(candidato_obj, dict)
                         else ""
                     )
+
+                    escolhas_situacoes = {
+                        "escolha": "Escolha",
+                        "nao-escolha": "Não Escolha",
+                        "reconvocacao": "Reconvocação",
+                    }
+
+                    candidato["escolha"] = None
+                    candidato["assinatura"] = (
+                        escolhas_situacoes.get(escolha.get("situacao", ""))
+                        if escolha
+                        else "Não Escolha"
+                    )
+                    candidato["codigo_eol"] = ""
+                    candidato["dre_codigo"] = ""
+                    candidato["dre_nome"] = ""
+                    candidato["tipo_unidade"] = ""
+                    candidato["nome_escola_escolhida"] = ""
+                    candidato["tipo_vaga"] = ""
+
                     if escolha and escolha.get("situacao") == "escolha":
                         dados_escola = self._extrair_dados_escola_escolhida(
                             escolha
@@ -770,15 +790,7 @@ class AtaEscolhaService:
                         candidato["tipo_vaga"] = dados_escola.get(
                             "tipo_vaga", ""
                         )
-                    else:
-                        candidato["escolha"] = None
-                        candidato["assinatura"] = "Não Escolha"
-                        candidato["codigo_eol"] = ""
-                        candidato["dre_codigo"] = ""
-                        candidato["dre_nome"] = ""
-                        candidato["tipo_unidade"] = ""
-                        candidato["nome_escola_escolhida"] = ""
-                        candidato["tipo_vaga"] = ""
+
                 uuids_separadores_cargo = []
                 acumulado = 0
                 for i in range(len(agendas_cargo) - 1):
