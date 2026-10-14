@@ -6,17 +6,24 @@ import logging
 from typing import Any
 
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from relatorios.api.schemas.personalizacao import (
+    OPERACOES_PERSONALIZACAO,
+    TAG_PERSONALIZACAO,
+)
 from relatorios.models import ConfiguracaoRelatorio
 from relatorios.serializers import ConfiguracaoRelatorioSerializer
 
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=[TAG_PERSONALIZACAO])
+@extend_schema_view(**OPERACOES_PERSONALIZACAO)
 class PersonalizacaoViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,

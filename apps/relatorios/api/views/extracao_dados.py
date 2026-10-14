@@ -5,18 +5,25 @@ View para extração de dados agregados de microserviços.
 import logging
 from typing import Any
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from requests import RequestException
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from relatorios.api.schemas.extracao_dados import (
+    OPERACOES_EXTRACAO_DADOS,
+    TAG_EXTRACAO_DADOS,
+)
 from relatorios.serializers.extracao_dados import ExtracaoDadosQuerySerializer
 from relatorios.services.extracao_dados_service import ExtracaoDadosService
 
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=[TAG_EXTRACAO_DADOS])
+@extend_schema_view(**OPERACOES_EXTRACAO_DADOS)
 class ExtracaoDadosViewSet(viewsets.GenericViewSet):
     """
     ViewSet para extração de dados.

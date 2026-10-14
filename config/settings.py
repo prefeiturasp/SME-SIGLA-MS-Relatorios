@@ -275,11 +275,112 @@ ELASTIC_APM = {
     'CAPTURE_TRANSACTION_STACKTRACES_LIMIT': 10,
 }
 
+DESCRICAO_API = """
+API do microsserviço de relatórios do SIGLA. Gera os relatórios dos processos
+de convocação (laudas, súmulas, listagens e ata de escolha), guarda os textos
+e o logotipo usados neles e reúne os indicadores da tela de extração de dados.
+
+Os dados dos relatórios e dos indicadores vêm de outros microsserviços
+(Agendas, Candidatos, Escolhas, Concursos e Processos de Convocação),
+consultados a cada chamada.
+
+## Autenticação
+
+Nenhuma rota exige credencial. O cabeçalho `Authorization: Bearer` não é
+validado por este serviço, mas é repassado aos microsserviços que ele
+consulta. Se um deles recusar o token, a falha aparece aqui como erro de
+comunicação: 500 na geração de relatório e 502 na extração de dados.
+
+Os dois esquemas listados em *Authorize* (Basic e sessão) são os do Django
+admin. Usuário e senha Basic incorretos respondem **403**, e o mesmo vale para
+chamada de escrita feita com a sessão e sem o token CSRF. Este serviço nunca
+responde 401.
+
+## Arquivos
+
+`POST /relatorios/` responde com o próprio relatório, não com JSON: HTML por
+padrão, ou PDF, XLSX ou DOCX conforme o parâmetro `formato`. O envio do
+logotipo em `PATCH /parametrizacao/{id}/` usa `multipart/form-data`.
+
+## Erros
+
+| Formato | Quando |
+|---|---|
+| `{"campo": ["mensagem"]}` | 400 de validação de corpo ou de filtro |
+| `{"detail": "mensagem"}` | 403, 404, 405, 406 e 502 |
+| `{"error": "mensagem"}` | 400 e 500 da geração de relatório |
+| `{"error": "mensagem", "cargos": [...]}` | 400 da Ata de Escolha sem cargo |
+
+Erro inesperado responde 500 com uma página HTML.
+
+## Paginação
+
+Só `GET /relatorios/` é paginada: `page` e `page_size` na consulta, e a
+resposta traz `links`, `count`, `page`, `page_size` e `results`.
+"""
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Relatorios Sigla API",
-    "DESCRIPTION": "API para o sistema de relatórios de sigla",
+    "DESCRIPTION": DESCRICAO_API,
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "TAGS": [
+        {
+            "name": "Relatórios",
+            "description": (
+                "Geração dos relatórios de um processo de convocação e "
+                "histórico do que foi gerado."
+            ),
+        },
+        {
+            "name": "Parametrização",
+            "description": (
+                "Cabeçalho padrão e logotipo usados em todos os relatórios. "
+                "As rotas de detalhe e de alteração sempre usam o registro "
+                "mais recente."
+            ),
+        },
+        {
+            "name": "Personalização",
+            "description": (
+                "Textos de cada tipo de relatório: cabeçalho, texto final e "
+                "capa da Ata de Escolha."
+            ),
+        },
+        {
+            "name": "Extração de dados",
+            "description": (
+                "Indicadores de habilitados, convocados, escolhas e "
+                "autorizações, reunidos dos outros microsserviços."
+            ),
+        },
+    ],
+    "ENUM_NAME_OVERRIDES": {
+        "TipoRelatorioEnum": "relatorios.models.constants.TIPOS_RELATORIOS",
+    },
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic",
+                "description": (
+                    "Usuário e senha do Django admin. Opcional: nenhuma "
+                    "rota exige credencial. Se enviado e incorreto, a "
+                    "resposta é 403."
+                ),
+            },
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "sessionid",
+                "description": (
+                    "Sessão do Django admin. Opcional. Com ela, chamadas "
+                    "de escrita precisam do token CSRF."
+                ),
+            },
+        }
+    },
 }
 
 # External services configuration
