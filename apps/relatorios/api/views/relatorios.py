@@ -6,10 +6,16 @@ import logging
 from typing import Any
 
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from relatorios.api.schemas.relatorios import (
+    OPERACOES_RELATORIOS,
+    TAG_RELATORIOS,
+)
 from relatorios.models import Relatorio
 from relatorios.serializers import (
     RelatorioCreateSerializer,
@@ -22,6 +28,8 @@ from relatorios.utils import CustomPagination
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=[TAG_RELATORIOS])
+@extend_schema_view(**OPERACOES_RELATORIOS)
 class RelatorioViewSet(viewsets.ModelViewSet):
     """ViewSet para gerenciar relatorios."""
 

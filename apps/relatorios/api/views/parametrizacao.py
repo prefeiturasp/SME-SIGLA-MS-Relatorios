@@ -5,10 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from relatorios.api.schemas.parametrizacao import (
+    OPERACOES_PARAMETRIZACAO,
+    TAG_PARAMETRIZACAO,
+)
 from relatorios.models import Parametrizacao
 from relatorios.repository import ParametrizacaoRepository
 from relatorios.serializers import ParametrizacaoSerializer
@@ -16,6 +21,8 @@ from relatorios.serializers import ParametrizacaoSerializer
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(tags=[TAG_PARAMETRIZACAO])
+@extend_schema_view(**OPERACOES_PARAMETRIZACAO)
 class ParametrizacaoViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
