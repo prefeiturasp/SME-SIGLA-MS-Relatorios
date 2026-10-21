@@ -10,6 +10,8 @@ from django.conf import settings
 from requests import RequestException
 from sigla_sdk.http.api_client import http_client
 
+from relatorios.services.http_log import mascarar_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,7 +60,8 @@ class CandidatosService:
                     params["codigo_cargo"] = codigo_cargo_param
         logger.info(
             f"Buscando candidatos habilitados | method=GET url={url} "
-            f"headers={self._headers}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         try:
             response = http_client.get(
@@ -73,7 +76,7 @@ class CandidatosService:
                 f"Erro ao buscar candidatos habilitados | "
                 f"processo_uuid={processo_uuid} "
                 f"codigo_cargo={params.get('codigo_cargo') or params.get('codigo_cargo__in')} "
-                f"error={exc}"
+                f"error={exc} "
             )
             raise
         logger.info(
@@ -162,7 +165,8 @@ class CandidatosService:
                     params["codigo_cargo"] = codigo_cargo_param
         logger.info(
             f"Buscando candidatos habilitados por processos e classificações | "
-            f"method=GET url={url} headers={self._headers} params={params}"
+            f"method=GET url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} params={params}"
         )
         try:
             response = http_client.get(
@@ -178,7 +182,7 @@ class CandidatosService:
                 f"processo_uuids={processo_uuid_param} "
                 f"classificacao={params.get('classificacao')} "
                 f"classificacao_nna={params.get('classificacao_nna')} "
-                f"codigo_cargo={params.get('codigo_cargo')} error={exc}"
+                f"codigo_cargo={params.get('codigo_cargo')} error={exc} "
             )
             raise
         logger.info(
@@ -206,7 +210,8 @@ class CandidatosService:
         payload = {"uuids": uuids}
         logger.info(
             f"Buscando candidatos por UUIDs | method=POST params={params} "
-            f"payload={payload} url={url} headers={self._headers}"
+            f"payload={payload} url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         try:
             response = http_client.post(
@@ -220,12 +225,12 @@ class CandidatosService:
         except RequestException as exc:
             logger.error(
                 f"Erro ao buscar candidatos por UUIDs | "
-                f"total_uuids={len(uuids)} order_by={order_by} error={exc}"
+                f"total_uuids={len(uuids)} order_by={order_by} error={exc} "
             )
             raise
         logger.info(
             f"Candidatos buscados por UUIDs com sucesso | method=POST "
-            f"url={url} headers={self._headers} params={params} "
+            f"url={url} params={params} "
             f"payload={payload} status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
@@ -260,7 +265,8 @@ class CandidatosService:
             payload["filtros"] = filtros
         logger.info(
             f"Buscando totais de habilitados por processo e ano | "
-            f"method=POST url={url} headers={self._headers} payload={payload}"
+            f"method=POST url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} payload={payload}"
         )
         try:
             response = http_client.post(
@@ -279,7 +285,7 @@ class CandidatosService:
 
         logger.info(
             f"Totais de habilitados por processo e ano buscados com sucesso | "
-            f"method=POST url={url} headers={self._headers} "
+            f"method=POST url={url} "
             f"payload={payload} status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
@@ -378,7 +384,8 @@ class CandidatosService:
         params = {"processo_uuid": processo_uuid, "page_size": 10000}
         logger.info(
             f"Buscando ConcursoCandidato | method=GET url={url} "
-            f"headers={self._headers} params={params}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} params={params}"
         )
         try:
             response = http_client.get(
@@ -389,11 +396,13 @@ class CandidatosService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error(f"Erro ao buscar ConcursoCandidato: {exc}")
+            logger.error(
+                f"Erro ao buscar ConcursoCandidato | error={exc} "
+            )
             raise
         logger.info(
             f"ConcursoCandidato encontrado | method=GET url={url} "
-            f"headers={self._headers} params={params} "
+            f"params={params} "
             f"status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
@@ -418,7 +427,8 @@ class CandidatosService:
         }
         logger.info(
             f"Buscando reclassificados | method=GET url={url} "
-            f"headers={self._headers} params={params}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} params={params}"
         )
         try:
             response = http_client.get(
@@ -436,7 +446,7 @@ class CandidatosService:
             raise
         logger.info(
             f"Reclassificados encontrados | method=GET url={url} "
-            f"headers={self._headers} params={params} "
+            f"params={params} "
             f"status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
@@ -469,7 +479,8 @@ class CandidatosService:
         }
         logger.info(
             f"Buscando eliminados | method=GET url={url} "
-            f"headers={self._headers} params={params}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} params={params}"
         )
         try:
             response = http_client.get(
@@ -489,7 +500,7 @@ class CandidatosService:
             raise
         logger.info(
             f"Eliminados encontrados | method=GET url={url} "
-            f"headers={self._headers} params={params} "
+            f"params={params} "
             f"status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
