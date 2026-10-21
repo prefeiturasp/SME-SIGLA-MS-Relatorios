@@ -10,6 +10,8 @@ from django.conf import settings
 from requests import RequestException
 from sigla_sdk.http.api_client import http_client
 
+from relatorios.services.http_log import mascarar_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +40,8 @@ class EscolhasService:
         logger.info(
             f"Buscando vagas de escolas | method=GET "
             f"processo_uuid={processo_uuid} url={url} "
-            f"headers={self._headers} params={params}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} params={params}"
         )
         try:
             response = http_client.get(
@@ -49,12 +52,14 @@ class EscolhasService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error(f"Erro ao buscar vagas de escolas | error={exc}")
+            logger.error(
+                f"Erro ao buscar vagas de escolas | error={exc} "
+            )
             raise
         logger.info(
             f"Vagas de escolas encontradas | method=GET "
             f"processo_uuid={processo_uuid} url={url} "
-            f"headers={self._headers} params={params} "
+            f"params={params} "
             f"status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
@@ -77,7 +82,8 @@ class EscolhasService:
         logger.info(
             f"Buscando escolhas por candidatos | method=POST "
             f"candidato_uuids={candidato_uuids} situacao={situacao} "
-            f"url={url} headers={self._headers}"
+            f"url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         try:
             response = http_client.post(
@@ -88,7 +94,9 @@ class EscolhasService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error(f"Erro ao buscar escolhas | error={exc}")
+            logger.error(
+                f"Erro ao buscar escolhas | error={exc} "
+            )
             raise
         escolhas_data = response.json()
         if isinstance(escolhas_data, list):
@@ -139,7 +147,8 @@ class EscolhasService:
             payload["filtros"] = filtros
         logger.info(
             f"Buscando extração de dados em escolhas | method=POST "
-            f"url={url} headers={self._headers} payload={payload}"
+            f"url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} payload={payload}"
         )
         try:
             response = http_client.post(
@@ -158,7 +167,7 @@ class EscolhasService:
 
         logger.info(
             f"Extração de dados em escolhas buscada com sucesso | "
-            f"method=POST url={url} headers={self._headers} "
+            f"method=POST url={url} "
             f"payload={payload} status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )

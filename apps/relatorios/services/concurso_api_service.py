@@ -9,6 +9,8 @@ from django.conf import settings
 from requests import RequestException
 from sigla_sdk.http.api_client import http_client
 
+from relatorios.services.http_log import mascarar_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +54,8 @@ class ConcursoService:
             payload["anos"] = anos
         logger.info(
             f"Buscando extração de dados em concursos | method=POST "
-            f"url={url} headers={self._headers} payload={payload}"
+            f"url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} payload={payload}"
         )
         try:
             response = http_client.post(
@@ -71,7 +74,7 @@ class ConcursoService:
 
         logger.info(
             f"Extração de dados em concursos buscada com sucesso | "
-            f"method=POST url={url} headers={self._headers} "
+            f"method=POST url={url} "
             f"payload={payload} status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )

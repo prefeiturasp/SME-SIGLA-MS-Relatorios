@@ -265,8 +265,6 @@ ELASTIC_APM = {
     ),
     'RECORDING': True,               # Garante que o APM está ativo
     'TRANSACTIONS_ROOT_UNNAMED': True, # Captura rotas mesmo se não tiverem nome definido nas URLs
-    'CAPTURE_BODY': 'all',
-    'CAPTURE_HEADERS': True,
     'CAPTURE_ERRORS': True,
     'CAPTURE_PERFORMANCE': True,
     'CAPTURE_TRANSACTIONS': True,
