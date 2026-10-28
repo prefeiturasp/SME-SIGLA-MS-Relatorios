@@ -9,6 +9,8 @@ from django.conf import settings
 from requests import RequestException
 from sigla_sdk.http.api_client import http_client
 
+from relatorios.services.http_log import mascarar_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,9 @@ class ProcessoConvocacaoService:
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/"
         logger.info(
             f"Buscando processo de convocação | method=GET url={url} "
-            f"headers={self._headers} processo_uuid={processo_uuid}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} "
+            f"processo_uuid={processo_uuid}"
         )
         try:
             response = http_client.get(
@@ -75,7 +79,8 @@ class ProcessoConvocacaoService:
         params = {"concurso_uuid": concurso_uuid}
         logger.info(
             f"Buscando processos de convocação por concurso | method=GET "
-            f"url={url} headers={self._headers} params={params}"
+            f"url={url} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} params={params}"
         )
         try:
             response = http_client.get(
@@ -93,7 +98,7 @@ class ProcessoConvocacaoService:
             raise
         logger.info(
             f"Processos de convocação por concursos encontrados | "
-            f"method=GET url={url} headers={self._headers} params={params} "
+            f"method=GET url={url} params={params} "
             f"status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )
@@ -114,7 +119,8 @@ class ProcessoConvocacaoService:
             ValueError: Se os dados informados forem inválidos.
         """
         logger.info(
-            f"Separando processos por principal | processo_data={processo_data}"
+            f"Separando processos por principal | "
+            f"processo_data={processo_data}"
         )
         concurso_uuid = processo_data.get("concurso_uuid")
         if not concurso_uuid:

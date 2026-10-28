@@ -9,6 +9,8 @@ from django.conf import settings
 from requests import RequestException
 from sigla_sdk.http.api_client import http_client
 
+from relatorios.services.http_log import mascarar_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,9 @@ class ProcessosService:
         url = f"{self.base_url}/api/v1/processos-convocacao/{processo_uuid}/cargos/"  # noqa: E501
         logger.info(
             f"Buscando cargos do processo | method=GET url={url} "
-            f"headers={self._headers} processo_uuid={processo_uuid}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds} "
+            f"processo_uuid={processo_uuid}"
         )
         try:
             response = http_client.get(
@@ -47,11 +51,13 @@ class ProcessosService:
             )
             response.raise_for_status()
         except RequestException as exc:
-            logger.error(f"Erro ao buscar cargos do processo | error={exc}")
+            logger.error(
+                f"Erro ao buscar cargos do processo | error={exc} "
+            )
             raise
         logger.info(
             f"Cargos do processo encontrados | method=GET url={url} "
-            f"headers={self._headers} processo_uuid={processo_uuid} "
+            f"processo_uuid={processo_uuid} "
             f"status_code={response.status_code} "
             f"response={str(response.json())[:100]}"
         )

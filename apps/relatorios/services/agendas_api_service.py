@@ -9,6 +9,8 @@ from django.conf import settings
 from requests import RequestException
 from sigla_sdk.http.api_client import http_client
 
+from relatorios.services.http_log import mascarar_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,8 @@ class AgendasService:
         }
         logger.info(
             f"Buscando agendas | method=GET url={url} params={params} "
-            f"headers={self._headers}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         try:
             response = http_client.get(
@@ -61,12 +64,13 @@ class AgendasService:
             logger.error(
                 f"Erro ao buscar agendas | "
                 f"processo_convocacao_uuid={processo_convocacao_uuid} "
-                f"error={exc}"
+                f"error={exc} "
             )
             raise
         logger.info(
             f"Agendas buscadas com sucesso | method=GET url={url} "
-            f"params={params} headers={self._headers}"
+            f"params={params} headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         return response  # type: ignore[no-any-return]
 
@@ -82,7 +86,8 @@ class AgendasService:
         url = f"{self.base_url}/api/v1/agendas/{agenda_uuid}/"
         logger.info(
             f"Buscando agenda por UUID | method=GET url={url} "
-            f"headers={self._headers}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         try:
             response = http_client.get(
@@ -94,11 +99,12 @@ class AgendasService:
         except RequestException as exc:
             logger.error(
                 f"Erro ao buscar agenda por UUID | method=GET url={url} "
-                f"headers={self._headers} error={exc}"
+                f"error={exc}"
             )
             raise
         logger.info(
             f"Agenda buscada com sucesso | method=GET url={url} "
-            f"headers={self._headers}"
+            f"headers={mascarar_headers(self._headers)} "
+            f"timeout_seconds={self.timeout_seconds}"
         )
         return response  # type: ignore[no-any-return]
